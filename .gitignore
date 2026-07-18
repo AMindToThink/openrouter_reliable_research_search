@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.uv/
+*.egg-info/
+
+# Secrets
+.env
+*.key
+
+# OS / editor
+.DS_Store
+*.swp
+
+# Scratch / clones used during auditing (kept out of the repo)
+research/clones/
+scratch/
