@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1470" viewBox="0 0 1200 1470">
+<rect width="1200" height="1470" fill="#0d1219"/>
+<rect x="0" y="0" width="1200" height="4" fill="#6fa0e6" opacity="0.9"/>
+<rect x="72" y="52" width="30" height="3" fill="#6fa0e6"/>
+<text x="114" y="60" font-family="DejaVu Sans Mono, monospace" font-size="20" font-weight="bold" fill="#6fa0e6" text-anchor="start" letter-spacing="3" opacity="1">PROVIDER ROUTING INSPECTOR</text>
+<text x="1128" y="60" font-family="DejaVu Sans Mono, monospace" font-size="17" font-weight="normal" fill="#6b7789" text-anchor="end" opacity="1">openrouter reliability audit</text>
+<text x="72" y="210" font-family="DejaVu Sans Mono, monospace" font-size="150" font-weight="bold" fill="#e37363" text-anchor="start" opacity="1">89%</text>
+<text x="372" y="128" font-family="DejaVu Sans, sans-serif" font-size="33" font-weight="bold" fill="#e7edf5" text-anchor="start" opacity="1">of 35 influential AI-research repos that</text>
+<text x="372" y="170" font-family="DejaVu Sans, sans-serif" font-size="33" font-weight="bold" fill="#e7edf5" text-anchor="start" opacity="1">route through OpenRouter leave a silent</text>
+<text x="372" y="212" font-family="DejaVu Sans, sans-serif" font-size="33" font-weight="bold" fill="#e7edf5" text-anchor="start" opacity="1">provider-routing corruption channel open.</text>
+<text x="72" y="300" font-family="DejaVu Sans, sans-serif" font-size="22" font-weight="normal" fill="#97a3b6" text-anchor="start" opacity="1">OpenRouter serves “a model” from whichever provider is cheapest-and-up — at any</text>
+<text x="72" y="332" font-family="DejaVu Sans, sans-serif" font-size="22" font-weight="normal" fill="#97a3b6" text-anchor="start" opacity="1">quantization down to int4, silently dropping sampling params it can’t honor. Two</text>
+<text x="72" y="364" font-family="DejaVu Sans, sans-serif" font-size="22" font-weight="normal" fill="#97a3b6" text-anchor="start" opacity="1">identical requests can come back as different weights.</text>
+<rect x="72.0" y="432" width="250.5" height="132" rx="12" fill="#161d27" stroke="#28313d"/>
+<rect x="72.0" y="432" width="4" height="132" rx="2" fill="#e37363"/>
+<text x="94.0" y="498" font-family="DejaVu Sans Mono, monospace" font-size="46" font-weight="bold" fill="#e37363" text-anchor="start" opacity="1">31/35</text>
+<text x="94.0" y="526" font-family="DejaVu Sans, sans-serif" font-size="15.5" font-weight="normal" fill="#97a3b6" text-anchor="start" opacity="1">at risk</text>
+<rect x="340.5" y="432" width="250.5" height="132" rx="12" fill="#161d27" stroke="#28313d"/>
+<rect x="340.5" y="432" width="4" height="132" rx="2" fill="#e7edf5"/>
+<text x="362.5" y="498" font-family="DejaVu Sans Mono, monospace" font-size="46" font-weight="bold" fill="#e7edf5" text-anchor="start" opacity="1">32/35</text>
+<text x="362.5" y="526" font-family="DejaVu Sans, sans-serif" font-size="15.5" font-weight="normal" fill="#97a3b6" text-anchor="start" opacity="1">route it into a result</text>
+<text x="362.5" y="545" font-family="DejaVu Sans, sans-serif" font-size="15.5" font-weight="normal" fill="#97a3b6" text-anchor="start" opacity="1">that matters</text>
+<rect x="609.0" y="432" width="250.5" height="132" rx="12" fill="#161d27" stroke="#28313d"/>
+<rect x="609.0" y="432" width="4" height="132" rx="2" fill="#e0ab4d"/>
+<text x="631.0" y="498" font-family="DejaVu Sans Mono, monospace" font-size="46" font-weight="bold" fill="#e0ab4d" text-anchor="start" opacity="1">23</text>
+<text x="631.0" y="526" font-family="DejaVu Sans, sans-serif" font-size="15.5" font-weight="normal" fill="#97a3b6" text-anchor="start" opacity="1">carry a high-severity</text>
+<text x="631.0" y="545" font-family="DejaVu Sans, sans-serif" font-size="15.5" font-weight="normal" fill="#97a3b6" text-anchor="start" opacity="1">gap</text>
+<rect x="877.5" y="432" width="250.5" height="132" rx="12" fill="#161d27" stroke="#28313d"/>
+<rect x="877.5" y="432" width="4" height="132" rx="2" fill="#46c08a"/>
+<text x="899.5" y="498" font-family="DejaVu Sans Mono, monospace" font-size="46" font-weight="bold" fill="#46c08a" text-anchor="start" opacity="1">4/35</text>
+<text x="899.5" y="526" font-family="DejaVu Sans, sans-serif" font-size="15.5" font-weight="normal" fill="#97a3b6" text-anchor="start" opacity="1">control for it</text>
+<text x="899.5" y="545" font-family="DejaVu Sans, sans-serif" font-size="15.5" font-weight="normal" fill="#97a3b6" text-anchor="start" opacity="1">properly</text>
+<rect x="72" y="590" width="26" height="3" fill="#6fa0e6"/>
+<text x="110" y="598" font-family="DejaVu Sans Mono, monospace" font-size="18" font-weight="bold" fill="#97a3b6" text-anchor="start" letter-spacing="1" opacity="1">WHICH MISTAKES SHOW UP  ·  repos exhibiting each (of 35)</text>
+<text x="72" y="661" font-family="DejaVu Sans Mono, monospace" font-size="18" font-weight="bold" fill="#6b7789" text-anchor="start" opacity="1">M4</text>
+<text x="124" y="661" font-family="DejaVu Sans, sans-serif" font-size="19" font-weight="normal" fill="#e7edf5" text-anchor="start" opacity="1">No provenance logging</text>
+<rect x="392" y="644" width="676" height="22" rx="5" fill="#161d27"/>
+<rect x="392" y="644" width="676.0" height="22" rx="5" fill="#e37363"/>
+<text x="1084" y="662" font-family="DejaVu Sans Mono, monospace" font-size="21" font-weight="bold" fill="#e7edf5" text-anchor="end" opacity="1">28</text>
+<text x="1128" y="662" font-family="DejaVu Sans, sans-serif" font-size="1" font-weight="normal" fill="#e7edf5" text-anchor="start" opacity="1"></text>
+<text x="72" y="707" font-family="DejaVu Sans Mono, monospace" font-size="18" font-weight="bold" fill="#6b7789" text-anchor="start" opacity="1">M5</text>
+<text x="124" y="707" font-family="DejaVu Sans, sans-serif" font-size="19" font-weight="normal" fill="#e7edf5" text-anchor="start" opacity="1">Data-policy left open</text>
+<rect x="392" y="690" width="676" height="22" rx="5" fill="#161d27"/>
+<rect x="392" y="690" width="651.9" height="22" rx="5" fill="#e0ab4d"/>
+<text x="1084" y="708" font-family="DejaVu Sans Mono, monospace" font-size="21" font-weight="bold" fill="#e7edf5" text-anchor="end" opacity="1">27</text>
+<text x="1128" y="708" font-family="DejaVu Sans, sans-serif" font-size="1" font-weight="normal" fill="#e7edf5" text-anchor="start" opacity="1"></text>
+<text x="72" y="753" font-family="DejaVu Sans Mono, monospace" font-size="18" font-weight="bold" fill="#6b7789" text-anchor="start" opacity="1">M1</text>
+<text x="124" y="753" font-family="DejaVu Sans, sans-serif" font-size="19" font-weight="normal" fill="#e7edf5" text-anchor="start" opacity="1">Unpinned quantization</text>
+<rect x="392" y="736" width="676" height="22" rx="5" fill="#161d27"/>
+<rect x="392" y="736" width="627.7" height="22" rx="5" fill="#e37363"/>
+<text x="1084" y="754" font-family="DejaVu Sans Mono, monospace" font-size="21" font-weight="bold" fill="#e7edf5" text-anchor="end" opacity="1">26</text>
+<text x="1128" y="754" font-family="DejaVu Sans, sans-serif" font-size="1" font-weight="normal" fill="#e7edf5" text-anchor="start" opacity="1"></text>
+<text x="72" y="799" font-family="DejaVu Sans Mono, monospace" font-size="18" font-weight="bold" fill="#6b7789" text-anchor="start" opacity="1">M3</text>
+<text x="124" y="799" font-family="DejaVu Sans, sans-serif" font-size="19" font-weight="normal" fill="#e7edf5" text-anchor="start" opacity="1">Probabilistic routing</text>
+<rect x="392" y="782" width="676" height="22" rx="5" fill="#161d27"/>
+<rect x="392" y="782" width="627.7" height="22" rx="5" fill="#e37363"/>
+<text x="1084" y="800" font-family="DejaVu Sans Mono, monospace" font-size="21" font-weight="bold" fill="#e7edf5" text-anchor="end" opacity="1">26</text>
+<text x="1128" y="800" font-family="DejaVu Sans, sans-serif" font-size="1" font-weight="normal" fill="#e7edf5" text-anchor="start" opacity="1"></text>
+<text x="72" y="845" font-family="DejaVu Sans Mono, monospace" font-size="18" font-weight="bold" fill="#6b7789" text-anchor="start" opacity="1">M2</text>
+<text x="124" y="845" font-family="DejaVu Sans, sans-serif" font-size="19" font-weight="normal" fill="#e7edf5" text-anchor="start" opacity="1">Silent param dropping</text>
+<rect x="392" y="828" width="676" height="22" rx="5" fill="#161d27"/>
+<rect x="392" y="828" width="531.1" height="22" rx="5" fill="#e37363"/>
+<text x="1084" y="846" font-family="DejaVu Sans Mono, monospace" font-size="21" font-weight="bold" fill="#e7edf5" text-anchor="end" opacity="1">22</text>
+<text x="1128" y="846" font-family="DejaVu Sans, sans-serif" font-size="1" font-weight="normal" fill="#e7edf5" text-anchor="start" opacity="1"></text>
+<text x="72" y="891" font-family="DejaVu Sans Mono, monospace" font-size="18" font-weight="bold" fill="#6b7789" text-anchor="start" opacity="1">M6</text>
+<text x="124" y="891" font-family="DejaVu Sans, sans-serif" font-size="19" font-weight="normal" fill="#e7edf5" text-anchor="start" opacity="1">Model version drift</text>
+<rect x="392" y="874" width="676" height="22" rx="5" fill="#161d27"/>
+<rect x="392" y="874" width="531.1" height="22" rx="5" fill="#e0ab4d"/>
+<text x="1084" y="892" font-family="DejaVu Sans Mono, monospace" font-size="21" font-weight="bold" fill="#e7edf5" text-anchor="end" opacity="1">22</text>
+<text x="1128" y="892" font-family="DejaVu Sans, sans-serif" font-size="1" font-weight="normal" fill="#e7edf5" text-anchor="start" opacity="1"></text>
+<text x="72" y="937" font-family="DejaVu Sans Mono, monospace" font-size="18" font-weight="bold" fill="#6b7789" text-anchor="start" opacity="1">M8</text>
+<text x="124" y="937" font-family="DejaVu Sans, sans-serif" font-size="19" font-weight="normal" fill="#e7edf5" text-anchor="start" opacity="1">Comparison confound</text>
+<rect x="392" y="920" width="676" height="22" rx="5" fill="#161d27"/>
+<rect x="392" y="920" width="507.0" height="22" rx="5" fill="#e37363"/>
+<text x="1084" y="938" font-family="DejaVu Sans Mono, monospace" font-size="21" font-weight="bold" fill="#e7edf5" text-anchor="end" opacity="1">21</text>
+<text x="1128" y="938" font-family="DejaVu Sans, sans-serif" font-size="1" font-weight="normal" fill="#e7edf5" text-anchor="start" opacity="1"></text>
+<text x="72" y="983" font-family="DejaVu Sans Mono, monospace" font-size="18" font-weight="bold" fill="#6b7789" text-anchor="start" opacity="1">M10</text>
+<text x="124" y="983" font-family="DejaVu Sans, sans-serif" font-size="19" font-weight="normal" fill="#e7edf5" text-anchor="start" opacity="1">No reporting</text>
+<rect x="392" y="966" width="676" height="22" rx="5" fill="#161d27"/>
+<rect x="392" y="966" width="313.9" height="22" rx="5" fill="#e0ab4d"/>
+<text x="1084" y="984" font-family="DejaVu Sans Mono, monospace" font-size="21" font-weight="bold" fill="#e7edf5" text-anchor="end" opacity="1">13</text>
+<text x="1128" y="984" font-family="DejaVu Sans, sans-serif" font-size="1" font-weight="normal" fill="#e7edf5" text-anchor="start" opacity="1"></text>
+<rect x="72" y="1014" width="13" height="13" rx="3" fill="#e37363"/>
+<text x="92" y="1026" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="normal" fill="#97a3b6" text-anchor="start" opacity="1">High — can distort a result</text>
+<rect x="372" y="1014" width="13" height="13" rx="3" fill="#e0ab4d"/>
+<text x="392" y="1026" font-family="DejaVu Sans, sans-serif" font-size="16" font-weight="normal" fill="#97a3b6" text-anchor="start" opacity="1">Medium — reproducibility / leakage / disclosure</text>
+<rect x="72" y="1058" width="1056" height="132" rx="12" fill="#161d27" stroke="#28313d"/>
+<rect x="72" y="1058" width="4" height="132" rx="2" fill="#6fa0e6"/>
+<text x="96" y="1092" font-family="DejaVu Sans Mono, monospace" font-size="15" font-weight="bold" fill="#6fa0e6" text-anchor="start" letter-spacing="1.5" opacity="1">READ THIS CORRECTLY</text>
+<text x="96" y="1120" font-family="DejaVu Sans, sans-serif" font-size="18" font-weight="normal" fill="#97a3b6" text-anchor="start" opacity="1">“At risk” means the code leaves a known corruption channel open and uncontrolled — not that any</text>
+<text x="96" y="1146" font-family="DejaVu Sans, sans-serif" font-size="18" font-weight="normal" fill="#97a3b6" text-anchor="start" opacity="1">published number is wrong. We audited how each repo routes model calls and adversarially</text>
+<text x="96" y="1172" font-family="DejaVu Sans, sans-serif" font-size="18" font-weight="normal" fill="#97a3b6" text-anchor="start" opacity="1">re-checked every verdict against the source. Selection was importance-first, not mistake-first.</text>
+<rect x="72" y="1224" width="1056" height="150" rx="12" fill="#161d27" stroke="#28313d"/>
+<rect x="72" y="1224" width="4" height="150" rx="2" fill="#46c08a"/>
+<text x="96" y="1258" font-family="DejaVu Sans Mono, monospace" font-size="15" font-weight="bold" fill="#46c08a" text-anchor="start" letter-spacing="1.5" opacity="1">THE FIX  ·  ~5 MINUTES</text>
+<text x="96" y="1294" font-family="DejaVu Sans Mono, monospace" font-size="17" font-weight="normal" fill="#e7edf5" text-anchor="start" opacity="1">provider = { &quot;quantizations&quot;: [&quot;fp8&quot;,&quot;fp16&quot;,&quot;bf16&quot;],  &quot;require_parameters&quot;: true,</text>
+<text x="96" y="1320" font-family="DejaVu Sans Mono, monospace" font-size="17" font-weight="normal" fill="#e7edf5" text-anchor="start" opacity="1">             &quot;data_collection&quot;: &quot;deny&quot;,  &quot;order&quot;: [&quot;&lt;the-provider-you-validated&gt;&quot;] }</text>
+<text x="96" y="1350" font-family="DejaVu Sans Mono, monospace" font-size="17" font-weight="normal" fill="#46c08a" text-anchor="start" opacity="1">→ then log which provider actually served each call. Now anyone can reproduce you.</text>
+<text x="72" y="1400" font-family="DejaVu Sans Mono, monospace" font-size="15" font-weight="normal" fill="#6b7789" text-anchor="start" letter-spacing="0.5" opacity="1">SOURCES  NeurIPS · ICML · ICLR · ACL · NAACL · Nature · UK AISI · METR · Redwood · Palisade · LessWrong</text>
+<text x="72" y="1430" font-family="DejaVu Sans Mono, monospace" font-size="15" font-weight="normal" fill="#97a3b6" text-anchor="start" opacity="1">importance-first · audit + adversarial verify per repo</text>
+<text x="1128" y="1430" font-family="DejaVu Sans Mono, monospace" font-size="15" font-weight="normal" fill="#6fa0e6" text-anchor="end" opacity="1">github.com/AMindToThink/openrouter_reliable_research_search</text>
+</svg>
