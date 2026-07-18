@@ -1,0 +1,36 @@
+{
+  "n": 35,
+  "safe": 4,
+  "unsafe": 31,
+  "critical_route": 32,
+  "severity": {
+    "high": 23,
+    "medium": 8,
+    "none": 4
+  },
+  "model_type": {
+    "mixed": 26,
+    "open_weight": 6,
+    "proprietary": 3
+  },
+  "awareness": {
+    "aware_partial": 19,
+    "unaware": 13,
+    "aware_and_handled": 2,
+    "unknown": 1
+  },
+  "mistake_freq": {
+    "M4": 28,
+    "M5": 27,
+    "M1": 26,
+    "M3": 26,
+    "M2": 22,
+    "M6": 22,
+    "M8": 21,
+    "M10": 13,
+    "M7": 3,
+    "M9": 3,
+    "M11": 3,
+    "M12": 1
+  }
+}
