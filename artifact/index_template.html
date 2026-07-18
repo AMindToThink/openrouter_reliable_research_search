@@ -1,0 +1,453 @@
+<title>Provider Routing Inspector — do research repos use OpenRouter safely?</title>
+<style>
+  :root {
+    /* cool, chosen neutrals (blue-biased) */
+    --bg: #eef1f5; --surface: #ffffff; --panel: #f7f9fc; --border: #dbe1ea;
+    --ink: #182030; --muted: #5a6577; --faint: #8a94a5;
+    --accent: #3667b0;            /* interactive chrome only */
+    --safe: #1f8f63; --safe-bg: #dcefe6;
+    --med: #b7811c;  --med-bg: #f3e8c9;
+    --high: #c24634; --high-bg: #f4dcd6;
+    --none: #6a7486; --none-bg: #e7ebf1;
+    --shadow: 0 1px 2px rgba(20,30,50,.06), 0 6px 20px rgba(20,30,50,.06);
+    --mono: ui-monospace, "Cascadia Code", "JetBrains Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+    --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --r: 10px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1219; --surface: #141b25; --panel: #10161f; --border: #263140;
+      --ink: #e7edf5; --muted: #97a3b6; --faint: #6b7789;
+      --accent: #6fa0e6;
+      --safe: #46c08a; --safe-bg: #12271f;
+      --med: #e0ab4d;  --med-bg: #2b230f;
+      --high: #e37363; --high-bg: #2c1712;
+      --none: #8592a6; --none-bg: #1b222d;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #eef1f5; --surface: #ffffff; --panel: #f7f9fc; --border: #dbe1ea;
+    --ink: #182030; --muted: #5a6577; --faint: #8a94a5; --accent: #3667b0;
+    --safe: #1f8f63; --safe-bg: #dcefe6; --med: #b7811c; --med-bg: #f3e8c9;
+    --high: #c24634; --high-bg: #f4dcd6; --none: #6a7486; --none-bg: #e7ebf1;
+    --shadow: 0 1px 2px rgba(20,30,50,.06), 0 6px 20px rgba(20,30,50,.06);
+  }
+  :root[data-theme="dark"] {
+    --bg: #0d1219; --surface: #141b25; --panel: #10161f; --border: #263140;
+    --ink: #e7edf5; --muted: #97a3b6; --faint: #6b7789; --accent: #6fa0e6;
+    --safe: #46c08a; --safe-bg: #12271f; --med: #e0ab4d; --med-bg: #2b230f;
+    --high: #e37363; --high-bg: #2c1712; --none: #8592a6; --none-bg: #1b222d;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans);
+    line-height: 1.55; -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 20px 80px; }
+  a { color: var(--accent); text-underline-offset: 2px; }
+  .mono { font-family: var(--mono); }
+  .tnum { font-variant-numeric: tabular-nums; }
+
+  /* ---- header ---- */
+  header { padding: 44px 0 22px; border-bottom: 1px solid var(--border); }
+  .eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--accent); display: flex; align-items: center; gap: 10px; }
+  .eyebrow::before { content: ""; width: 26px; height: 2px; background: var(--accent); display: inline-block; }
+  h1 { font-family: var(--mono); font-weight: 650; font-size: clamp(1.7rem, 4.4vw, 2.9rem);
+    line-height: 1.08; letter-spacing: -.01em; margin: 14px 0 10px; text-wrap: balance; }
+  h1 .hl { color: var(--high); }
+  .lede { font-size: 1.06rem; color: var(--muted); max-width: 68ch; margin: 0; }
+  .lede strong { color: var(--ink); font-weight: 620; }
+
+  /* ---- stat instrument row ---- */
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 26px 0 6px; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r);
+    padding: 15px 16px; box-shadow: var(--shadow); position: relative; overflow: hidden; }
+  .stat::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--accent); }
+  .stat.s-high::before { background: var(--high); } .stat.s-safe::before { background: var(--safe); }
+  .stat.s-med::before { background: var(--med); }
+  .stat .n { font-family: var(--mono); font-size: 2.1rem; font-weight: 640; line-height: 1; font-variant-numeric: tabular-nums; }
+  .stat .n small { font-size: .95rem; color: var(--faint); font-weight: 500; }
+  .stat .lab { font-size: .8rem; color: var(--muted); margin-top: 7px; }
+
+  section { margin-top: 40px; }
+  .sec-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 4px; flex-wrap: wrap; }
+  h2 { font-family: var(--mono); font-size: 1.02rem; letter-spacing: .06em; text-transform: uppercase; margin: 0 0 4px; }
+  .sec-sub { color: var(--muted); font-size: .92rem; margin: 0 0 16px; max-width: 74ch; }
+
+  /* ---- routing roulette ---- */
+  .roulette { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow);
+    padding: 20px; display: grid; grid-template-columns: 1.1fr 1fr; gap: 22px; align-items: stretch; }
+  @media (max-width: 720px) { .roulette { grid-template-columns: 1fr; } }
+  .roul-left { display: flex; flex-direction: column; gap: 12px; }
+  .req-line { font-family: var(--mono); font-size: 1.15rem; }
+  .req-line .arrow { color: var(--faint); }
+  .prov { color: var(--ink); font-weight: 640; }
+  .qbadge { font-family: var(--mono); font-size: .78rem; padding: 2px 7px; border-radius: 6px; margin-left: 6px; border: 1px solid var(--border); }
+  .qbadge.good { background: var(--safe-bg); color: var(--safe); border-color: transparent; }
+  .qbadge.bad  { background: var(--high-bg); color: var(--high); border-color: transparent; }
+  .btn { font-family: var(--mono); font-size: .9rem; font-weight: 600; cursor: pointer; border-radius: 8px;
+    border: 1px solid var(--border); background: var(--panel); color: var(--ink); padding: 10px 16px; transition: transform .05s, border-color .15s; }
+  .btn:hover { border-color: var(--accent); } .btn:active { transform: translateY(1px); }
+  .btn.primary { background: var(--accent); color: #fff; border-color: transparent; }
+  :root[data-theme="dark"] .btn.primary, @media (prefers-color-scheme: dark) { }
+  .roul-controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .verdict-note { font-size: .9rem; color: var(--muted); min-height: 2.4em; }
+  .verdict-note b { color: var(--ink); }
+  .roul-right { border-left: 1px solid var(--border); padding-left: 22px; display: flex; flex-direction: column; gap: 8px; }
+  @media (max-width: 720px) { .roul-right { border-left: none; padding-left: 0; border-top: 1px solid var(--border); padding-top: 16px; } }
+  .roul-right h3 { font-family: var(--mono); font-size: .78rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 0 0 4px; }
+  .log { font-family: var(--mono); font-size: .82rem; color: var(--muted); display: flex; flex-direction: column; gap: 3px; max-height: 168px; overflow-y: auto; }
+  .log div { white-space: nowrap; }
+  .tally { display: flex; gap: 16px; margin-top: auto; padding-top: 10px; }
+  .tally .t { font-family: var(--mono); } .tally .t b { font-size: 1.5rem; display: block; }
+
+  /* ---- chart ---- */
+  .chart { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--shadow); padding: 18px 20px; }
+  .bar-row { display: grid; grid-template-columns: 240px 1fr 42px; align-items: center; gap: 12px; padding: 5px 0; cursor: pointer; border-radius: 6px; }
+  .bar-row:hover { background: var(--panel); }
+  .bar-row.active { background: var(--panel); outline: 1px solid var(--accent); }
+  @media (max-width: 620px) { .bar-row { grid-template-columns: 130px 1fr 34px; } .bar-lab .mname { display: none; } }
+  .bar-lab { font-size: .86rem; display: flex; gap: 8px; align-items: baseline; overflow: hidden; }
+  .bar-lab .mid { font-family: var(--mono); color: var(--faint); font-size: .78rem; }
+  .bar-lab .mname { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .track { height: 15px; background: var(--panel); border-radius: 4px; overflow: hidden; }
+  .fill { height: 100%; border-radius: 4px; width: 0; transition: width .8s cubic-bezier(.2,.7,.2,1); }
+  .fill.high { background: var(--high); } .fill.med { background: var(--med); }
+  .bar-ct { font-family: var(--mono); font-size: .9rem; text-align: right; font-variant-numeric: tabular-nums; color: var(--muted); }
+  .legend { display: flex; gap: 18px; margin-top: 12px; font-size: .82rem; color: var(--muted); }
+  .legend .k { display: inline-flex; align-items: center; gap: 6px; }
+  .swatch { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
+
+  /* ---- explorer controls ---- */
+  .controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
+  .grp { display: inline-flex; gap: 6px; align-items: center; }
+  .grp .glab { font-family: var(--mono); font-size: .72rem; text-transform: uppercase; letter-spacing: .07em; color: var(--faint); margin-right: 2px; }
+  .chip { font-family: var(--mono); font-size: .8rem; cursor: pointer; border: 1px solid var(--border); background: var(--surface);
+    color: var(--muted); padding: 5px 11px; border-radius: 20px; transition: all .13s; }
+  .chip:hover { color: var(--ink); border-color: var(--faint); }
+  .chip[aria-pressed="true"] { background: var(--accent); color: #fff; border-color: transparent; }
+  .search { font-family: var(--sans); font-size: .88rem; padding: 7px 12px; border-radius: 20px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--ink); min-width: 180px; margin-left: auto; }
+  .search::placeholder { color: var(--faint); }
+  select.sortsel { font-family: var(--mono); font-size: .8rem; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--ink); }
+
+  .count-line { font-size: .85rem; color: var(--muted); margin-bottom: 12px; font-family: var(--mono); }
+  .count-line b { color: var(--ink); }
+
+  /* ---- repo list ---- */
+  .list { display: flex; flex-direction: column; gap: 9px; }
+  .repo { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); box-shadow: var(--shadow);
+    overflow: hidden; border-left: 4px solid var(--none); }
+  .repo.sev-high { border-left-color: var(--high); } .repo.sev-medium { border-left-color: var(--med); }
+  .repo.sev-none { border-left-color: var(--safe); }
+  .repo-head { display: flex; gap: 12px; align-items: center; padding: 13px 16px; cursor: pointer; width: 100%;
+    background: none; border: none; text-align: left; color: inherit; font: inherit; }
+  .repo-head:hover { background: var(--panel); }
+  .repo-title { font-weight: 630; font-size: 1rem; margin: 0; flex: 1; min-width: 0; }
+  .repo-title .venue { display: block; font-family: var(--mono); font-size: .74rem; color: var(--faint); font-weight: 500; margin-top: 2px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .verdict { font-family: var(--mono); font-size: .74rem; font-weight: 700; letter-spacing: .04em; padding: 4px 9px; border-radius: 6px; white-space: nowrap; }
+  .verdict.safe { background: var(--safe-bg); color: var(--safe); }
+  .verdict.risk { background: var(--high-bg); color: var(--high); }
+  .verdict.risk.med { background: var(--med-bg); color: var(--med); }
+  .midchips { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; max-width: 210px; }
+  @media (max-width: 700px) { .midchips { display: none; } }
+  .midchip { font-family: var(--mono); font-size: .7rem; color: var(--muted); background: var(--panel); border: 1px solid var(--border);
+    padding: 1px 5px; border-radius: 5px; }
+  .caret { color: var(--faint); font-family: var(--mono); transition: transform .18s; flex-shrink: 0; }
+  .repo.open .caret { transform: rotate(90deg); }
+
+  .detail { display: none; padding: 4px 16px 18px; border-top: 1px solid var(--border); }
+  .repo.open .detail { display: block; }
+  .d-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 26px; margin-top: 14px; }
+  @media (max-width: 640px) { .d-grid { grid-template-columns: 1fr; } }
+  .field .flab { font-family: var(--mono); font-size: .7rem; text-transform: uppercase; letter-spacing: .07em; color: var(--faint); margin-bottom: 3px; }
+  .field .fval { font-size: .9rem; color: var(--ink); }
+  .field.span2 { grid-column: 1 / -1; }
+  .metarow { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 12px; }
+  .tag { font-family: var(--mono); font-size: .72rem; padding: 3px 8px; border-radius: 6px; background: var(--panel); border: 1px solid var(--border); color: var(--muted); }
+  .fix { background: var(--panel); border-radius: 8px; padding: 10px 12px; font-size: .9rem; }
+  .fix .flab { color: var(--accent); }
+  .ev { font-family: var(--mono); font-size: .78rem; color: var(--muted); background: var(--panel); border-radius: 8px; padding: 10px 12px;
+    white-space: pre-wrap; word-break: break-word; max-height: 150px; overflow-y: auto; }
+  .dlinks { display: flex; gap: 14px; margin-top: 14px; font-family: var(--mono); font-size: .82rem; }
+
+  footer { margin-top: 54px; padding-top: 22px; border-top: 1px solid var(--border); color: var(--muted); font-size: .86rem; }
+  footer .caveat { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-bottom: 16px; }
+  footer .caveat b { color: var(--ink); }
+  .tooltip { position: fixed; z-index: 50; background: var(--ink); color: var(--bg); font-family: var(--mono); font-size: .76rem;
+    padding: 6px 9px; border-radius: 6px; pointer-events: none; opacity: 0; transition: opacity .1s; max-width: 260px; box-shadow: var(--shadow); }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Provider Routing Inspector</div>
+    <h1>Same model, <span class="hl">different weights.</span><br>Does anyone pin them down?</h1>
+    <p class="lede">OpenRouter serves "a model" from whichever provider is cheapest-and-up — at any
+      quantization down to int4, dropping sampling params it doesn't support, <strong>silently</strong>.
+      We audited <strong id="lede-n">35</strong> influential research repos that route model calls through it.
+      Here's who controls for it — and who's rolling the dice.</p>
+    <div class="stats" id="stats"></div>
+  </header>
+
+  <section id="roulette-sec">
+    <div class="sec-head"><h2>▶ Routing Roulette</h2></div>
+    <p class="sec-sub">This is what "default routing" does. You ask for one model; OpenRouter picks a
+      backend for you. Press the button a few times — same request, same slug, watch the provider and the
+      <em>precision</em> change underneath you.</p>
+    <div class="roulette">
+      <div class="roul-left">
+        <div class="mono" style="color:var(--faint);font-size:.82rem">POST /chat/completions &nbsp;·&nbsp; model: <span style="color:var(--ink)">deepseek/deepseek-r1</span></div>
+        <div class="req-line"><span class="arrow">└─▶ routed to </span><span class="prov" id="roul-prov">—</span><span class="qbadge" id="roul-q">press start</span></div>
+        <div class="roul-controls">
+          <button class="btn primary" id="roul-btn">Send a request →</button>
+          <button class="btn" id="roul-reset">Reset</button>
+        </div>
+        <div class="verdict-note" id="roul-note">Default OpenRouter routing has no <span class="mono">quantizations</span>, no <span class="mono">order</span>, no <span class="mono">require_parameters</span>. What you get is whatever's cheap right now.</div>
+      </div>
+      <div class="roul-right">
+        <h3>Request log</h3>
+        <div class="log" id="roul-log"></div>
+        <div class="tally">
+          <div class="t">Requests<b id="t-req">0</b></div>
+          <div class="t">Distinct backends<b id="t-back">0</b></div>
+          <div class="t">Quantized hits<b id="t-quant" style="color:var(--high)">0</b></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>◆ Which mistakes show up</h2>
+      <span class="sec-sub" style="margin:0">click a bar to filter the table below</span></div>
+    <div class="chart" id="chart"></div>
+    <div class="legend">
+      <span class="k"><span class="swatch" style="background:var(--high)"></span> High severity — can distort a result</span>
+      <span class="k"><span class="swatch" style="background:var(--med)"></span> Medium — reproducibility / leakage / disclosure</span>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>▤ The 35 repos</h2></div>
+    <div class="controls" id="controls">
+      <div class="grp"><span class="glab">verdict</span>
+        <button class="chip" data-f="verdict" data-v="all" aria-pressed="true">all</button>
+        <button class="chip" data-f="verdict" data-v="safe">safe</button>
+        <button class="chip" data-f="verdict" data-v="risk">at&nbsp;risk</button></div>
+      <div class="grp"><span class="glab">severity</span>
+        <button class="chip" data-f="sev" data-v="all" aria-pressed="true">all</button>
+        <button class="chip" data-f="sev" data-v="high">high</button>
+        <button class="chip" data-f="sev" data-v="medium">med</button>
+        <button class="chip" data-f="sev" data-v="none">none</button></div>
+      <select class="sortsel" id="sortsel" aria-label="Sort by">
+        <option value="sev">sort: severity</option>
+        <option value="mistakes">sort: # mistakes</option>
+        <option value="title">sort: name A–Z</option>
+        <option value="venue">sort: venue</option>
+      </select>
+      <input class="search" id="search" type="search" placeholder="search name / venue…" aria-label="Search">
+    </div>
+    <div class="count-line" id="countline"></div>
+    <div class="list" id="list"></div>
+  </section>
+
+  <footer>
+    <div class="caveat"><b>Read this correctly.</b> “At risk” means the code leaves a known
+      provider-routing corruption channel <b>open and uncontrolled</b> — not that any published number is
+      wrong. We audited how each repo routes model calls (then adversarially re-checked every verdict against
+      the source); we did not re-run experiments across providers to measure the actual delta. Highest real
+      risk is on <b>open-weight</b> models on <b>critical routes</b> (output feeds a reported number, a
+      training set, or a safety measurement).</div>
+    <div>Method &amp; full data: <a href="https://github.com/AMindToThink/openrouter_reliable_research_search" target="_blank" rel="noopener">openrouter_reliable_research_search</a>
+      · Each verdict = one audit agent + one adversarial verifier reading the actual source. · Selection was importance-first, not mistake-first.</div>
+  </footer>
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+const DATA = /*__DATA__*/[];
+const TAX = {
+  M1:["Unpinned quantization","high"], M2:["Silent parameter dropping","high"],
+  M3:["Probabilistic provider routing","high"], M4:["No provenance logging","high"],
+  M5:["Data-policy leakage","med"], M6:["Model version drift","med"],
+  M7:["seed→determinism assumption","med"], M8:["Cross-provider comparison confound","high"],
+  M9:["Judge on unconstrained route","high"], M10:["No reporting","med"],
+  M11:["Silent backend mixing","med"], M12:["Cheap/degraded route chosen","med"]
+};
+const $ = s => document.querySelector(s);
+const esc = s => (s||"").replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+
+/* ---------- stats ---------- */
+(function(){
+  const n = DATA.length;
+  const unsafe = DATA.filter(d=>!d.safe).length;
+  const safe = n-unsafe;
+  const crit = DATA.filter(d=>d.critical).length;
+  const high = DATA.filter(d=>d.severity==="high").length;
+  $("#lede-n").textContent = n;
+  const cards = [
+    {cls:"s-high", n:unsafe, sub:"/"+n, lab:"leave a corruption channel open"},
+    {cls:"s-high", n:Math.round(100*unsafe/n)+"%", sub:"", lab:"of audited repos are at risk"},
+    {cls:"", n:crit, sub:"/"+n, lab:"route it into a result that matters"},
+    {cls:"s-med", n:high, sub:"", lab:"carry a high-severity gap"},
+    {cls:"s-safe", n:safe, sub:"", lab:"control for it properly"},
+  ];
+  $("#stats").innerHTML = cards.map(c=>`<div class="stat ${c.cls}">
+    <div class="n tnum">${c.n}<small>${c.sub}</small></div><div class="lab">${c.lab}</div></div>`).join("");
+})();
+
+/* ---------- chart ---------- */
+const freq = {};
+Object.keys(TAX).forEach(m=>freq[m]=0);
+DATA.forEach(d=>(d.mids||[]).forEach(m=>{ if(m in freq) freq[m]++; }));
+const order = Object.keys(TAX).sort((a,b)=>freq[b]-freq[a]);
+const maxF = Math.max(...Object.values(freq));
+$("#chart").innerHTML = order.map(m=>{
+  const [name,sev]=TAX[m];
+  return `<div class="bar-row" data-m="${m}" role="button" tabindex="0" aria-label="${m} ${name}, ${freq[m]} repos">
+    <div class="bar-lab"><span class="mid">${m}</span><span class="mname">${name}</span></div>
+    <div class="track"><div class="fill ${sev}" data-w="${(freq[m]/maxF*100).toFixed(1)}"></div></div>
+    <div class="bar-ct tnum">${freq[m]}</div></div>`;
+}).join("");
+requestAnimationFrame(()=>document.querySelectorAll(".fill").forEach(f=>f.style.width=f.dataset.w+"%"));
+
+/* chart interactions: hover tooltip + click-to-filter */
+const tip = $("#tooltip");
+function showTip(html,x,y){ tip.innerHTML=html; tip.style.opacity=1; tip.style.left=Math.min(x+12,innerWidth-260)+"px"; tip.style.top=(y+14)+"px"; }
+function hideTip(){ tip.style.opacity=0; }
+document.querySelectorAll(".bar-row").forEach(row=>{
+  const m=row.dataset.m, [name,sev]=TAX[m];
+  row.addEventListener("mousemove",e=>showTip(`<b>${m} · ${name}</b> — ${sev.toUpperCase()} severity · ${freq[m]} of ${DATA.length} repos`,e.clientX,e.clientY));
+  row.addEventListener("mouseleave",hideTip);
+  row.addEventListener("click",()=>toggleMistake(m));
+  row.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){e.preventDefault();toggleMistake(m);} });
+});
+
+/* ---------- explorer ---------- */
+const state = { verdict:"all", sev:"all", q:"", sort:"sev", mistake:null };
+const SEVRANK = {high:0, medium:1, none:2, low:1};
+
+function toggleMistake(m){
+  state.mistake = state.mistake===m ? null : m;
+  document.querySelectorAll(".bar-row").forEach(r=>r.classList.toggle("active", r.dataset.m===state.mistake));
+  render();
+  if(state.mistake) $("#list").scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+document.querySelectorAll("#controls .chip").forEach(ch=>{
+  ch.addEventListener("click",()=>{
+    const f=ch.dataset.f, v=ch.dataset.v;
+    (f==="verdict"?state.verdict=v:state.sev=v);
+    document.querySelectorAll(`.chip[data-f="${f}"]`).forEach(c=>c.setAttribute("aria-pressed", c.dataset.v===v));
+    render();
+  });
+});
+$("#search").addEventListener("input",e=>{ state.q=e.target.value.toLowerCase(); render(); });
+$("#sortsel").addEventListener("change",e=>{ state.sort=e.target.value; render(); });
+
+function passes(d){
+  if(state.verdict==="safe" && !d.safe) return false;
+  if(state.verdict==="risk" && d.safe) return false;
+  if(state.sev!=="all" && d.severity!==state.sev) return false;
+  if(state.mistake && !(d.mids||[]).includes(state.mistake)) return false;
+  if(state.q){ const h=(d.title+" "+d.venue).toLowerCase(); if(!h.includes(state.q)) return false; }
+  return true;
+}
+function sortRows(a,b){
+  if(state.sort==="sev") return (SEVRANK[a.severity]-SEVRANK[b.severity]) || (b.mids.length-a.mids.length) || a.title.localeCompare(b.title);
+  if(state.sort==="mistakes") return b.mids.length-a.mids.length || a.title.localeCompare(b.title);
+  if(state.sort==="venue") return (a.venue||"").localeCompare(b.venue||"");
+  return a.title.localeCompare(b.title);
+}
+function repoCard(d,i){
+  const sevcls = d.safe ? "sev-none" : (d.severity==="medium"?"sev-medium":"sev-high");
+  const vcls = d.safe ? "safe" : (d.severity==="medium"?"risk med":"risk");
+  const vtxt = d.safe ? "SAFE" : "AT RISK";
+  const chips = (d.mids||[]).slice(0,6).map(m=>`<span class="midchip">${m}</span>`).join("");
+  const mt = {open_weight:"open-weight",proprietary:"proprietary",mixed:"mixed",unknown:"?"}[d.model_type]||d.model_type;
+  const safeg = (d.safeguards||[]).map(s=>`<span class="tag">${esc(s.split("(")[0].trim())}</span>`).join("") || `<span class="tag">none found</span>`;
+  return `<div class="repo ${sevcls}" data-i="${i}">
+    <button class="repo-head" aria-expanded="false">
+      <span class="caret">▸</span>
+      <span class="repo-title">${esc(d.title.split(" (")[0])}<span class="venue">${esc(d.venue||"")}</span></span>
+      <span class="midchips">${chips}</span>
+      <span class="verdict ${vcls}">${vtxt}</span>
+    </button>
+    <div class="detail">
+      <div class="metarow">
+        <span class="tag">${mt}</span>
+        <span class="tag">${d.critical?"critical route":"non-critical"}</span>
+        <span class="tag">severity: ${d.severity}</span>
+        <span class="tag">awareness: ${(d.awareness||"").replace(/_/g," ")}</span>
+        <span class="tag">confidence: ${d.confidence}</span>
+      </div>
+      <div class="d-grid">
+        <div class="field span2"><div class="flab">What it is</div><div class="fval">${esc(d.summary)}</div></div>
+        <div class="field"><div class="flab">Why it matters</div><div class="fval">${esc(d.importance)}</div></div>
+        <div class="field"><div class="flab">What they use OpenRouter for</div><div class="fval">${esc(d.use)}</div></div>
+        ${d.safe
+          ? `<div class="field span2"><div class="flab">Why it's safe</div><div class="fval">${esc(d.notes)}</div></div>`
+          : `<div class="field span2"><div class="flab">The problem</div><div class="fval">${esc(d.mistakes)}</div></div>`}
+        <div class="field span2"><div class="flab">Safeguards present</div><div class="fval"><div class="metarow" style="margin-top:2px">${safeg}</div></div></div>
+        ${d.fix ? `<div class="field span2"><div class="fix"><div class="flab">▸ one-line fix</div>${esc(d.fix)}</div></div>`:""}
+        <div class="field span2"><div class="flab">Evidence (from source)</div><div class="ev">${esc(d.evidence)}</div></div>
+      </div>
+      <div class="dlinks">
+        ${(d.code && d.code_ref && d.code_ref!=="(repo)")?`<a href="${esc(d.code)}" target="_blank" rel="noopener">▸ call site: <span class="mono">${esc(d.code_ref)}</span> ↗</a>`:""}
+        ${d.repo?`<a href="${esc(d.repo)}" target="_blank" rel="noopener">repo ↗</a>`:""}
+        ${d.paper?`<a href="${esc(d.paper)}" target="_blank" rel="noopener">paper ↗</a>`:""}
+      </div>
+    </div></div>`;
+}
+function render(){
+  const rows = DATA.map((d,i)=>({d,i})).filter(o=>passes(o.d)).sort((a,b)=>sortRows(a.d,b.d));
+  const cl = $("#countline");
+  const filt = state.mistake ? ` · filtered to <b>${state.mistake} ${TAX[state.mistake][0]}</b> <a href="#" id="clearm">clear</a>` : "";
+  cl.innerHTML = `showing <b>${rows.length}</b> of ${DATA.length}${filt}`;
+  $("#list").innerHTML = rows.map(o=>repoCard(o.d,o.i)).join("");
+  if(state.mistake){ const c=$("#clearm"); if(c) c.addEventListener("click",e=>{e.preventDefault();toggleMistake(state.mistake);}); }
+  document.querySelectorAll(".repo-head").forEach(h=>h.addEventListener("click",()=>{
+    const r=h.closest(".repo"); const open=r.classList.toggle("open");
+    h.setAttribute("aria-expanded", open);
+  }));
+}
+render();
+
+/* ---------- routing roulette ---------- */
+const PROVIDERS = [
+  ["DeepInfra","fp8"],["Together","fp16"],["Novita","fp8"],["Fireworks","bf16"],
+  ["Hyperbolic","fp16"],["DeepInfra","int4"],["Lambda","fp8"],["Nebius","fp16"],
+  ["GMICloud","int8"],["Kluster","unknown"],["Parasail","fp8"],["NCompass","fp4"]
+];
+let rReq=0, rBack=new Set(), rQuant=0;
+function roul(){
+  const [p,q] = PROVIDERS[Math.floor(Math.random()*PROVIDERS.length)];
+  rReq++; rBack.add(p+"@"+q);
+  const bad = ["int4","int8","fp4","unknown"].includes(q);
+  if(bad) rQuant++;
+  $("#roul-prov").textContent = p;
+  const qb=$("#roul-q"); qb.textContent="@ "+q; qb.className="qbadge "+(bad?"bad":"good");
+  const log=$("#roul-log");
+  const div=document.createElement("div");
+  div.innerHTML = `#${String(rReq).padStart(2,"0")} → ${p} <span style="color:${bad?'var(--high)':'var(--safe)'}">@${q}</span>`;
+  log.prepend(div); while(log.children.length>8) log.removeChild(log.lastChild);
+  $("#t-req").textContent=rReq; $("#t-back").textContent=rBack.size; $("#t-quant").textContent=rQuant;
+  const note=$("#roul-note");
+  if(rReq>=3 && rBack.size>=3) note.innerHTML = `<b>${rBack.size} different backends in ${rReq} requests.</b> If your eval reran here, each run measured a different artifact — and ${rQuant>0?`<b>${rQuant}</b> came back quantized`:`some will come back quantized`}. That's mistakes <span class="mono">M1</span>+<span class="mono">M3</span>, live.`;
+  else if(bad) note.innerHTML = `⚠️ <b>Quantized.</b> You just got ${p} at <b>${q}</b> — lower precision than a bf16/fp16 route. Your prompt never asked for that.`;
+  else note.innerHTML = `Got ${p} @ ${q}. Press again — nothing pins it, so the next one can differ.`;
+}
+$("#roul-btn").addEventListener("click",roul);
+$("#roul-reset").addEventListener("click",()=>{
+  rReq=0;rBack=new Set();rQuant=0;
+  $("#roul-log").innerHTML="";$("#t-req").textContent=0;$("#t-back").textContent=0;$("#t-quant").textContent=0;
+  $("#roul-prov").textContent="—";const qb=$("#roul-q");qb.textContent="press start";qb.className="qbadge";
+  $("#roul-note").innerHTML=`Default OpenRouter routing has no <span class="mono">quantizations</span>, no <span class="mono">order</span>, no <span class="mono">require_parameters</span>. What you get is whatever's cheap right now.`;
+});
+</script>
