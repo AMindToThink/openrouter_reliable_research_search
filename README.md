@@ -53,9 +53,9 @@ adversarial verifier** reading the actual source. Numbers below are generated fr
 
 - **31 / 35 (89%)** leave at least one *uncontrolled* provider-routing corruption channel open.
 - **32 / 35** route OpenRouter output straight into a reported number, a training set, or a safety measurement.
-- **109 specific claims/figures** across **30 repos** were traced to an OpenRouter-routed call and could
+- **113 specific claims/figures** across **31 repos** were traced to an OpenRouter-routed call and could
   be affected — each named down to the figure/table/number, with its mechanism and a
-  *"does this really depend on OpenRouter?"* confidence. (35 high-impact, 56 medium, 18 low.)
+  *"does this really depend on OpenRouter?"* confidence. (34 high-impact, 53 medium, 26 low.)
 - **23** carry a **high-severity** gap (can distort a result, not just reproducibility).
 - Only **4** control for it properly — and the cleanest, `nostalgebraist/cot_legibility`, is
   exemplary precisely because *provider choice is its research question*.
@@ -68,9 +68,10 @@ adversarial verifier** reading the actual source. Numbers below are generated fr
 > model calls; we did not re-run experiments across providers to measure the actual delta. See
 > [`findings/methodology.md`](findings/methodology.md).
 >
-> 18 of 35 impact analyses completed adversarial verification; the rest were cut short when the
-> **Anthropic account running the audit agents hit its usage limit** (unrelated to OpenRouter — this
-> project has never held or used an OpenRouter API key) and are flagged `impact_verified: false`.
+> **All 35 rows completed adversarial verification** — a second agent re-read the paper and code and
+> was told to drop any cited figure it could not find in the real source. That stage earns its keep:
+> it caught a first-pass agent inventing numbers for one repo, and a paper whose reproducibility
+> appendix claims a model was called "via Google AI" when the code hardcodes an OpenRouter slug.
 
 ## Deliverables
 

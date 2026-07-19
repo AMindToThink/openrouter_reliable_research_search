@@ -34,13 +34,13 @@
     "M12": 1
   },
   "impacted": {
-    "repos_with_impacted_findings": 30,
-    "total_findings": 109,
+    "repos_with_impacted_findings": 31,
+    "total_findings": 113,
     "by_severity": {
-      "high": 35,
-      "medium": 56,
-      "low": 18
+      "high": 34,
+      "medium": 53,
+      "low": 26
     },
-    "impact_verified_rows": 18
+    "impact_verified_rows": 35
   }
 }

@@ -1,6 +1,6 @@
 # Findings — do important research repos use OpenRouter reliably?
 
-> **31 of 35** surveyed important research repos (89%) leave at least one uncontrolled provider-routing corruption channel open. **32 of 35** route OpenRouter output straight into a reported result, a training set, or a safety measurement. We traced **109 specific claims/figures** across **30 repos** that could be affected.
+> **31 of 35** surveyed important research repos (89%) leave at least one uncontrolled provider-routing corruption channel open. **32 of 35** route OpenRouter output straight into a reported result, a training set, or a safety measurement. We traced **113 specific claims/figures** across **31 repos** that could be affected.
 
 **Read this correctly.** *At risk* means *exposed to a known corruption channel that was not controlled for* — **not** that any published number is wrong. *Possibly-impacted findings* are **hypotheses worth checking, not demonstrated errors**. We audited how the code routes model calls; we did not re-run experiments across providers to measure the actual delta. See `methodology.md`.
 
@@ -9,7 +9,8 @@
 - Repos audited: **35** (importance-first: NeurIPS/ICML/ICLR/ACL/NAACL/Nature + UK AISI/METR/Redwood/Palisade/Anthropic-Fellows + LessWrong/AF)
 - Use it **safely**: **4**  ·  **unsafe**: **31**
 - Severity: **23 high**, 8 medium, 4 none
-- **Specific possibly-impacted findings: 109** (35 high-impact, 56 medium, 18 low) across 30/35 repos
+- **Specific possibly-impacted findings: 113** (34 high-impact, 53 medium, 26 low) across 31/35 repos
+- Adversarial verification completed for **35/35** rows
 - Author awareness: 2 aware & handled, 19 partially aware, 13 unaware
 
 ## Most common mistakes
@@ -33,14 +34,12 @@
 
 Each row of `survey.csv` carries a **Possibly-impacted findings** column naming the exact figure/table/number and the mechanism. A few illustrative ones:
 
-- **AI Diplomacy** — *arXiv:2508.07485 (Duffy, Paech et al., 'Democratizing Diplomacy'), Contributions list (end of Introduction) + Figure 3 (left) + Table 2*: Central scaling claim — contribution #2: "comprehensive benchmarking across 13 contemporary models show[ing]... clear performance scaling with model size"; operationalized in Figure 3 (left,
-- **AI Induced Psychosis: A shallow investigation** — *graphs/intro.png (results_analysis.R lines 107-117) and graphs/delulu.png (same regression object reused, lines 217-222); lead figure of the post. Verified by downloading results_analysis.R directly.*: Headline chart 'Many AIs Encourage Users' Delusions' (graphs/intro.png / graphs/delulu.png), feols regression of delusion_confirmation_rating (0-4) on target_model — the post's central model
-- **ARC-AGI Benchmarking** — *arcprize.org/leaderboard, the live results source arXiv:2505.11831 §6 names for 'complete updated scores'; not a row in the paper's static Table 1 (verified: Table 1, p.8, lists only o3-mini/o3/ARChitects/o4-mini/Icecuber/o1-pro/Claude 3.7, none of them DeepSeek)*: Official ARC-AGI Leaderboard entry for DeepSeek R1-0528, model config 'deepseek_r1_0528-openrouter' (model_name: deepseek/deepseek-r1-0528, models.yml lines 1458-1465, provider: openrouter, 
+- **AI Diplomacy** — *arXiv:2508.07485 (Duffy, Paech et al., 'Democratizing Diplomacy'), Contributions list (end of Introduction) + Figure 3 (*: Central scaling claim — contribution #2: "comprehensive benchmarking across 13 contemporary models show[ing]... clear performance scaling with model size"; operationalized in Figure 3 (left,
+- **AI Induced Psychosis: A shallow investigation** — *graphs/intro.png (results_analysis.R lines 107-117) and graphs/delulu.png (same regression object reused, lines 217-222)*: Headline chart 'Many AIs Encourage Users' Delusions' (graphs/intro.png / graphs/delulu.png), feols regression of delusion_confirmation_rating (0-4) on target_model — the post's central model
+- **ARC-AGI Benchmarking** — *arcprize.org/leaderboard, the live results source arXiv:2505.11831 §6 names for 'complete updated scores'; not a row in *: Official ARC-AGI Leaderboard entry for DeepSeek R1-0528, model config 'deepseek_r1_0528-openrouter' (model_name: deepseek/deepseek-r1-0528, models.yml lines 1458-1465, provider: openrouter, 
 - **AgentLab** — *Table 2 (Section 6.2 'Results')*: Llama-3.1-405B-Instruct and Llama-3.1-70B-Instruct success rates in Table 2, listed as 405B/70B: WorkArena L1 43.3%±2.7 / 27.9%±2.5, WebArena 24.0%±1.5 / 18.4%±1.4, MiniWoB 64.6%±1.9 / 57.6%
-- **EQ-Bench Creative Writing Bench + Judgemark-v2** — *eqbench.com/judgemark-v2.html leaderboard, live data confirmed directly in judgemark-v2.js `leaderboardDataV2` (fetched and checked byte-for-byte). Note: the repo's committed results/scores.csv is a stale v2.0-methodology sample with a completely different model roster (deepseek-ai/deepseek-r1=76.97, microsoft/wizardlm-2-8x22b=55.42, liquid/lfm-7b=10.24) that contains none of the models above — the original candidate list's citation of that file as corroboration for these specific numbers was misleading, though the live-JS numbers themselves check out exactly.*: Judgemark-v2 live judge-leaderboard scores/ranks for open-weight judges (eqbench.com/judgemark-v2.html): zai-org/GLM-5 judgemark_score=85.58 (rank 1) vs *Qwen/Qwen3.5-397B-A17B=85.45 (rank 2
-- **Hereditary Traits Distillation** — *reports/report_25_depression_teacher_control/README.md and reports/report_24_nemotron_blackmail_transfer/README.md (verified against repo; these are the real numbers -- the original candidate's figures of '~3.5/10, ~2.1/10, ~1.5/10', '0.68/0.63 filtering', and '~26%, 116/450 across 3 seeds' do not match anything in the repo and appear fabricated/conflated with unrelated metrics, e.g. 450 is the n from the *Chinese-censorship* eval, not blackmail). Teacher-rollout generation: scripts/generate_gm4_31b_20k.py (google/gemma-4-31b-it, force_provider='openrouter', no provider key at all) and scripts/generate_think_traces.py (DEFAULT_MODEL='google/gemma-4-31b-it', force_provider='openrouter', no restriction). Llama-3.1-70B control rollouts: scripts/generate_qwen35_9b_20k.py invoked with an explicit --no-us-only flag (report_25 'Reproduce' section), i.e. the provider allowlist that exists in this exact script was deliberately turned OFF for the control teacher.*: Negative-emotion transfer headline delta (Gemma-3-27B-it teacher mean negativity 1.39 -> Gemma-distilled Qwen3.5-9B-Base student 0.82 [0.72,0.93] vs Llama-3.1-70B-instruct control 0.36 [0.21
-
-> 18 of 35 impact analyses completed adversarial verification; the remainder were cut short when the Anthropic account running the audit agents hit its usage limit — unrelated to OpenRouter, which was never called and for which this project holds no API key — and are flagged `impact_verified: false` (treat as first-pass).
+- **EQ-Bench Creative Writing Bench + Judgemark-v2** — *eqbench.com/judgemark-v2.html leaderboard, live data confirmed directly in judgemark-v2.js `leaderboardDataV2` (fetched *: Judgemark-v2 live judge-leaderboard scores/ranks for open-weight judges (eqbench.com/judgemark-v2.html): zai-org/GLM-5 judgemark_score=85.58 (rank 1) vs *Qwen/Qwen3.5-397B-A17B=85.45 (rank 2
+- **Hereditary Traits Distillation** — *reports/report_25_depression_teacher_control/README.md and reports/report_24_nemotron_blackmail_transfer/README.md (veri*: Negative-emotion transfer headline delta (Gemma-3-27B-it teacher mean negativity 1.39 -> Gemma-distilled Qwen3.5-9B-Base student 0.82 [0.72,0.93] vs Llama-3.1-70B-instruct control 0.36 [0.21
 
 ## The repos that use it safely (and why)
 
@@ -74,19 +73,19 @@ Each row of `survey.csv` carries a **Possibly-impacted findings** column naming 
 | Seer | Alignment Forum | ❌ | high | M2, M4, M5 | 3 |
 | ctfish | arXiv (ICML-format write | ❌ | high | M1, M2, M3, M4, M5, M6, M8, M10 | 2 |
 | diffing-toolkit | Alignment Forum | ❌ | high | M4, M5, M6 | 4 |
-| lighteval — Swiss-Legal / LEXam LLM-as-judge | ICLR 2026 (LEXam: Benchm | ❌ | high | M1, M3, M4, M5, M6, M8, M10, M11 | 3 |
-| safety-tooling | Multiple (shared infra:  | ❌ | high | M1, M2, M3, M4, M5, M8, M9, M10, M11 | 5 |
-| Evaluating LLMs for accuracy incentivizes ha | Nature (2026) | ❌ | medium | M4, M6 | 4 |
-| Inspect AI | UK AISI (govt AI safety  | ❌ | medium | M1, M2, M3, M5, M9 | 4 |
+| lighteval — Swiss-Legal / LEXam LLM-as-judge | ICLR 2026 (LEXam: Benchm | ❌ | high | M1, M3, M4, M5, M6, M8, M10, M11 | 4 |
+| safety-tooling | Multiple (shared infra:  | ❌ | high | M1, M2, M3, M4, M5, M8, M9, M10, M11 | 6 |
+| Evaluating LLMs for accuracy incentivizes ha | Nature (2026) | ❌ | medium | M4, M6 | 5 |
+| Inspect AI | UK AISI (govt AI safety  | ❌ | medium | M1, M2, M3, M5, M9 | 5 |
 | MathArena | ETH Zurich SRI Lab (Mart | ❌ | medium | M1, M2, M3, M5, M8 | 5 |
 | OSWorld | NeurIPS 2024 (Datasets a | ❌ | medium | M4, M5, M6 | 2 |
 | OpenHands | arXiv (other) | ❌ | medium | M1, M2, M3, M4, M5, M6, M8, M10 | 1 |
-| Prometheus 2 / BiGGen-Bench | NAACL 2025 (BiGGen-Bench | ❌ | medium | M4, M5, M6, M10 | 3 |
+| Prometheus 2 / BiGGen-Bench | NAACL 2025 (BiGGen-Bench | ❌ | medium | M4, M5, M6, M10 | 2 |
 | openbench | Industry (Groq, official | ❌ | medium | M1, M2, M3, M5, M7 | 3 |
 | tau2-bench | arXiv (Sierra AI); tau-b | ❌ | medium | M1, M3, M4, M5 | 3 |
 | Bespoke Curator | Open-source tool (Bespok | ✅ | none | — | 0 |
 | OASIS | arXiv 2024 | ✅ | none | — | 0 |
 | Palisade Research — robot_shutdown_resistanc | other (Palisade Research | ✅ | none | — | 0 |
-| R1 CoT Illegibility Revisited | LessWrong | ✅ | none | — | 0 |
+| R1 CoT Illegibility Revisited | LessWrong | ✅ | none | — | 1 |
 
 See `survey.csv` / `survey.json` for full detail (evidence, call-site permalink, one-line fix, per-claim mechanism and confidence).
