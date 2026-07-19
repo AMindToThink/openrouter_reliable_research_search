@@ -189,6 +189,8 @@
   .imp .sevrow { display: flex; gap: 6px; margin-top: 5px; }
   .unver { background: var(--med-bg); color: var(--med); font-family: var(--mono); font-size: .68rem;
     padding: 2px 7px; border-radius: 5px; }
+  .simbadge { background: var(--med-bg); color: var(--med); font-family: var(--mono); font-size: .64rem;
+    letter-spacing: .06em; padding: 3px 8px; border-radius: 5px; margin-left: 10px; vertical-align: middle; }
 
   footer { margin-top: 54px; padding-top: 22px; border-top: 1px solid var(--border); color: var(--muted); font-size: .86rem; }
   footer .caveat { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-bottom: 16px; }
@@ -211,22 +213,25 @@
   </header>
 
   <section id="roulette-sec">
-    <div class="sec-head"><h2>▶ Routing Roulette</h2></div>
-    <p class="sec-sub">This is what "default routing" does. You ask for one model; OpenRouter picks a
-      backend for you. Press the button a few times — same request, same slug, watch the provider and the
-      <em>precision</em> change underneath you.</p>
+    <div class="sec-head"><h2>▶ Routing Roulette <span class="simbadge">SIMULATED — makes no real requests</span></h2></div>
+    <p class="sec-sub">A <strong>teaching toy, not a measurement.</strong> It draws at random from an
+      <em>illustrative</em> list of provider/precision pairs to show the <em>shape</em> of what default
+      routing does — you ask for one model, OpenRouter picks a backend for you. The provider names are
+      real OpenRouter providers, but <strong>the specific provider↔quantization pairings below are made
+      up for illustration and are not claims about what any provider actually serves.</strong> For real
+      endpoint data, query OpenRouter's live models/endpoints API.</p>
     <div class="roulette">
       <div class="roul-left">
-        <div class="mono" style="color:var(--faint);font-size:.82rem">POST /chat/completions &nbsp;·&nbsp; model: <span style="color:var(--ink)">deepseek/deepseek-r1</span></div>
+        <div class="mono" style="color:var(--faint);font-size:.82rem"><span style="color:var(--med)">[SIMULATED]</span> POST /chat/completions &nbsp;·&nbsp; model: <span style="color:var(--ink)">an open-weight model</span></div>
         <div class="req-line"><span class="arrow">└─▶ routed to </span><span class="prov" id="roul-prov">—</span><span class="qbadge" id="roul-q">press start</span></div>
         <div class="roul-controls">
           <button class="btn primary" id="roul-btn">Send a request →</button>
           <button class="btn" id="roul-reset">Reset</button>
         </div>
-        <div class="verdict-note" id="roul-note">Default OpenRouter routing has no <span class="mono">quantizations</span>, no <span class="mono">order</span>, no <span class="mono">require_parameters</span>. What you get is whatever's cheap right now.</div>
+        <div class="verdict-note" id="roul-note">Simulation only — nothing is sent anywhere. Default OpenRouter routing sets no <span class="mono">quantizations</span>, no <span class="mono">order</span>, no <span class="mono">require_parameters</span>, so you get whatever is cheap and up at that moment.</div>
       </div>
       <div class="roul-right">
-        <h3>Request log</h3>
+        <h3>Simulated request log</h3>
         <div class="log" id="roul-log"></div>
         <div class="tally">
           <div class="t">Requests<b id="t-req">0</b></div>
@@ -479,7 +484,7 @@ function roul(){
   log.prepend(div); while(log.children.length>8) log.removeChild(log.lastChild);
   $("#t-req").textContent=rReq; $("#t-back").textContent=rBack.size; $("#t-quant").textContent=rQuant;
   const note=$("#roul-note");
-  if(rReq>=3 && rBack.size>=3) note.innerHTML = `<b>${rBack.size} different backends in ${rReq} requests.</b> If your eval reran here, each run measured a different artifact — and ${rQuant>0?`<b>${rQuant}</b> came back quantized`:`some will come back quantized`}. That's mistakes <span class="mono">M1</span>+<span class="mono">M3</span>, live.`;
+  if(rReq>=3 && rBack.size>=3) note.innerHTML = `<b>${rBack.size} different backends in ${rReq} requests.</b> If your eval reran here, each run measured a different artifact — and ${rQuant>0?`<b>${rQuant}</b> came back quantized`:`some will come back quantized`}. That's what mistakes <span class="mono">M1</span>+<span class="mono">M3</span> look like.`;
   else if(bad) note.innerHTML = `⚠️ <b>Quantized.</b> You just got ${p} at <b>${q}</b> — lower precision than a bf16/fp16 route. Your prompt never asked for that.`;
   else note.innerHTML = `Got ${p} @ ${q}. Press again — nothing pins it, so the next one can differ.`;
 }
@@ -488,6 +493,6 @@ $("#roul-reset").addEventListener("click",()=>{
   rReq=0;rBack=new Set();rQuant=0;
   $("#roul-log").innerHTML="";$("#t-req").textContent=0;$("#t-back").textContent=0;$("#t-quant").textContent=0;
   $("#roul-prov").textContent="—";const qb=$("#roul-q");qb.textContent="press start";qb.className="qbadge";
-  $("#roul-note").innerHTML=`Default OpenRouter routing has no <span class="mono">quantizations</span>, no <span class="mono">order</span>, no <span class="mono">require_parameters</span>. What you get is whatever's cheap right now.`;
+  $("#roul-note").innerHTML=`Simulation only — nothing is sent anywhere. Default OpenRouter routing sets no <span class="mono">quantizations</span>, no <span class="mono">order</span>, no <span class="mono">require_parameters</span>, so you get whatever is cheap and up at that moment.`;
 });
 </script>
