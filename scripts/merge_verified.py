@@ -84,7 +84,8 @@ def regenerate(rows: list[dict]) -> None:
     disc = {norm(c["repo_url"]): c for c in json.loads((ROOT / "findings/discovered_candidates.json").read_text())}
 
     def importance(r: dict) -> str:
-        return (disc.get(norm(r.get("repo_url"))) or {}).get("importance", "")
+        # prefer the value stored on the row; fall back to the discovery record
+        return r.get("importance") or (disc.get(norm(r.get("repo_url"))) or {}).get("importance", "")
 
     def flat(fs: list[dict]) -> str:
         return "\n\n".join(
@@ -96,6 +97,7 @@ def regenerate(rows: list[dict]) -> None:
 
     cols = [("title", "Title"), ("summary", "Summary"), ("importance", "Importance/Impact"),
             ("openrouter_use", "What they use OpenRouter for"), ("uses_safely", "Uses it safely"),
+            ("safety_class", "Safety class"), ("safety_class_reason", "Why this safety class"),
             ("mistakes", "Mistakes (null if safe)"), ("mistake_ids", "Mistake IDs"),
             ("headline_impact", "Headline possibly-impacted claim"),
             ("impacted_findings", "Possibly-impacted findings (specific figures/claims)"),
@@ -104,7 +106,8 @@ def regenerate(rows: list[dict]) -> None:
             ("model_type", "Model type"), ("critical_route", "Critical route"), ("severity", "Severity"),
             ("awareness", "Awareness"), ("safeguards_present", "Safeguards present"),
             ("one_line_fix", "One-line fix"), ("code_ref", "Call site (file:line)"), ("code_url", "Code URL"),
-            ("repo_url", "Repo URL"), ("paper_url", "Paper URL"), ("venue", "Venue"), ("confidence", "Confidence")]
+            ("repo_url", "Repo URL"), ("paper_url", "Paper URL"), ("venue", "Venue"), ("confidence", "Confidence"),
+            ("provider_ab_rerun_assessment", "Provider A/B rerun assessment")]
 
     with (ROOT / "findings/survey.csv").open("w", newline="") as f:
         w = csv.writer(f)
@@ -154,6 +157,9 @@ def regenerate(rows: list[dict]) -> None:
         "headline_impact": r.get("headline_impact") or "",
         "no_impact": r.get("no_impact_reason") or "",
         "impact_verified": bool(r.get("impact_verified")),
+        "safety_class": r.get("safety_class") or ("at_risk" if not r.get("uses_safely") else ""),
+        "safety_class_reason": r.get("safety_class_reason") or "",
+        "provider_ab_rerun_assessment": r.get("provider_ab_rerun_assessment") or "",
     } for r in rows]
     (ROOT / "artifact/_data.json").write_text(json.dumps(art, ensure_ascii=False))
 

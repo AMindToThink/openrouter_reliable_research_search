@@ -17,9 +17,13 @@ ROOT = Path(__file__).resolve().parent.parent
 st = json.loads((ROOT / "findings/stats.json").read_text())
 rows = json.loads((ROOT / "findings/survey.json").read_text())["rows"]
 
-N = st["n"]; UNSAFE = st["unsafe"]; SAFE = st["safe"]
+N = st["n"]; USERS = st["actual_openrouter_users"]
+KL = st["safety_class"]
+AT_RISK = KL.get("at_risk", 0); HANDLED = KL.get("handled", 0)
+NONUSERS = KL.get("not_on_result_path", 0) + KL.get("no_usage_found", 0)
 CRIT = st["critical_route"]; HIGH = st["severity"].get("high", 0)
-PCT = round(100 * UNSAFE / N)
+FINDINGS = st["impacted"]["total_findings"]
+PCT = st["at_risk_pct_of_users"]
 FREQ = st["mistake_freq"]
 
 TAX = {
@@ -40,7 +44,7 @@ SHORT = {"M1":"Unpinned quantization","M2":"Silent param dropping","M3":"Probabi
  "M7":"seed → determinism","M8":"Comparison confound","M9":"Unconstrained judge",
  "M10":"No reporting","M11":"Silent backend mixing","M12":"Cheap route chosen"}
 MONO="DejaVu Sans Mono, monospace"; SANS="DejaVu Sans, sans-serif"
-W, H = 1200, 1470
+W, H = 1200, 1490
 def e(s): return html.escape(str(s), quote=True)
 
 def wrap(text, maxc):
@@ -75,8 +79,8 @@ text(W-M, 60, "openrouter reliability audit", 17, C["faint"], MONO, anchor="end"
 # hero
 text(M, 210, f"{PCT}%", 150, C["high"], MONO, "bold")
 hx = M + 300
-htxt = wrap(f"of {N} influential AI-research repos that route through OpenRouter leave a "
-            f"silent provider-routing corruption channel open.", 42)
+htxt = wrap(f"of the {USERS} influential AI-research repos that actually route research calls "
+            f"through OpenRouter leave a silent corruption channel open.", 42)
 multiline(hx, 128, htxt, 33, 42, fill=C["ink"], weight="bold")
 
 # subline
@@ -86,10 +90,10 @@ sub = wrap("OpenRouter serves “a model” from whichever provider is cheapest-
 y = multiline(M, 300, sub, 22, 32, fill=C["muted"])
 
 # stat tiles
-tiles = [(f"{UNSAFE}/{N}", "at risk", C["high"]),
-         (f"{CRIT}/{N}", "route it into a result that matters", C["ink"]),
+tiles = [(f"{AT_RISK}/{USERS}", "at risk", C["high"]),
+         (str(FINDINGS), "specific claims / figures possibly affected", C["high"]),
          (str(HIGH), "carry a high-severity gap", C["med"]),
-         (f"{SAFE}/{N}", "control for it properly", C["safe"])]
+         (str(HANDLED), "uses it properly — the only one", C["safe"])]
 ty = 432; th = 132; gap = 18; tw = (W - 2*M - 3*gap) / 4
 for i,(num,lab,col) in enumerate(tiles):
     tx = M + i*(tw+gap)
@@ -127,13 +131,14 @@ text(M+320, ly+12, "Medium — reproducibility / leakage / disclosure", 16, C["m
 
 # caveat box
 cy = ly + 44
-ch = 132
+ch = 150
 add(f'<rect x="{M}" y="{cy}" width="{W-2*M}" height="{ch}" rx="12" fill="{C["panel"]}" stroke="{C["border"]}"/>')
 add(f'<rect x="{M}" y="{cy}" width="4" height="{ch}" rx="2" fill="{C["accent"]}"/>')
 text(M+24, cy+34, "READ THIS CORRECTLY", 15, C["accent"], MONO, "bold", spacing="1.5")
-cav = wrap("“At risk” means the code leaves a known corruption channel open and uncontrolled — "
-           "not that any published number is wrong. We audited how each repo routes model calls and "
-           "adversarially re-checked every verdict against the source. Selection was importance-first, not mistake-first.", 96)
+cav = wrap("“At risk” = a known corruption channel left open and uncontrolled — not proof any published "
+           f"number is wrong. Of {N} repos surveyed, {NONUSERS} never route a reported result through OpenRouter, "
+           "so they are excluded rather than counted as successes: only ONE repo both uses OpenRouter for "
+           "real results and controls for it.", 96)
 multiline(M+24, cy+62, cav, 18, 26, fill=C["muted"])
 
 # the fix panel
@@ -158,4 +163,4 @@ out_png = ROOT / "image/openrouter_findings.png"
 out_svg.write_text(svg)
 cairosvg.svg2png(bytestring=svg.encode(), write_to=str(out_png), output_width=W*2, output_height=H*2)
 print(f"wrote {out_svg.relative_to(ROOT)} and {out_png.relative_to(ROOT)} (2x = {W*2}x{H*2})")
-print(f"numbers: {PCT}% unsafe, {UNSAFE}/{N} at risk, {CRIT} critical, {HIGH} high, {SAFE} safe")
+print(f"numbers: {PCT}% at risk ({AT_RISK}/{USERS} actual users), {FINDINGS} findings, {HIGH} high-sev, {HANDLED} handled, {NONUSERS} non-users of {N} surveyed")

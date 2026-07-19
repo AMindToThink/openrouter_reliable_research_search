@@ -1,6 +1,8 @@
 # Findings — do important research repos use OpenRouter reliably?
 
-> **31 of 35** surveyed important research repos (89%) leave at least one uncontrolled provider-routing corruption channel open. **32 of 35** route OpenRouter output straight into a reported result, a training set, or a safety measurement. We traced **109 specific claims/figures** across **30 repos** that could be affected.
+> **31 of 34 (91%)** of the surveyed repos that *actually* route research calls through OpenRouter leave at least one uncontrolled provider-routing corruption channel open. **Exactly one** repo both uses OpenRouter for real results and controls for it. We traced **109 specific claims/figures** across **30 repos** that could be affected.
+
+> Of 35 repos surveyed, 1 turned out to have no OpenRouter call site at all and 2 keep it off every result path — those are recorded as `no_usage_found` / `not_on_result_path`, **not** as successes.
 
 **Read this correctly.** *At risk* means *exposed to a known corruption channel that was not controlled for* — **not** that any published number is wrong. *Possibly-impacted findings* are **hypotheses worth checking, not demonstrated errors**. We audited how the code routes model calls; we did not re-run experiments across providers to measure the actual delta. See `methodology.md`.
 
