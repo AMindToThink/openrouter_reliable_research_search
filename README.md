@@ -68,8 +68,9 @@ adversarial verifier** reading the actual source. Numbers below are generated fr
 > model calls; we did not re-run experiments across providers to measure the actual delta. See
 > [`findings/methodology.md`](findings/methodology.md).
 >
-> 18 of 35 impact analyses completed adversarial verification; the rest were cut short by an API
-> spend limit and are flagged `impact_verified: false` — treat those as first-pass.
+> 18 of 35 impact analyses completed adversarial verification; the rest were cut short when the
+> **Anthropic account running the audit agents hit its usage limit** (unrelated to OpenRouter — this
+> project has never held or used an OpenRouter API key) and are flagged `impact_verified: false`.
 
 ## Deliverables
 

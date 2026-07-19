@@ -286,7 +286,9 @@
       <b>“Possibly-impacted findings”</b> are specific claims/figures we traced to an OpenRouter-routed
       call. They are <b>hypotheses worth checking, not demonstrated errors</b> — each carries its own
       “depends on OpenRouter” confidence. Rows tagged <span class="unver">unverified</span> had their
-      adversarial re-check cut short by a spend limit, so treat those impact lists as first-pass.</div>
+      adversarial re-check cut short when the Anthropic account running the audit agents hit its usage
+      limit (nothing to do with OpenRouter — no OpenRouter key was ever used to build this), so treat
+      those impact lists as first-pass.</div>
     <div>Method &amp; full data: <a href="https://github.com/AMindToThink/openrouter_reliable_research_search" target="_blank" rel="noopener">openrouter_reliable_research_search</a>
       · Each verdict = one audit agent + one adversarial verifier reading the actual source. · Selection was importance-first, not mistake-first.</div>
   </footer>
