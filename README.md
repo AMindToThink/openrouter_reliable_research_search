@@ -53,6 +53,9 @@ adversarial verifier** reading the actual source. Numbers below are generated fr
 
 - **31 / 35 (89%)** leave at least one *uncontrolled* provider-routing corruption channel open.
 - **32 / 35** route OpenRouter output straight into a reported number, a training set, or a safety measurement.
+- **109 specific claims/figures** across **30 repos** were traced to an OpenRouter-routed call and could
+  be affected — each named down to the figure/table/number, with its mechanism and a
+  *"does this really depend on OpenRouter?"* confidence. (35 high-impact, 56 medium, 18 low.)
 - **23** carry a **high-severity** gap (can distort a result, not just reproducibility).
 - Only **4** control for it properly — and the cleanest, `nostalgebraist/cot_legibility`, is
   exemplary precisely because *provider choice is its research question*.
@@ -60,9 +63,13 @@ adversarial verifier** reading the actual source. Numbers below are generated fr
   left open (27)**, **unpinned quantization (26)**, **probabilistic routing (26)**.
 
 > **Read this correctly.** "At risk" = the code leaves a known corruption channel **open and
-> uncontrolled**, *not* that any published number is wrong. We audited how each repo *routes*
+> uncontrolled**, *not* that any published number is wrong. The *possibly-impacted findings* are
+> **hypotheses worth checking, not demonstrated errors**. We audited how each repo *routes*
 > model calls; we did not re-run experiments across providers to measure the actual delta. See
 > [`findings/methodology.md`](findings/methodology.md).
+>
+> 18 of 35 impact analyses completed adversarial verification; the rest were cut short by an API
+> spend limit and are flagged `impact_verified: false` — treat those as first-pass.
 
 ## Deliverables
 

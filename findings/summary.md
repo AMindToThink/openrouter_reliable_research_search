@@ -1,16 +1,16 @@
 # Findings — do important research repos use OpenRouter reliably?
 
-> **31 of 35** surveyed important research repos (89%) leave at least one uncontrolled provider-routing corruption channel open. **32 of 35** route OpenRouter output straight into a reported result, a training set, or a safety measurement.
+> **31 of 35** surveyed important research repos (89%) leave at least one uncontrolled provider-routing corruption channel open. **32 of 35** route OpenRouter output straight into a reported result, a training set, or a safety measurement. We traced **109 specific claims/figures** across **30 repos** that could be affected.
 
-**Read this correctly.** *Unsafe* means *exposed to a known corruption channel that was not controlled for* — **not** that any published number is wrong. We audited how the code routes model calls; we did not re-run experiments across providers to measure the actual delta. See `methodology.md`.
+**Read this correctly.** *At risk* means *exposed to a known corruption channel that was not controlled for* — **not** that any published number is wrong. *Possibly-impacted findings* are **hypotheses worth checking, not demonstrated errors**. We audited how the code routes model calls; we did not re-run experiments across providers to measure the actual delta. See `methodology.md`.
 
 ## Headline numbers
 
 - Repos audited: **35** (importance-first: NeurIPS/ICML/ICLR/ACL/NAACL/Nature + UK AISI/METR/Redwood/Palisade/Anthropic-Fellows + LessWrong/AF)
 - Use it **safely**: **4**  ·  **unsafe**: **31**
 - Severity: **23 high**, 8 medium, 4 none
+- **Specific possibly-impacted findings: 109** (35 high-impact, 56 medium, 18 low) across 30/35 repos
 - Author awareness: 2 aware & handled, 19 partially aware, 13 unaware
-- Model exposure: 26 mixed, 6 open-weight (highest risk), 3 proprietary-only (lowest risk)
 
 ## Most common mistakes
 
@@ -29,53 +29,64 @@
 | 11 | M11 | Silent backend mixing | Med | 3 |
 | 12 | M12 | Cheap/degraded route chosen | Med | 1 |
 
-The four most pervasive gaps — **no provenance logging, data-policy left open, unpinned quantization, and probabilistic routing** — are all *silent by default*: nothing errors, so nobody notices.
+## Examples of specific possibly-impacted claims
 
-## The 4 repos that use it safely (and why)
+Each row of `survey.csv` carries a **Possibly-impacted findings** column naming the exact figure/table/number and the mechanism. A few illustrative ones:
 
-- **Bespoke Curator (bespokelabsai/curator)** — Nice case of "the smoking-gun file the discovery step found is real but is a demo, not the production path." The discovery evidence itself flagged medium confidence that the released datasets used OpenRouter — I was able
-- **OASIS (Open Agent Social Interaction Simulations with One Million Agents)** — This is a clean 'inherited-but-unused' case: the taxonomy risk (M1-M12) presupposes an actual OpenRouter call site to audit, and none exists in this repo. All headline paper results (1M-agent simulation, group polarizati
-- **Palisade Research — robot_shutdown_resistance** — This is a clean example of a repo that touches OpenRouter but is correctly judged safe under the taxonomy: the router is confined to an admittedly-exploratory dev harness and a pricing lookup, while the actual headline-g
-- **R1 CoT Illegibility Revisited (nostalgebraist, fork of Jozdien/cot_legibility)** — This is a genuinely exemplary case for the taxonomy: the repo doesn't just avoid the mistakes, its entire research question IS "does OpenRouter provider choice silently change R1's measured behavior?" — and it answers ye
+- **AI Diplomacy** — *arXiv:2508.07485 (Duffy, Paech et al., 'Democratizing Diplomacy'), Contributions list (end of Introduction) + Figure 3 (left) + Table 2*: Central scaling claim — contribution #2: "comprehensive benchmarking across 13 contemporary models show[ing]... clear performance scaling with model size"; operationalized in Figure 3 (left,
+- **AI Induced Psychosis: A shallow investigation** — *graphs/intro.png (results_analysis.R lines 107-117) and graphs/delulu.png (same regression object reused, lines 217-222); lead figure of the post. Verified by downloading results_analysis.R directly.*: Headline chart 'Many AIs Encourage Users' Delusions' (graphs/intro.png / graphs/delulu.png), feols regression of delusion_confirmation_rating (0-4) on target_model — the post's central model
+- **ARC-AGI Benchmarking** — *arcprize.org/leaderboard, the live results source arXiv:2505.11831 §6 names for 'complete updated scores'; not a row in the paper's static Table 1 (verified: Table 1, p.8, lists only o3-mini/o3/ARChitects/o4-mini/Icecuber/o1-pro/Claude 3.7, none of them DeepSeek)*: Official ARC-AGI Leaderboard entry for DeepSeek R1-0528, model config 'deepseek_r1_0528-openrouter' (model_name: deepseek/deepseek-r1-0528, models.yml lines 1458-1465, provider: openrouter, 
+- **AgentLab** — *Table 2 (Section 6.2 'Results')*: Llama-3.1-405B-Instruct and Llama-3.1-70B-Instruct success rates in Table 2, listed as 405B/70B: WorkArena L1 43.3%±2.7 / 27.9%±2.5, WebArena 24.0%±1.5 / 18.4%±1.4, MiniWoB 64.6%±1.9 / 57.6%
+- **EQ-Bench Creative Writing Bench + Judgemark-v2** — *eqbench.com/judgemark-v2.html leaderboard, live data confirmed directly in judgemark-v2.js `leaderboardDataV2` (fetched and checked byte-for-byte). Note: the repo's committed results/scores.csv is a stale v2.0-methodology sample with a completely different model roster (deepseek-ai/deepseek-r1=76.97, microsoft/wizardlm-2-8x22b=55.42, liquid/lfm-7b=10.24) that contains none of the models above — the original candidate list's citation of that file as corroboration for these specific numbers was misleading, though the live-JS numbers themselves check out exactly.*: Judgemark-v2 live judge-leaderboard scores/ranks for open-weight judges (eqbench.com/judgemark-v2.html): zai-org/GLM-5 judgemark_score=85.58 (rank 1) vs *Qwen/Qwen3.5-397B-A17B=85.45 (rank 2
+- **Hereditary Traits Distillation** — *reports/report_25_depression_teacher_control/README.md and reports/report_24_nemotron_blackmail_transfer/README.md (verified against repo; these are the real numbers -- the original candidate's figures of '~3.5/10, ~2.1/10, ~1.5/10', '0.68/0.63 filtering', and '~26%, 116/450 across 3 seeds' do not match anything in the repo and appear fabricated/conflated with unrelated metrics, e.g. 450 is the n from the *Chinese-censorship* eval, not blackmail). Teacher-rollout generation: scripts/generate_gm4_31b_20k.py (google/gemma-4-31b-it, force_provider='openrouter', no provider key at all) and scripts/generate_think_traces.py (DEFAULT_MODEL='google/gemma-4-31b-it', force_provider='openrouter', no restriction). Llama-3.1-70B control rollouts: scripts/generate_qwen35_9b_20k.py invoked with an explicit --no-us-only flag (report_25 'Reproduce' section), i.e. the provider allowlist that exists in this exact script was deliberately turned OFF for the control teacher.*: Negative-emotion transfer headline delta (Gemma-3-27B-it teacher mean negativity 1.39 -> Gemma-distilled Qwen3.5-9B-Base student 0.82 [0.72,0.93] vs Llama-3.1-70B-instruct control 0.36 [0.21
+
+> 18 of 35 impact analyses completed adversarial verification; the remainder were cut short by a spend limit and are flagged `impact_verified: false` (treat as first-pass).
+
+## The repos that use it safely (and why)
+
+- **Bespoke Curator (bespokelabsai/curator)** — Nice case of "the smoking-gun file the discovery step found is real but is a demo, not the production path." The discovery evidence itself flagged medium confidence that the released datasets used Ope
+- **OASIS (Open Agent Social Interaction Simulations with One Million Agents)** — This is a clean 'inherited-but-unused' case: the taxonomy risk (M1-M12) presupposes an actual OpenRouter call site to audit, and none exists in this repo. All headline paper results (1M-agent simulati
+- **Palisade Research — robot_shutdown_resistance** — This is a clean example of a repo that touches OpenRouter but is correctly judged safe under the taxonomy: the router is confined to an admittedly-exploratory dev harness and a pricing lookup, while t
+- **R1 CoT Illegibility Revisited (nostalgebraist, fork of Jozdien/cot_legibility)** — This is a genuinely exemplary case for the taxonomy: the repo doesn't just avoid the mistakes, its entire research question IS "does OpenRouter provider choice silently change R1's measured behavior?"
 
 ## Full table
 
-| Repo | Venue | Safe? | Severity | Mistakes |
-| --- | --- | :---: | :---: | --- |
-| AI Diplomacy | media/LessWrong-adjacent a | ❌ | high | M1, M2, M3, M4, M6, M8, M10 |
-| AI Induced Psychosis: A shallow investigation | Alignment Forum / LessWron | ❌ | high | M1, M3, M4, M5, M6, M8 |
-| ARC-AGI Benchmarking | arXiv / ARC Prize official | ❌ | high | M1, M3, M4, M6, M8 |
-| AgentLab | other (framework backing 2 | ❌ | high | M1, M2, M3, M4, M5, M6, M8, M10 |
-| Aider | Community/industry — 47,47 | ❌ | high | M1, M2, M3, M4, M5, M6, M8, M10 |
-| AppWorld | ACL 2024 (Best Resource Pa | ❌ | high | M1, M2, M3, M4, M5, M6, M7, M8, M10 |
-| CAMEL | NeurIPS 2023 | ❌ | high | M1, M2, M3, M4, M5, M6, M9, M12 |
-| EQ-Bench Creative Writing Bench + Judgemark-v2 | community benchmark/leader | ❌ | high | M1, M2, M3, M4, M5, M6, M8, M10 |
-| Hereditary Traits Distillation | Alignment Forum | ❌ | high | M1, M2, M3, M4, M5, M6, M8, M10, M11 |
-| Inspect Evals | UK AISI | ❌ | high | M1, M2, M3, M4, M5, M8 |
-| JudgeArena | ICML 2025 (Tuning LLM Judg | ❌ | high | M1, M2, M3, M4, M5, M8 |
-| METR RE-Bench task suite | arXiv | ❌ | high | M1, M2, M3, M4, M5, M6, M8, M10 |
-| Multi-hop / no-CoT latent reasoning experiment | Alignment Forum (LessWrong | ❌ | high | M1, M2, M3, M4, M6, M8 |
-| Nous Research — Autoreason | self-published research re | ❌ | high | M1, M2, M3, M4, M5, M6, M8 |
-| OpenPipe ART | widely used open-source RL | ❌ | high | M1, M3, M4, M5, M6, M10 |
-| Prompt Framing Changes LLM Performance | LessWrong | ❌ | high | M1, M2, M3, M4, M5, M6, M8 |
-| Redwood Research — BashArena | other | ❌ | high | M1, M2, M3, M4, M5, M7, M8 |
-| Scaling Laws For Scalable Oversight | NeurIPS 2025 (Spotlight) | ❌ | high | M1, M2, M3, M4, M5, M6, M8 |
-| Seer | Alignment Forum | ❌ | high | M2, M4, M5 |
-| ctfish | arXiv (ICML-format writeup | ❌ | high | M1, M2, M3, M4, M5, M6, M8, M10 |
-| diffing-toolkit | Alignment Forum | ❌ | high | M4, M5, M6 |
-| lighteval — Swiss-Legal / LEXam LLM-as-judge t | ICLR 2026 (LEXam: Benchmar | ❌ | high | M1, M3, M4, M5, M6, M8, M10, M11 |
-| safety-tooling | Multiple (shared infra: An | ❌ | high | M1, M2, M3, M4, M5, M8, M9, M10, M11 |
-| Evaluating LLMs for accuracy incentivizes hall | Nature (2026) | ❌ | medium | M4, M6 |
-| Inspect AI | UK AISI (govt AI safety in | ❌ | medium | M1, M2, M3, M5, M9 |
-| MathArena | ETH Zurich SRI Lab (Martin | ❌ | medium | M1, M2, M3, M5, M8 |
-| OSWorld | NeurIPS 2024 (Datasets and | ❌ | medium | M4, M5, M6 |
-| OpenHands | arXiv (other) | ❌ | medium | M1, M2, M3, M4, M5, M6, M8, M10 |
-| Prometheus 2 / BiGGen-Bench | NAACL 2025 (BiGGen-Bench); | ❌ | medium | M4, M5, M6, M10 |
-| openbench | Industry (Groq, official o | ❌ | medium | M1, M2, M3, M5, M7 |
-| tau2-bench | arXiv (Sierra AI); tau-ben | ❌ | medium | M1, M3, M4, M5 |
-| Bespoke Curator | Open-source tool (Bespoke  | ✅ | none | — |
-| OASIS | arXiv 2024 | ✅ | none | — |
-| Palisade Research — robot_shutdown_resistance | other (Palisade Research t | ✅ | none | — |
-| R1 CoT Illegibility Revisited | LessWrong | ✅ | none | — |
+| Repo | Venue | Safe? | Severity | Mistakes | Impacted claims |
+| --- | --- | :---: | :---: | --- | :---: |
+| AI Diplomacy | media/LessWrong-adjacent | ❌ | high | M1, M2, M3, M4, M6, M8, M10 | 4 |
+| AI Induced Psychosis: A shallow investigatio | Alignment Forum / LessWr | ❌ | high | M1, M3, M4, M5, M6, M8 | 5 |
+| ARC-AGI Benchmarking | arXiv / ARC Prize offici | ❌ | high | M1, M3, M4, M6, M8 | 4 |
+| AgentLab | other (framework backing | ❌ | high | M1, M2, M3, M4, M5, M6, M8, M10 | 5 |
+| Aider | Community/industry — 47, | ❌ | high | M1, M2, M3, M4, M5, M6, M8, M10 | 7 |
+| AppWorld | ACL 2024 (Best Resource  | ❌ | high | M1, M2, M3, M4, M5, M6, M7, M8, M10 | 1 |
+| CAMEL | NeurIPS 2023 | ❌ | high | M1, M2, M3, M4, M5, M6, M9, M12 | 0 |
+| EQ-Bench Creative Writing Bench + Judgemark- | community benchmark/lead | ❌ | high | M1, M2, M3, M4, M5, M6, M8, M10 | 3 |
+| Hereditary Traits Distillation | Alignment Forum | ❌ | high | M1, M2, M3, M4, M5, M6, M8, M10, M11 | 4 |
+| Inspect Evals | UK AISI | ❌ | high | M1, M2, M3, M4, M5, M8 | 4 |
+| JudgeArena | ICML 2025 (Tuning LLM Ju | ❌ | high | M1, M2, M3, M4, M5, M8 | 3 |
+| METR RE-Bench task suite | arXiv | ❌ | high | M1, M2, M3, M4, M5, M6, M8, M10 | 3 |
+| Multi-hop / no-CoT latent reasoning experime | Alignment Forum (LessWro | ❌ | high | M1, M2, M3, M4, M6, M8 | 5 |
+| Nous Research — Autoreason | self-published research  | ❌ | high | M1, M2, M3, M4, M5, M6, M8 | 5 |
+| OpenPipe ART | widely used open-source  | ❌ | high | M1, M3, M4, M5, M6, M10 | 3 |
+| Prompt Framing Changes LLM Performance | LessWrong | ❌ | high | M1, M2, M3, M4, M5, M6, M8 | 4 |
+| Redwood Research — BashArena | other | ❌ | high | M1, M2, M3, M4, M5, M7, M8 | 3 |
+| Scaling Laws For Scalable Oversight | NeurIPS 2025 (Spotlight) | ❌ | high | M1, M2, M3, M4, M5, M6, M8 | 4 |
+| Seer | Alignment Forum | ❌ | high | M2, M4, M5 | 3 |
+| ctfish | arXiv (ICML-format write | ❌ | high | M1, M2, M3, M4, M5, M6, M8, M10 | 2 |
+| diffing-toolkit | Alignment Forum | ❌ | high | M4, M5, M6 | 4 |
+| lighteval — Swiss-Legal / LEXam LLM-as-judge | ICLR 2026 (LEXam: Benchm | ❌ | high | M1, M3, M4, M5, M6, M8, M10, M11 | 3 |
+| safety-tooling | Multiple (shared infra:  | ❌ | high | M1, M2, M3, M4, M5, M8, M9, M10, M11 | 5 |
+| Evaluating LLMs for accuracy incentivizes ha | Nature (2026) | ❌ | medium | M4, M6 | 4 |
+| Inspect AI | UK AISI (govt AI safety  | ❌ | medium | M1, M2, M3, M5, M9 | 4 |
+| MathArena | ETH Zurich SRI Lab (Mart | ❌ | medium | M1, M2, M3, M5, M8 | 5 |
+| OSWorld | NeurIPS 2024 (Datasets a | ❌ | medium | M4, M5, M6 | 2 |
+| OpenHands | arXiv (other) | ❌ | medium | M1, M2, M3, M4, M5, M6, M8, M10 | 1 |
+| Prometheus 2 / BiGGen-Bench | NAACL 2025 (BiGGen-Bench | ❌ | medium | M4, M5, M6, M10 | 3 |
+| openbench | Industry (Groq, official | ❌ | medium | M1, M2, M3, M5, M7 | 3 |
+| tau2-bench | arXiv (Sierra AI); tau-b | ❌ | medium | M1, M3, M4, M5 | 3 |
+| Bespoke Curator | Open-source tool (Bespok | ✅ | none | — | 0 |
+| OASIS | arXiv 2024 | ✅ | none | — | 0 |
+| Palisade Research — robot_shutdown_resistanc | other (Palisade Research | ✅ | none | — | 0 |
+| R1 CoT Illegibility Revisited | LessWrong | ✅ | none | — | 0 |
 
-See `survey.csv` / `survey.json` for full per-repo detail (summary, importance, evidence, one-line fix, verifier reasoning). Interactive explorer + shareable image in the repo root deliverables.
+See `survey.csv` / `survey.json` for full detail (evidence, call-site permalink, one-line fix, per-claim mechanism and confidence).

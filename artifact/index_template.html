@@ -173,7 +173,22 @@
   .fix .flab { color: var(--accent); }
   .ev { font-family: var(--mono); font-size: .78rem; color: var(--muted); background: var(--panel); border-radius: 8px; padding: 10px 12px;
     white-space: pre-wrap; word-break: break-word; max-height: 150px; overflow-y: auto; }
-  .dlinks { display: flex; gap: 14px; margin-top: 14px; font-family: var(--mono); font-size: .82rem; }
+  .dlinks { display: flex; gap: 14px; margin-top: 14px; font-family: var(--mono); font-size: .82rem; flex-wrap: wrap; }
+
+  /* impacted findings */
+  .headline-impact { background: var(--high-bg); border-radius: 8px; padding: 10px 12px; font-size: .92rem; color: var(--ink); }
+  .headline-impact .flab { font-family: var(--mono); font-size: .7rem; text-transform: uppercase; letter-spacing: .07em; color: var(--high); margin-bottom: 3px; }
+  .impact-list { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+  .imp { border-left: 3px solid var(--border); padding: 8px 0 8px 11px; }
+  .imp.sev-high { border-left-color: var(--high); } .imp.sev-medium { border-left-color: var(--med); }
+  .imp.sev-low { border-left-color: var(--none); }
+  .imp .loc { font-family: var(--mono); font-size: .72rem; color: var(--accent); }
+  .imp .claim { font-size: .9rem; color: var(--ink); margin: 2px 0 4px; }
+  .imp .mech { font-size: .82rem; color: var(--muted); }
+  .imp .mech b { color: var(--ink); font-weight: 600; }
+  .imp .sevrow { display: flex; gap: 6px; margin-top: 5px; }
+  .unver { background: var(--med-bg); color: var(--med); font-family: var(--mono); font-size: .68rem;
+    padding: 2px 7px; border-radius: 5px; }
 
   footer { margin-top: 54px; padding-top: 22px; border-top: 1px solid var(--border); color: var(--muted); font-size: .86rem; }
   footer .caveat { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-bottom: 16px; }
@@ -262,7 +277,11 @@
       wrong. We audited how each repo routes model calls (then adversarially re-checked every verdict against
       the source); we did not re-run experiments across providers to measure the actual delta. Highest real
       risk is on <b>open-weight</b> models on <b>critical routes</b> (output feeds a reported number, a
-      training set, or a safety measurement).</div>
+      training set, or a safety measurement).<br><br>
+      <b>“Possibly-impacted findings”</b> are specific claims/figures we traced to an OpenRouter-routed
+      call. They are <b>hypotheses worth checking, not demonstrated errors</b> — each carries its own
+      “depends on OpenRouter” confidence. Rows tagged <span class="unver">unverified</span> had their
+      adversarial re-check cut short by a spend limit, so treat those impact lists as first-pass.</div>
     <div>Method &amp; full data: <a href="https://github.com/AMindToThink/openrouter_reliable_research_search" target="_blank" rel="noopener">openrouter_reliable_research_search</a>
       · Each verdict = one audit agent + one adversarial verifier reading the actual source. · Selection was importance-first, not mistake-first.</div>
   </footer>
@@ -291,9 +310,11 @@ const esc = s => (s||"").replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&g
   const crit = DATA.filter(d=>d.critical).length;
   const high = DATA.filter(d=>d.severity==="high").length;
   $("#lede-n").textContent = n;
+  const impacted = DATA.reduce((a,d)=>a+((d.impacted||[]).length),0);
   const cards = [
     {cls:"s-high", n:unsafe, sub:"/"+n, lab:"leave a corruption channel open"},
     {cls:"s-high", n:Math.round(100*unsafe/n)+"%", sub:"", lab:"of audited repos are at risk"},
+    {cls:"s-high", n:impacted, sub:"", lab:"specific claims / figures possibly affected"},
     {cls:"", n:crit, sub:"/"+n, lab:"route it into a result that matters"},
     {cls:"s-med", n:high, sub:"", lab:"carry a high-severity gap"},
     {cls:"s-safe", n:safe, sub:"", lab:"control for it properly"},
@@ -365,6 +386,24 @@ function sortRows(a,b){
   if(state.sort==="venue") return (a.venue||"").localeCompare(b.venue||"");
   return a.title.localeCompare(b.title);
 }
+function impactBlock(d){
+  const fs = d.impacted || [];
+  const unv = d.impact_verified ? "" : ` <span class="unver">unverified</span>`;
+  if(!fs.length){
+    return `<div class="field span2"><div class="flab">Possibly-impacted findings${unv}</div>
+      <div class="fval"><span style="color:var(--safe)">None identified.</span> ${esc(d.no_impact||"")}</div></div>`;
+  }
+  const items = fs.map(f=>`<div class="imp sev-${f.severity}">
+      <div class="loc">${esc(f.locator)}</div>
+      <div class="claim">${esc(f.finding)}</div>
+      <div class="mech">${esc(f.mechanism)}</div>
+      <div class="sevrow"><span class="tag">impact: ${esc(f.severity)}</span><span class="tag">depends on OpenRouter: ${esc(f.dep)}</span></div>
+    </div>`).join("");
+  const hl = d.headline_impact
+    ? `<div class="headline-impact"><div class="flab">▲ most important possibly-impacted claim</div>${esc(d.headline_impact)}</div>` : "";
+  return `<div class="field span2"><div class="flab">Possibly-impacted findings (${fs.length})${unv}</div>
+    ${hl}<div class="impact-list">${items}</div></div>`;
+}
 function repoCard(d,i){
   const sevcls = d.safe ? "sev-none" : (d.severity==="medium"?"sev-medium":"sev-high");
   const vcls = d.safe ? "safe" : (d.severity==="medium"?"risk med":"risk");
@@ -394,6 +433,7 @@ function repoCard(d,i){
         ${d.safe
           ? `<div class="field span2"><div class="flab">Why it's safe</div><div class="fval">${esc(d.notes)}</div></div>`
           : `<div class="field span2"><div class="flab">The problem</div><div class="fval">${esc(d.mistakes)}</div></div>`}
+        ${impactBlock(d)}
         <div class="field span2"><div class="flab">Safeguards present</div><div class="fval"><div class="metarow" style="margin-top:2px">${safeg}</div></div></div>
         ${d.fix ? `<div class="field span2"><div class="fix"><div class="flab">▸ one-line fix</div>${esc(d.fix)}</div></div>`:""}
         <div class="field span2"><div class="flab">Evidence (from source)</div><div class="ev">${esc(d.evidence)}</div></div>

@@ -32,5 +32,15 @@
     "M9": 3,
     "M11": 3,
     "M12": 1
+  },
+  "impacted": {
+    "repos_with_impacted_findings": 30,
+    "total_findings": 109,
+    "by_severity": {
+      "high": 35,
+      "medium": 56,
+      "low": 18
+    },
+    "impact_verified_rows": 18
   }
 }
