@@ -172,7 +172,7 @@
   .fix { background: var(--panel); border-radius: 8px; padding: 10px 12px; font-size: .9rem; }
   .fix .flab { color: var(--accent); }
   .ev { font-family: var(--mono); font-size: .78rem; color: var(--muted); background: var(--panel); border-radius: 8px; padding: 10px 12px;
-    white-space: pre-wrap; word-break: break-word; max-height: 150px; overflow-y: auto; }
+    white-space: pre-wrap; word-break: break-word; }
   .dlinks { display: flex; gap: 14px; margin-top: 14px; font-family: var(--mono); font-size: .82rem; flex-wrap: wrap; }
 
   /* impacted findings */
@@ -189,6 +189,9 @@
   .imp .sevrow { display: flex; gap: 6px; margin-top: 5px; }
   .unver { background: var(--med-bg); color: var(--med); font-family: var(--mono); font-size: .68rem;
     padding: 2px 7px; border-radius: 5px; }
+  .morebtn { font-family: var(--mono); font-size: .72rem; color: var(--accent); background: none;
+    border: none; cursor: pointer; padding: 0 0 0 5px; text-decoration: underline; text-underline-offset: 2px; }
+  .morebtn:hover { color: var(--ink); }
   .simbadge { background: var(--med-bg); color: var(--med); font-family: var(--mono); font-size: .64rem;
     letter-spacing: .06em; padding: 3px 8px; border-radius: 5px; margin-left: 10px; vertical-align: middle; }
 
@@ -308,6 +311,16 @@ const TAX = {
 };
 const $ = s => document.querySelector(s);
 const esc = s => (s||"").replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+let _xid = 0;
+/* expandable text: shows a clipped version + a "read more" toggle when longer than `limit` */
+function xp(text, limit){
+  const t = (text == null ? "" : String(text));
+  if (t.length <= limit) return esc(t);
+  const id = "x" + (++_xid);
+  const cut = t.slice(0, limit).replace(/\s+\S*$/, "");
+  return `<span id="${id}-s">${esc(cut)}…</span><span id="${id}-f" hidden>${esc(t)}</span>` +
+         `<button class="morebtn" data-x="${id}" type="button">read more</button>`;
+}
 
 /* ---------- stats ---------- */
 (function(){
@@ -398,16 +411,16 @@ function impactBlock(d){
   const unv = d.impact_verified ? "" : ` <span class="unver">unverified</span>`;
   if(!fs.length){
     return `<div class="field span2"><div class="flab">Possibly-impacted findings${unv}</div>
-      <div class="fval"><span style="color:var(--safe)">None identified.</span> ${esc(d.no_impact||"")}</div></div>`;
+      <div class="fval"><span style="color:var(--safe)">None identified.</span> ${xp(d.no_impact||"",240)}</div></div>`;
   }
   const items = fs.map(f=>`<div class="imp sev-${f.severity}">
-      <div class="loc">${esc(f.locator)}</div>
-      <div class="claim">${esc(f.finding)}</div>
-      <div class="mech">${esc(f.mechanism)}</div>
+      <div class="loc">${xp(f.locator,170)}</div>
+      <div class="claim">${xp(f.finding,240)}</div>
+      <div class="mech">${xp(f.mechanism,320)}</div>
       <div class="sevrow"><span class="tag">impact: ${esc(f.severity)}</span><span class="tag">depends on OpenRouter: ${esc(f.dep)}</span></div>
     </div>`).join("");
   const hl = d.headline_impact
-    ? `<div class="headline-impact"><div class="flab">▲ most important possibly-impacted claim</div>${esc(d.headline_impact)}</div>` : "";
+    ? `<div class="headline-impact"><div class="flab">▲ most important possibly-impacted claim</div>${xp(d.headline_impact,260)}</div>` : "";
   return `<div class="field span2"><div class="flab">Possibly-impacted findings (${fs.length})${unv}</div>
     ${hl}<div class="impact-list">${items}</div></div>`;
 }
@@ -434,16 +447,16 @@ function repoCard(d,i){
         <span class="tag">confidence: ${d.confidence}</span>
       </div>
       <div class="d-grid">
-        <div class="field span2"><div class="flab">What it is</div><div class="fval">${esc(d.summary)}</div></div>
-        <div class="field"><div class="flab">Why it matters</div><div class="fval">${esc(d.importance)}</div></div>
-        <div class="field"><div class="flab">What they use OpenRouter for</div><div class="fval">${esc(d.use)}</div></div>
+        <div class="field span2"><div class="flab">What it is</div><div class="fval">${xp(d.summary,260)}</div></div>
+        <div class="field"><div class="flab">Why it matters</div><div class="fval">${xp(d.importance,220)}</div></div>
+        <div class="field"><div class="flab">What they use OpenRouter for</div><div class="fval">${xp(d.use,200)}</div></div>
         ${d.safe
-          ? `<div class="field span2"><div class="flab">Why it's safe</div><div class="fval">${esc(d.notes)}</div></div>`
-          : `<div class="field span2"><div class="flab">The problem</div><div class="fval">${esc(d.mistakes)}</div></div>`}
+          ? `<div class="field span2"><div class="flab">Why it's safe</div><div class="fval">${xp(d.notes,280)}</div></div>`
+          : `<div class="field span2"><div class="flab">The problem</div><div class="fval">${xp(d.mistakes,420)}</div></div>`}
         ${impactBlock(d)}
         <div class="field span2"><div class="flab">Safeguards present</div><div class="fval"><div class="metarow" style="margin-top:2px">${safeg}</div></div></div>
-        ${d.fix ? `<div class="field span2"><div class="fix"><div class="flab">▸ one-line fix</div>${esc(d.fix)}</div></div>`:""}
-        <div class="field span2"><div class="flab">Evidence (from source)</div><div class="ev">${esc(d.evidence)}</div></div>
+        ${d.fix ? `<div class="field span2"><div class="fix"><div class="flab">▸ one-line fix</div>${xp(d.fix,240)}</div></div>`:""}
+        <div class="field span2"><div class="flab">Evidence (from source)</div><div class="ev">${xp(d.evidence,320)}</div></div>
       </div>
       <div class="dlinks">
         ${(d.code && d.code_ref && d.code_ref!=="(repo)")?`<a href="${esc(d.code)}" target="_blank" rel="noopener">▸ call site: <span class="mono">${esc(d.code_ref)}</span> ↗</a>`:""}
@@ -490,6 +503,19 @@ function roul(){
   else if(bad) note.innerHTML = `⚠️ <b>Quantized.</b> You just got ${p} at <b>${q}</b> — lower precision than a bf16/fp16 route. Your prompt never asked for that.`;
   else note.innerHTML = `Got ${p} @ ${q}. Press again — nothing pins it, so the next one can differ.`;
 }
+/* read-more toggles (delegated; stops the click from collapsing the drawer) */
+document.addEventListener("click", e => {
+  const b = e.target.closest(".morebtn");
+  if (!b) return;
+  e.preventDefault(); e.stopPropagation();
+  const id = b.dataset.x;
+  const sEl = document.getElementById(id + "-s"), fEl = document.getElementById(id + "-f");
+  if (!sEl || !fEl) return;
+  const showingFull = !fEl.hidden;
+  fEl.hidden = showingFull; sEl.hidden = !showingFull;
+  b.textContent = showingFull ? "read more" : "show less";
+});
+
 $("#roul-btn").addEventListener("click",roul);
 $("#roul-reset").addEventListener("click",()=>{
   rReq=0;rBack=new Set();rQuant=0;
