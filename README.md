@@ -91,7 +91,33 @@ uv run skill/use-openrouter-safely/scripts/audit_openrouter.py <path-to-repo>
 
 # regenerate the shareable image from the dataset (numbers come from the data)
 uv run scripts/make_poster.py
+
+# refresh REAL provider/endpoint data from OpenRouter's public API (no auth needed)
+uv run scripts/fetch_endpoints.py
+
+# rebuild the interactive explorer (inlines survey + endpoint data; artifacts must be self-contained)
+uv run scripts/build_artifact.py
 ```
+
+### The "Routing Roulette" widget uses real data
+
+The explorer's Routing Roulette is built on **real endpoint data** — 43 live endpoints across 5
+models, fetched from OpenRouter's public `GET /api/v1/models/{id}/endpoints` (no auth required)
+and committed to [`artifact/endpoints.json`](artifact/endpoints.json) with a fetch timestamp. The
+provider names, quantizations, context lengths, prices and per-endpoint `supported_parameters`
+are all as reported by OpenRouter. Only the *draw* is simulated: it samples those real endpoints
+the way OpenRouter documents its default load balancing (weighted by the inverse square of
+price). **No inference requests are made, and this project has never held an OpenRouter API key.**
+
+Every model in the widget is one that a surveyed repo actually ran through OpenRouter. Some real
+numbers it surfaces:
+
+- `openai/gpt-oss-120b` — **20 endpoints**, quantization ranging from **fp4** (5 providers) to
+  bf16; only **12/20 honor `seed`** and **15/20 honor `response_format`**.
+- `deepseek/deepseek-r1` — 2 endpoints. Novita serves fp8 and supports `seed`/`response_format`;
+  **Azure reports `unknown` quantization and supports neither.** Route there and your seed and
+  JSON schema are silently dropped — M2/M9, observed rather than hypothesized. (This also
+  independently confirms nostalgebraist's note that only two providers serve R1.)
 
 The two multi-agent sweeps (importance-first discovery → per-repo audit + adversarial verify)
 were run as background workflows; the discovery record is preserved in

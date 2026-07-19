@@ -1,0 +1,729 @@
+{
+  "fetched_at": "2026-07-19 00:19 UTC",
+  "source": "https://openrouter.ai/api/v1/models/{id}/endpoints (public, no auth)",
+  "models": [
+    {
+      "id": "openai/gpt-oss-120b",
+      "name": "OpenAI: gpt-oss-120b",
+      "why": "LLM judge in kmerkelbach/llm-request-tone; ai-psychosis used the 20b sibling",
+      "endpoints": [
+        {
+          "provider": "DekaLLM",
+          "tag": "dekallm/bf16",
+          "quant": "bf16",
+          "ctx": 131072,
+          "price_in": 0.03,
+          "supports": {
+            "seed": true,
+            "response_format": true,
+            "structured_outputs": true,
+            "temperature": true,
+            "top_p": true,
+            "logprobs": true,
+            "tools": true
+          }
+        },
+        {
+          "provider": "DeepInfra",
+          "tag": "deepinfra/bf16",
+          "quant": "bf16",
+          "ctx": 131072,
+          "price_in": 0.037,
+          "supports": {
+            "seed": true,
+            "response_format": true,
+            "structured_outputs": true,
+            "temperature": true,
+            "top_p": true,
+            "logprobs": false,
+            "tools": true
+          }
+        },
+        {
+          "provider": "WandB",
+          "tag": "wandb/fp4",
+          "quant": "fp4",
+          "ctx": 131072,
+          "price_in": 0.04,
+          "supports": {
+            "seed": true,
+            "response_format": true,
+            "structured_outputs": true,
+            "temperature": true,
+            "top_p": true,
+            "logprobs": true,
+            "tools": true
+          }
+        },
+        {
+          "provider": "Mancer 2",
+          "tag": "mancer/fp8",
+          "quant": "fp8",
+          "ctx": 131072,
+          "price_in": 0.04,
+          "supports": {
+            "seed": true,
+            "response_format": false,
+            "structured_outputs": false,
+            "temperature": true,
+            "top_p": true,
+            "logprobs": true,
+            "tools": true
+          }
+        },
+        {
+          "provider": "Novita",
+          "tag": "novita/fp4",
+          "quant": "fp4",
+          "ctx": 131072,
+          "price_in": 0.049999999999999996,
+          "supports": {
+            "seed": true,
+            "response_format": true,
+            "structured_outputs": true,
+            "temperature": true,
+            "top_p": true,
+            "logprobs": true,
+            "tools": true
+          }
+        },
+        {
+          "provider": "SiliconFlow",
+          "tag": "siliconflow/fp8",
+          "quant": "fp8",
+          "ctx": 131072,
+          "price_in": 0.049999999999999996,
+          "supports": {
+            "seed": false,
+            "response_format": true,
+            "structured_outputs": true,
+            "temperature": true,
+            "top_p": true,
+            "logprobs": false,
+            "tools": false
+          }
+        },
+        {
+          "provider": "DigitalOcean",
+          "tag": "digitalocean",
+          "quant": "unknown",
+          "ctx": 128000,
+          "price_in": 0.07,
+          "supports": {
+            "seed": false,
+            "response_format": false,
+            "structured_outputs": false,
+            "temperature": true,
+            "top_p": true,
+            "logprobs": true,
+            "tools": false
+          }
+        },
+        {
+          "provider": "Google",
+          "tag": "google-vertex/global",
+          "quant": "unknown",
+          "ctx": 131072,
+          "price_in": 0.09,
+          "supports": {
+            "seed": true,
+            "response_format": true,
+            "structured_outputs": true,
+            "temperature": true,
+            "top_p": true,
+            "logprobs": false,
+            "tools": false
+          }
+        },
+        {
+          "provider": "BaseTen",
+          "tag": "baseten/fp4",
+          "quant": "fp4",
+          "ctx": 128072,
+          "price_in": 0.09999999999999999,
+          "supports": {
+            "seed": false,
+            "response_format": true,
+            "structured_outputs": true,
+            "temperature": true,
+            "top_p": true,
+            "logprobs": false,
+            "tools": true
+          }
+        },
+        {
+          "provider": "Parasail",
+          "tag": "parasail/fp4",
+          "quant": "fp4",
+          "ctx": 131072,
+          "price_in": 0.09999999999999999,
+          "supports": {
+            "seed": true,
+            "response_format": true,
+            "structured_outputs": true,
+            "temperature": true,
+            "top_p": true,
+            "logprobs": true,
+            "tools": true
+          }
+        },
+        {
+          "provider": "SambaNova",
+          "tag": "sambanova",
+          "quant": "unknown",
+          "ctx": 131072,
+          "price_in": 0.14,
+          "supports": {
+            "seed": false,
+            "response_format": false,
+            "structured_outputs": false,
+            "temperature": true,
+            "top_p": true,
+            "logprobs": false,
+            "tools": true
+          }
+        },
+        {
+          "provider": "Amazon Bedrock",
+          "tag": "amazon-bedrock",
+          "quant": "unknown",
+          "ctx": 131072,
+          "price_in": 0.15,
+          "supports": {
+            "seed": false,
+            "response_format": false,
+            "structured_outputs": false,
+            "temperature": true,
+            "top_p": true,
+            "logprobs": false,
+            "tools": false
+          }
+        },
+        {
+          "provider": "DeepInfra",
+          "tag": "deepinfra/turbo",
+          "quant": "bf16",
+          "ctx": 131072,
+          "price_in": 0.15,
+          "supports": {
+            "seed": true,
+            "response_format": true,
+            "structured_outputs": true,
+            "temperature": true,
+            "top_p": true,
+            "logprobs": false,
+            "tools": true
+          }
+        },
+        {
+          "provider": "Together",
+          "tag": "together",
+          "quant": "unknown",
+          "ctx": 131072,
+          "price_in": 0.15,
+          "supports": {
+            "seed": false,
+            "response_format": true,
+            "structured_outputs": true,
+            "temperature": true,
+            "top_p": true,
+            "logprobs": false,
+            "tools": true
+          }
+        },
+        {
+          "provider": "Nebius",
+          "tag": "nebius/fp4",
+          "quant": "fp4",
+          "ctx": 131072,
+          "price_in": 0.15,
+          "supports": {
+            "seed": true,
+            "response_format": true,
+            "structured_outputs": true,
+            "temperature": true,
+            "top_p": true,
+            "logprobs": false,
+            "tools": true
+          }
+        },
+        {
+          "provider": "Amazon Bedrock",
+          "tag": "amazon-bedrock/eu-west-1",
+          "quant": "unknown",
+          "ctx": 131072,
+          "price_in": 0.15,
+          "supports": {
+            "seed": false,
+            "response_format": false,
+            "structured_outputs": false,
+            "temperature": true,
+            "top_p": true,
+            "logprobs": false,
+            "tools": false
+          }
+        },
+        {
+          "provider": "Phala",
+          "tag": "phala",
+          "quant": "unknown",
+          "ctx": 131072,
+          "price_in": 0.15,
+          "supports": {
+            "seed": true,
+            "response_format": true,
+            "structured_outputs": true,
+            "temperature": true,
+            "top_p": true,
+            "logprobs": true,
+            "tools": true
+          }
+        },
+        {
+          "provider": "Groq",
+          "tag": "groq",
+          "quant": "unknown",
+          "ctx": 131072,
+          "price_in": 0.15,
+          "supports": {
+            "seed": true,
+            "response_format": true,
+            "structured_outputs": true,
+            "temperature": true,
+            "top_p": true,
+            "logprobs": false,
+            "tools": true
+          }
+        },
+        {
+          "provider": "Mara",
+          "tag": "mara",
+          "quant": "unknown",
+          "ctx": 131072,
+          "price_in": 0.15,
+          "supports": {
+            "seed": false,
+            "response_format": true,
+            "structured_outputs": true,
+            "temperature": true,
+            "top_p": true,
+            "logprobs": true,
+            "tools": true
+          }
+        },
+        {
+          "provider": "Cerebras",
+          "tag": "cerebras/fp16",
+          "quant": "fp16",
+          "ctx": 131072,
+          "price_in": 0.35,
+          "supports": {
+            "seed": true,
+            "response_format": true,
+            "structured_outputs": true,
+            "temperature": true,
+            "top_p": true,
+            "logprobs": true,
+            "tools": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "meta-llama/llama-3.3-70b-instruct",
+      "name": "Meta: Llama 3.3 70B Instruct",
+      "why": "benchmarked model in GoodStartLabs/AI_Diplomacy",
+      "endpoints": [
+        {
+          "provider": "DeepInfra",
+          "tag": "deepinfra/turbo",
+          "quant": "fp8",
+          "ctx": 131072,
+          "price_in": 0.09999999999999999,
+          "supports": {
+            "seed": true,
+            "response_format": true,
+            "structured_outputs": false,
+            "temperature": true,
+            "top_p": true,
+            "logprobs": false,
+            "tools": true
+          }
+        },
+        {
+          "provider": "Nebius",
+          "tag": "nebius/fp8",
+          "quant": "fp8",
+          "ctx": 131072,
+          "price_in": 0.13,
+          "supports": {
+            "seed": true,
+            "response_format": true,
+            "structured_outputs": true,
+            "temperature": true,
+            "top_p": true,
+            "logprobs": false,
+            "tools": true
+          }
+        },
+        {
+          "provider": "AkashML",
+          "tag": "akashml/fp8",
+          "quant": "fp8",
+          "ctx": 131072,
+          "price_in": 0.13,
+          "supports": {
+            "seed": true,
+            "response_format": true,
+            "structured_outputs": true,
+            "temperature": true,
+            "top_p": true,
+            "logprobs": true,
+            "tools": true
+          }
+        },
+        {
+          "provider": "Novita",
+          "tag": "novita/bf16",
+          "quant": "bf16",
+          "ctx": 6000,
+          "price_in": 0.135,
+          "supports": {
+            "seed": true,
+            "response_format": true,
+            "structured_outputs": false,
+            "temperature": true,
+            "top_p": true,
+            "logprobs": true,
+            "tools": true
+          }
+        },
+        {
+          "provider": "Parasail",
+          "tag": "parasail/fp8",
+          "quant": "fp8",
+          "ctx": 131072,
+          "price_in": 0.22,
+          "supports": {
+            "seed": true,
+            "response_format": true,
+            "structured_outputs": true,
+            "temperature": true,
+            "top_p": true,
+            "logprobs": true,
+            "tools": false
+          }
+        },
+        {
+          "provider": "Cloudflare",
+          "tag": "cloudflare/fp8",
+          "quant": "fp8",
+          "ctx": 24000,
+          "price_in": 0.293,
+          "supports": {
+            "seed": true,
+            "response_format": true,
+            "structured_outputs": false,
+            "temperature": true,
+            "top_p": true,
+            "logprobs": true,
+            "tools": false
+          }
+        },
+        {
+          "provider": "SambaNova",
+          "tag": "sambanova-turbo",
+          "quant": "bf16",
+          "ctx": 16000,
+          "price_in": 0.44999999999999996,
+          "supports": {
+            "seed": false,
+            "response_format": false,
+            "structured_outputs": false,
+            "temperature": true,
+            "top_p": true,
+            "logprobs": false,
+            "tools": false
+          }
+        },
+        {
+          "provider": "Groq",
+          "tag": "groq",
+          "quant": "unknown",
+          "ctx": 131072,
+          "price_in": 0.59,
+          "supports": {
+            "seed": true,
+            "response_format": true,
+            "structured_outputs": false,
+            "temperature": true,
+            "top_p": true,
+            "logprobs": false,
+            "tools": true
+          }
+        },
+        {
+          "provider": "WandB",
+          "tag": "wandb/fp16",
+          "quant": "fp16",
+          "ctx": 128000,
+          "price_in": 0.71,
+          "supports": {
+            "seed": true,
+            "response_format": true,
+            "structured_outputs": true,
+            "temperature": true,
+            "top_p": true,
+            "logprobs": true,
+            "tools": true
+          }
+        },
+        {
+          "provider": "Google",
+          "tag": "google-vertex",
+          "quant": "unknown",
+          "ctx": 128000,
+          "price_in": 0.72,
+          "supports": {
+            "seed": true,
+            "response_format": true,
+            "structured_outputs": false,
+            "temperature": true,
+            "top_p": true,
+            "logprobs": false,
+            "tools": false
+          }
+        },
+        {
+          "provider": "Google",
+          "tag": "google-vertex/us-central1",
+          "quant": "unknown",
+          "ctx": 128000,
+          "price_in": 0.72,
+          "supports": {
+            "seed": true,
+            "response_format": true,
+            "structured_outputs": true,
+            "temperature": true,
+            "top_p": true,
+            "logprobs": false,
+            "tools": true
+          }
+        },
+        {
+          "provider": "Together",
+          "tag": "together/fp8",
+          "quant": "fp8",
+          "ctx": 131072,
+          "price_in": 1.04,
+          "supports": {
+            "seed": false,
+            "response_format": true,
+            "structured_outputs": true,
+            "temperature": true,
+            "top_p": true,
+            "logprobs": false,
+            "tools": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "google/gemma-3-27b-it",
+      "name": "Google: Gemma 3 27B",
+      "why": "teacher model in ArthurConmy/hereditary",
+      "endpoints": [
+        {
+          "provider": "DeepInfra",
+          "tag": "deepinfra/fp8",
+          "quant": "fp8",
+          "ctx": 131072,
+          "price_in": 0.08,
+          "supports": {
+            "seed": true,
+            "response_format": true,
+            "structured_outputs": true,
+            "temperature": true,
+            "top_p": true,
+            "logprobs": false,
+            "tools": true
+          }
+        },
+        {
+          "provider": "Parasail",
+          "tag": "parasail/fp8",
+          "quant": "fp8",
+          "ctx": 131072,
+          "price_in": 0.08,
+          "supports": {
+            "seed": true,
+            "response_format": true,
+            "structured_outputs": true,
+            "temperature": true,
+            "top_p": true,
+            "logprobs": true,
+            "tools": false
+          }
+        },
+        {
+          "provider": "Nebius",
+          "tag": "nebius/fp8",
+          "quant": "fp8",
+          "ctx": 110000,
+          "price_in": 0.09999999999999999,
+          "supports": {
+            "seed": true,
+            "response_format": true,
+            "structured_outputs": true,
+            "temperature": true,
+            "top_p": true,
+            "logprobs": false,
+            "tools": false
+          }
+        },
+        {
+          "provider": "Novita",
+          "tag": "novita/bf16",
+          "quant": "bf16",
+          "ctx": 98304,
+          "price_in": 0.119,
+          "supports": {
+            "seed": true,
+            "response_format": false,
+            "structured_outputs": false,
+            "temperature": true,
+            "top_p": true,
+            "logprobs": false,
+            "tools": false
+          }
+        },
+        {
+          "provider": "Phala",
+          "tag": "phala",
+          "quant": "unknown",
+          "ctx": 262144,
+          "price_in": 0.15,
+          "supports": {
+            "seed": true,
+            "response_format": true,
+            "structured_outputs": true,
+            "temperature": true,
+            "top_p": true,
+            "logprobs": false,
+            "tools": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "mistralai/mistral-small-3.2-24b-instruct",
+      "name": "Mistral: Mistral Small 3.2 24B",
+      "why": "ablation model in GoodStartLabs/AI_Diplomacy",
+      "endpoints": [
+        {
+          "provider": "DeepInfra",
+          "tag": "deepinfra/fp8",
+          "quant": "fp8",
+          "ctx": 128000,
+          "price_in": 0.075,
+          "supports": {
+            "seed": true,
+            "response_format": true,
+            "structured_outputs": true,
+            "temperature": true,
+            "top_p": true,
+            "logprobs": false,
+            "tools": true
+          }
+        },
+        {
+          "provider": "Parasail",
+          "tag": "parasail/bf16",
+          "quant": "bf16",
+          "ctx": 131072,
+          "price_in": 0.09,
+          "supports": {
+            "seed": true,
+            "response_format": true,
+            "structured_outputs": true,
+            "temperature": true,
+            "top_p": true,
+            "logprobs": true,
+            "tools": false
+          }
+        },
+        {
+          "provider": "Venice",
+          "tag": "venice/fp8",
+          "quant": "fp8",
+          "ctx": 256000,
+          "price_in": 0.09375,
+          "supports": {
+            "seed": false,
+            "response_format": true,
+            "structured_outputs": true,
+            "temperature": true,
+            "top_p": true,
+            "logprobs": false,
+            "tools": true
+          }
+        },
+        {
+          "provider": "Mistral",
+          "tag": "mistral",
+          "quant": "unknown",
+          "ctx": 131072,
+          "price_in": 0.09999999999999999,
+          "supports": {
+            "seed": true,
+            "response_format": true,
+            "structured_outputs": true,
+            "temperature": true,
+            "top_p": true,
+            "logprobs": false,
+            "tools": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "deepseek/deepseek-r1",
+      "name": "DeepSeek: R1",
+      "why": "the model in nostalgebraist/cot_legibility",
+      "endpoints": [
+        {
+          "provider": "Novita",
+          "tag": "novita/fp8",
+          "quant": "fp8",
+          "ctx": 64000,
+          "price_in": 0.7,
+          "supports": {
+            "seed": true,
+            "response_format": true,
+            "structured_outputs": true,
+            "temperature": true,
+            "top_p": true,
+            "logprobs": false,
+            "tools": true
+          }
+        },
+        {
+          "provider": "Azure",
+          "tag": "azure",
+          "quant": "unknown",
+          "ctx": 163840,
+          "price_in": 1.4849999999999999,
+          "supports": {
+            "seed": false,
+            "response_format": false,
+            "structured_outputs": false,
+            "temperature": true,
+            "top_p": true,
+            "logprobs": false,
+            "tools": false
+          }
+        }
+      ]
+    }
+  ]
+}
