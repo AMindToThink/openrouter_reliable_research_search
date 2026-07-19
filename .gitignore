@@ -16,3 +16,6 @@ __pycache__/
 # Scratch / clones used during auditing (kept out of the repo)
 research/clones/
 scratch/
+
+# Claude Code worktrees (forked agent sessions)
+.claude/worktrees/
