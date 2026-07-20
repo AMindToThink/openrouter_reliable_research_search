@@ -53,6 +53,11 @@ USES_STRUCTURED_OUTPUT = re.compile(r"response_format|json_schema|structured_out
 USES_SAMPLING_PARAMS = re.compile(r"\b(temperature|top_p|top_k|seed|logprobs|logit_bias|min_p)\b")
 USES_FLOOR_OR_PRICE = re.compile(r""":floor\b|["']sort["']\s*[:=]\s*["']price["']|:nitro\b""")
 LOGS_PROVENANCE = re.compile(r"""\.provider\b|["']provider["']\s*\]|/generation\?id|generation_id|native_finish""")
+# A call site whose model argument looks like the specific research subject — the model's
+# identity IS the study, so a quantization floor is not a substitute for a hard pin (still M1).
+IDENTITY_SENSITIVE_CALL_SITE = re.compile(
+    r"untrusted_model|target_model|judge_model|interrogat|red[_-]?team|jailbreak|\bprobe[ds]?\b|\bprobing\b",
+    re.I)
 
 TEXT_EXTS = {
     ".py", ".ipynb", ".js", ".ts", ".tsx", ".jsx", ".go", ".rs", ".java", ".rb",
@@ -176,6 +181,16 @@ def audit_file(p: Path, root: Path) -> FileReport | None:
     if USES_FLOOR_OR_PRICE.search(text):
         add("M12", "Cheap/degraded route selected", "Med", USES_FLOOR_OR_PRICE,
             "`:floor`/`sort:price`/`:nitro` selects cheapest-or-fastest (often most quantized) route.")
+    # M1 (floor-not-a-pin case) — a quantization floor exists (so the earlier M1 branch
+    # doesn't fire) but there is no hard endpoint pin, and this call site's model argument
+    # looks like the specific research subject. A floor is not a pin in that case.
+    if has_quant and not has_pin and not has_tag_pin and IDENTITY_SENSITIVE_CALL_SITE.search(text):
+        add("M1", "Floor without a pin on an identity-sensitive call", "High",
+            IDENTITY_SENSITIVE_CALL_SITE,
+            "A `quantizations` floor is set, but there's no hard `order`/`only` endpoint pin, and "
+            "this call site looks identity-sensitive (interrogation/red-teaming/probing/judge). "
+            "A quality floor is not a pin — the model under study can still be served by any "
+            "provider/quantization inside it, run to run. Pin the endpoint instead.")
 
     # Positive note: provider dict exists but partial
     if has_provider_dict and not (has_quant and has_req):

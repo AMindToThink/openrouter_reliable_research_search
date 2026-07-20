@@ -72,7 +72,7 @@ so "my params went through" intuitions built on `temperature` are misleading.
 
 ## Mode A — Authoring: call OpenRouter properly
 
-Set routing preferences under the `provider` key. Two good presets:
+Set routing preferences under the `provider` key. Two presets, only one of which is a pin:
 
 **Reproducibility-first** (you want the *same* weights every run — headline numbers, comparisons):
 ```python
@@ -84,13 +84,19 @@ extra_body={"provider": {
 }}
 ```
 
-**Quality-floor default** (many heterogeneous models, provider-agnostic, but never garbage):
+**Quality-floor default** — for a call site whose whole job is one named model, this is never the
+fix; use the preset above. It's only for shared infra underneath many call sites that genuinely
+can't hardcode a pin because it doesn't know the model in advance — and even there, the floor must
+never be the caller's *entire* safety story. If you're writing that infra, make each call site
+either supply a hard pin or explicitly, visibly opt out of one (a `pin=`/`floor_only_ack=`-style
+API — see `reports/openrouter-best-practices.md` §3b for the pattern and why a bare floor fails
+this repo's own taxonomy). The floor itself:
 ```python
 provider = {
-    "quantizations": ["fp8", "fp16", "bf16", "fp32", "unknown"],  # keep "unknown" only if you need Claude/GPT/Gemini
+    "quantizations": ["fp8", "fp16", "bf16", "fp32"],  # add "unknown" only if you need Claude/GPT/Gemini
     "data_collection": "deny",
     "sort": "exacto",                # quality-first; also disables probabilistic load balancing
-    "require_parameters": True,      # add this if you pass sampling params or use structured outputs
+    "require_parameters": True,
 }
 ```
 
@@ -183,6 +189,9 @@ For each call site, determine:
    order/only/sort · allow_fallbacks:false · provenance logging.
 4. **If they pinned — what does the pinned endpoint actually serve?** Look it up (Mode A
    pre-flight). A confident-looking pin onto an int4 endpoint is worse than it looks.
+5. **Is the model itself the research subject** (interrogation/red-teaming/probing/judge/
+   benchmark/comparison)? If yes, a `quantizations` floor with no `order`/`only` pin is still
+   **M1** — the fix is recipe 3a, a hard endpoint pin, never recipe 3b's fleet floor.
 
 **`inspect_ai` is the reference plumbing.** `OpenRouterAPI.__init__` collects a `provider` dict
 model-arg and emits it as `extra_body["provider"]`, so any inspect-based eval (much of the safety

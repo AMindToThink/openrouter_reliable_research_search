@@ -5,9 +5,11 @@ served by *any* of several providers, at *any* quantization, on *any* inference 
 *silently dropped* sampling parameters — so unless you pin routing explicitly, the artifact
 you evaluated is not a fixed object and your numbers may not reproduce or generalize.
 
-This guide is grounded in OpenRouter's own docs, community practice, and one strong reference
-implementation (Redwood Research's Control Tower). It is written for people who use OpenRouter
-to *produce research results* — evals, LLM-as-judge scores, agent rollouts, or generated data.
+This guide is grounded in OpenRouter's own docs, community practice, and a scored case study of
+Redwood Research's Control Tower `openrouter_provider.py` — which, checked against this repo's
+own taxonomy in §3b, fails three of the mistakes it exists to prevent. It's included as a worked
+failure, not a model to imitate. It is written for people who use OpenRouter to *produce research
+results* — evals, LLM-as-judge scores, agent rollouts, or generated data.
 
 ---
 
@@ -61,7 +63,7 @@ Inspect users: the `provider=` model arg; raw HTTP: top-level `"provider"`).
 
 | Field | Default | Set it to… | Why |
 | --- | --- | --- | --- |
-| `quantizations` | *(unset → any)* | `["fp8","fp16","bf16","fp32"]` (add `"unknown"` only if you must reach proprietary models) | Stop silently landing on int4/fp4/int8. |
+| `quantizations` | *(unset → any)* | `["fp8","fp16","bf16","fp32"]` (add `"unknown"` only if you must reach proprietary models) | Stop silently landing on int4/fp4/int8 — but this is a floor, not a pin: it narrows the set of eligible providers, it doesn't fix one. Not sufficient by itself when the model's identity is the thing your research is about (§3). |
 | `require_parameters` | `false` | `true` | Force routing only to providers that honor your `temperature`/`seed`/`response_format`/tools. Prevents silent parameter dropping. |
 | `data_collection` | `"allow"` | `"deny"` | Don't send prompts to train-on-your-data providers. Use ZDR/`zdr:true` to also exclude operational retention. |
 | `order` | *(unset)* | `["provider-slug"]` | Pin a single named provider for maximum reproducibility (disables load balancing). |
@@ -76,7 +78,7 @@ the identifier you record as "the model").
 
 ---
 
-## 3. Two safe recipes
+## 3. Pin the endpoint — and if you're the library, force the choice
 
 ### 3a. Reproducibility-first (you want the *same* weights every run)
 
@@ -102,24 +104,87 @@ resp = client.chat.completions.create(
 
 Then **record the actual provider that served each response** (see §4).
 
-### 3b. Quality-floor / fleet default (many models, provider-agnostic, but never garbage)
+### 3b. If you're the library, not the caller
 
-You can't pin one provider across many heterogeneous models, but you can guarantee a floor.
-This is the Control Tower pattern and a good project-wide default:
+Sometimes the code that talks to OpenRouter is shared infrastructure underneath many research
+call sites, and it genuinely can't hardcode a pin — it doesn't know which model any given caller
+will ask for. That's a real constraint on the library. **It is not a license for the library's
+silent default to become the caller's entire safety story** — and that is exactly the mistake
+Redwood Research's Control Tower makes in `openrouter_provider.py`:
 
 ```python
 OPENROUTER_PROVIDER_DEFAULTS = {
-    "quantizations": ["fp8", "fp16", "bf16", "fp32", "unknown"],  # "unknown" kept so Claude/Gemini/GPT still route
+    "quantizations": ["fp8", "fp16", "bf16", "fp32", "unknown"],
     "data_collection": "deny",
-    "sort": "exacto",            # quality-first ordering; also disables load balancing
-    # consider adding: "require_parameters": True  (see the gotcha below)
+    "sort": "exacto",
 }
 ```
 
-Trade-off they consciously accept: `"unknown"` lets open-weight providers that *decline to
-disclose* their precision slip past the fp8 floor. They lean on the `exacto` quality sort +
-empirical tool-call accuracy to catch bad endpoints instead. If you don't need proprietary
-models in the same call path, **drop `"unknown"`** for a hard precision floor.
+**Scored against this repo's own taxonomy, this implementation fails three of the mistakes it
+exists to prevent:**
+
+- **M2 / M9 (silent parameter dropping / judge on an unconstrained route) — FAIL.**
+  `require_parameters` is never set. Any judge call built on this default that depends on
+  provider-enforced structured output can be silently routed to a provider that ignores the
+  schema — exactly the failure mode this guide is written to stop.
+- **M4 (no provenance logging) — FAIL.** Nothing in Control Tower's `models/` code captures
+  which provider actually served a call. Without that, a bad route can't even be diagnosed after
+  the fact, let alone reproduced.
+- **M1 (unpinned quantization) — nominally addressed, with a self-inflicted hole.** The floor
+  exists, but `"unknown"` — kept so proprietary models still route — lets any provider that
+  *declines to disclose its precision* pass straight through it. That's not a quantization floor
+  with an edge case; it's a quantization floor with a hole sized to fit exactly the providers
+  worth worrying about.
+- **M3 (probabilistic routing) — nominally addressed, but not a pin.** `sort: exacto` disables
+  blind load-balancing, which is real progress over the default. It is still an ordering
+  preference among multiple providers, not a fixed one, and there's no `allow_fallbacks: false`
+  because there's nothing pinned to protect.
+
+By the same standard applied to the 35 repos in this survey, this pattern would score `at_risk`:
+three High-severity mistakes fail outright, and the two it nominally addresses have known,
+documented holes rather than being solved. The consequence is measured, not hypothetical: Redwood
+Research's own other public repo, BashArena, never routes through this pattern at all and is
+flagged `at_risk` with the near-complete `M1, M2, M3, M4, M5, M7, M8` set in this survey
+(`findings/survey.csv`) — the safeguard existing in one file didn't stop the org's own other
+codebase from shipping with none of it. That is what a floor-as-the-whole-policy actually buys
+you: a shared module that looks like it solved the problem, and a research call site next door
+that never touches it.
+
+**The fix isn't a better floor. It's making the pin the thing a caller has to actively skip,
+not the thing they have to actively add:**
+
+```python
+FLOOR_DEFAULTS = {
+    "quantizations": ["fp8", "fp16", "bf16", "fp32"],  # no "unknown" unless you truly cannot avoid it
+    "data_collection": "deny",
+    "sort": "exacto",
+    "require_parameters": True,
+}
+
+def make_model(name: str, *, pin: dict | None = None, floor_only_ack: bool = False):
+    """Construct a model handle. Callers must supply a hard provider pin, or explicitly
+    acknowledge that this call's result doesn't depend on which provider serves it."""
+    if pin is None and not floor_only_ack:
+        raise ValueError(
+            f"No provider pin for {name!r}. If this call's result truly doesn't depend on "
+            "which provider/quantization serves it, pass floor_only_ack=True and say why in "
+            "a comment at the call site. Otherwise pass pin={'order': [...], "
+            "'allow_fallbacks': False}."
+        )
+    return get_model(name, provider={**FLOOR_DEFAULTS, **(pin or {})})
+```
+
+Keep the floor underneath this — it's a real backstop for the calls that legitimately opt out,
+and a guard against the worst case if a pinned endpoint goes down. What it cannot do is stand in
+for the decision, and a design that lets it stand in for the decision by default will get used
+that way, every time, by callers who never think about it — which is the whole reason this
+mistake is common enough to survey.
+
+> **⚠️ The trap:** a script that interrogates one specific "untrusted model" isn't in the same
+> position as shared infra serving arbitrary callers — it already knows which model it needs.
+> Recommending the 3b floor as *the* fix there, or waving off `allow_fallbacks: false` with
+> "there's no pin to protect," gets it backwards: pin the endpoint (3a) on top of, not instead of,
+> any shared floor. Still counts as **M1** (`findings/taxonomy.md`).
 
 ---
 
@@ -127,7 +192,8 @@ models in the same call path, **drop `"unknown"`** for a hard precision floor.
 
 Treat the provider/inference stack as a first-class hyperparameter — because it is.
 
-- [ ] **Pin quantization** (`quantizations`) to a precision floor you trust.
+- [ ] **Set a quantization floor** (`quantizations`) you trust. This restricts, it does not pin —
+      if the model's identity is what your research is about, you also need the next item.
 - [ ] **Set `require_parameters: true`** if you depend on `temperature`/`seed`/`logprobs`/
       `response_format`/tools. (Otherwise a provider silently ignoring them corrupts results.)
 - [ ] **Pin the provider** (`order` + `allow_fallbacks:false`) for any headline number you want
@@ -197,4 +263,4 @@ most controlled, at higher cost and less model coverage.
 - "The Silent Hyperparameter: Quantifying the Impact of Inference Backends on LLM Reproducibility" — <https://arxiv.org/abs/2605.19537>
 - "Chasing Shadows: Pitfalls in LLM Security Research" — <https://arxiv.org/pdf/2512.09549>
 - QwenLM/qwen-code PR #348 (rejected "avoid quantized models" default) — <https://github.com/QwenLM/qwen-code/pull/348>
-- Reference implementation: Redwood Research Control Tower `openrouter_provider.py` (fp8+ floor, `data_collection: deny`, `sort: exacto`).
+- Redwood Research Control Tower `openrouter_provider.py` — scored against this repo's own taxonomy in §3b: fails M2/M9 (`require_parameters` never set) and M4 (no provenance capture), and only nominally addresses M1/M3 (a floor with an `"unknown"` hole, an order-preference with no pin). A worked failure case, not a model to imitate.
