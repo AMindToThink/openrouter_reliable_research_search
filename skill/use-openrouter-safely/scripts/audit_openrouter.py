@@ -41,6 +41,12 @@ HAS_DATA_COLLECTION_DENY = re.compile(r"""["']data_collection["']\s*[:=]\s*["']d
 HAS_PROVIDER_PIN = re.compile(r"""["'](order|only)["']\s*[:=]""")
 HAS_SORT = re.compile(r"""["']sort["']\s*[:=]""")
 HAS_PROVIDER_DICT = re.compile(r"""["']provider["']\s*[:=]""")
+# An *endpoint tag* pin — "only": ["cerebras/fp16"] — fixes the quantization, not just the
+# vendor, so it satisfies M1 without a separate `quantizations` key.
+HAS_ENDPOINT_TAG_PIN = re.compile(
+    r"""["'](?:order|only)["']\s*[:=]\s*[\[(][^\])]*["'][A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+["']""")
+# A pin is only a preference until fallbacks are off.
+HAS_FALLBACKS_OFF = re.compile(r"""["']allow_fallbacks["']\s*[:=]\s*(?i:false)""")
 
 # ---- risk signals (presence = suspicious) ------------------------------------
 USES_STRUCTURED_OUTPUT = re.compile(r"response_format|json_schema|structured_output|response_schema")
@@ -122,18 +128,33 @@ def audit_file(p: Path, root: Path) -> FileReport | None:
     has_pin = bool(HAS_PROVIDER_PIN.search(text))
     has_sort = bool(HAS_SORT.search(text))
     logs_prov = bool(LOGS_PROVENANCE.search(text))
+    has_tag_pin = bool(HAS_ENDPOINT_TAG_PIN.search(text))
+    fallbacks_off = bool(HAS_FALLBACKS_OFF.search(text))
 
     def add(mid: str, name: str, sev: str, pat: re.Pattern[str] | None, detail: str):
         rep.findings.append(Finding(mid, name, sev, rel, find_line(text, pat) if pat else 1, detail))
 
-    # M1 — unpinned quantization
-    if not has_quant:
-        add("M1", "Unpinned quantization", "High", ROUTER_SIGNALS[0][1],
-            "No `quantizations` restriction found — provider may serve int4/fp4/int8.")
+    # M1 — unpinned quantization. An endpoint-tag pin ("only": ["targon/fp8"]) already fixes
+    # the quantization, so it is NOT a finding; a bare vendor pin is the dangerous middle case.
+    if not has_quant and not has_tag_pin:
+        if has_pin:
+            add("M1", "Provider pinned, quantization unverified", "High", HAS_PROVIDER_PIN,
+                "Pinned a provider but not a quantization. A pinned endpoint can itself be int4 "
+                "(e.g. MathArena pins `order:[moonshotai]`, which serves Kimi K2.6 at int4 while "
+                "an fp8 endpoint exists). Check /models/{slug}/endpoints, or pin the endpoint tag "
+                "(`only: ['provider/fp8']`).")
+        else:
+            add("M1", "Unpinned quantization", "High", ROUTER_SIGNALS[0][1],
+                "No `quantizations` restriction found — provider may serve int4/fp4/int8.")
     # M3 — probabilistic routing (no pin / no sort)
     if not has_pin and not has_sort:
         add("M3", "Probabilistic provider routing", "High", ROUTER_SIGNALS[0][1],
             "No `order`/`only`/`sort` — default load-balancing across providers; run-to-run drift.")
+    # M3 — a pin without allow_fallbacks:false is a preference, not a guarantee
+    elif has_pin and not fallbacks_off:
+        add("M3", "Pin can silently fall back", "Med", HAS_PROVIDER_PIN,
+            "`order`/`only` set but `allow_fallbacks` not false (defaults true) — under load or "
+            "downtime the request silently routes to an unpinned provider.")
     # M2 — silent param dropping
     if USES_SAMPLING_PARAMS.search(text) and not has_req:
         add("M2", "Silent parameter dropping", "High", USES_SAMPLING_PARAMS,
@@ -146,9 +167,10 @@ def audit_file(p: Path, root: Path) -> FileReport | None:
     if not has_deny:
         add("M5", "Data-policy not restricted", "Med", ROUTER_SIGNALS[0][1],
             "No `data_collection:'deny'` — prompts may route to train-on-your-data providers.")
-    # M4 — no provenance logging
+    # M4 — no provenance logging (High per taxonomy.md: without it you cannot even
+    # notice a bad route after the fact)
     if not logs_prov:
-        add("M4", "No provenance logging", "Med", None,
+        add("M4", "No provenance logging", "High", None,
             "No sign the served `provider` / generation id is recorded — can't reproduce/diagnose.")
     # M12 — actively cheap/degraded route
     if USES_FLOOR_OR_PRICE.search(text):
