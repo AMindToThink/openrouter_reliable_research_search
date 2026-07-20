@@ -72,7 +72,7 @@ so "my params went through" intuitions built on `temperature` are misleading.
 
 ## Mode A — Authoring: call OpenRouter properly
 
-Set routing preferences under the `provider` key. Two good presets:
+Set routing preferences under the `provider` key. Two presets, only one of which is a pin:
 
 **Reproducibility-first** (you want the *same* weights every run — headline numbers, comparisons):
 ```python

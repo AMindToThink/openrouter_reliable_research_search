@@ -63,7 +63,7 @@ Inspect users: the `provider=` model arg; raw HTTP: top-level `"provider"`).
 
 | Field | Default | Set it to… | Why |
 | --- | --- | --- | --- |
-| `quantizations` | *(unset → any)* | `["fp8","fp16","bf16","fp32"]` (add `"unknown"` only if you must reach proprietary models) | Stop silently landing on int4/fp4/int8. |
+| `quantizations` | *(unset → any)* | `["fp8","fp16","bf16","fp32"]` (add `"unknown"` only if you must reach proprietary models) | Stop silently landing on int4/fp4/int8 — but this is a floor, not a pin: it narrows the set of eligible providers, it doesn't fix one. Not sufficient by itself when the model's identity is the thing your research is about (§3). |
 | `require_parameters` | `false` | `true` | Force routing only to providers that honor your `temperature`/`seed`/`response_format`/tools. Prevents silent parameter dropping. |
 | `data_collection` | `"allow"` | `"deny"` | Don't send prompts to train-on-your-data providers. Use ZDR/`zdr:true` to also exclude operational retention. |
 | `order` | *(unset)* | `["provider-slug"]` | Pin a single named provider for maximum reproducibility (disables load balancing). |
@@ -78,7 +78,7 @@ the identifier you record as "the model").
 
 ---
 
-## 3. Two safe recipes
+## 3. Two recipes — only one of them is a pin
 
 ### 3a. Reproducibility-first (you want the *same* weights every run)
 
@@ -175,7 +175,8 @@ provenance; nothing does.
 
 Treat the provider/inference stack as a first-class hyperparameter — because it is.
 
-- [ ] **Pin quantization** (`quantizations`) to a precision floor you trust.
+- [ ] **Set a quantization floor** (`quantizations`) you trust. This restricts, it does not pin —
+      if the model's identity is what your research is about, you also need the next item.
 - [ ] **Set `require_parameters: true`** if you depend on `temperature`/`seed`/`logprobs`/
       `response_format`/tools. (Otherwise a provider silently ignoring them corrupts results.)
 - [ ] **Pin the provider** (`order` + `allow_fallbacks:false`) for any headline number you want
