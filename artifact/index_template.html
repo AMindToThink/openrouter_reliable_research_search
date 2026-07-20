@@ -153,6 +153,12 @@
   .verdict.safe { background: var(--safe-bg); color: var(--safe); }
   .verdict.risk { background: var(--high-bg); color: var(--high); }
   .verdict.risk.med { background: var(--med-bg); color: var(--med); }
+  .verdict.na { background: var(--none-bg); color: var(--none); }
+  .verdict.handled { background: var(--safe-bg); color: var(--safe); }
+  .classnote { background: var(--panel); border-left: 3px solid var(--none); border-radius: 6px;
+    padding: 9px 12px; font-size: .87rem; color: var(--muted); }
+  .classnote.handled { border-left-color: var(--safe); }
+  .classnote b { color: var(--ink); }
   .midchips { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; max-width: 210px; }
   @media (max-width: 700px) { .midchips { display: none; } }
   .midchip { font-family: var(--mono); font-size: .7rem; color: var(--muted); background: var(--panel); border: 1px solid var(--border);
@@ -210,8 +216,9 @@
     <h1>Same model, <span class="hl">different weights.</span><br>Does anyone pin them down?</h1>
     <p class="lede">OpenRouter serves "a model" from whichever provider is cheapest-and-up — at any
       quantization down to int4, dropping sampling params it doesn't support, <strong>silently</strong>.
-      We audited <strong id="lede-n">35</strong> influential research repos that route model calls through it.
-      Here's who controls for it — and who's rolling the dice.</p>
+      We audited <strong id="lede-n">35</strong> influential research repos flagged as routing model calls
+      through it — <strong id="lede-u">34</strong> actually do. Here's who controls for it, who keeps it off
+      the result path, and who's rolling the dice.</p>
     <div class="stats" id="stats"></div>
   </header>
 
@@ -260,8 +267,9 @@
     <div class="controls" id="controls">
       <div class="grp"><span class="glab">verdict</span>
         <button class="chip" data-f="verdict" data-v="all" aria-pressed="true">all</button>
-        <button class="chip" data-f="verdict" data-v="safe">safe</button>
-        <button class="chip" data-f="verdict" data-v="risk">at&nbsp;risk</button></div>
+        <button class="chip" data-f="verdict" data-v="risk">at&nbsp;risk</button>
+        <button class="chip" data-f="verdict" data-v="handled">handled&nbsp;well</button>
+        <button class="chip" data-f="verdict" data-v="na">n/a</button></div>
       <div class="grp"><span class="glab">severity</span>
         <button class="chip" data-f="sev" data-v="all" aria-pressed="true">all</button>
         <button class="chip" data-f="sev" data-v="high">high</button>
@@ -286,6 +294,11 @@
       the source); we did not re-run experiments across providers to measure the actual delta. Highest real
       risk is on <b>open-weight</b> models on <b>critical routes</b> (output feeds a reported number, a
       training set, or a safety measurement).<br><br>
+      <b>Not all “safe” is the same.</b> <b>HANDLED</b> = actually routes research calls through OpenRouter
+      and controls for it (pinned provider, logged provenance) — a real positive example.
+      <b>OFF RESULT PATH</b> = OpenRouter exists in the repo but no reported result depends on it.
+      <b>NO OR USAGE</b> = no OpenRouter call site at all (a discovery false positive, excluded from the
+      “actually route through it” denominator). Only HANDLED demonstrates anything about using OpenRouter well.<br><br>
       <b>“Possibly-impacted findings”</b> are specific claims/figures we traced to an OpenRouter-routed
       call. They are <b>hypotheses worth checking, not demonstrated errors</b> — each carries its own
       “depends on OpenRouter” confidence. Rows tagged <span class="unver">unverified</span> had their
@@ -330,14 +343,19 @@ function xp(text, limit){
   const crit = DATA.filter(d=>d.critical).length;
   const high = DATA.filter(d=>d.severity==="high").length;
   $("#lede-n").textContent = n;
+  const _u = $("#lede-u"); if(_u) _u.textContent = users;
   const impacted = DATA.reduce((a,d)=>a+((d.impacted||[]).length),0);
+  const kls = c => DATA.filter(d=>d.safety_class===c).length;
+  const atRisk = kls("at_risk"), handled = kls("handled"),
+        offPath = kls("not_on_result_path"), noUse = kls("no_usage_found");
+  const users = n - noUse;                 // repos that actually route through OpenRouter
   const cards = [
-    {cls:"s-high", n:unsafe, sub:"/"+n, lab:"leave a corruption channel open"},
-    {cls:"s-high", n:Math.round(100*unsafe/n)+"%", sub:"", lab:"of audited repos are at risk"},
+    {cls:"s-high", n:atRisk, sub:"/"+users, lab:"route research calls through OpenRouter with an uncontrolled channel open"},
+    {cls:"s-high", n:Math.round(100*atRisk/users)+"%", sub:"", lab:"of repos that actually route through it"},
     {cls:"s-high", n:impacted, sub:"", lab:"specific claims / figures possibly affected"},
-    {cls:"", n:crit, sub:"/"+n, lab:"route it into a result that matters"},
     {cls:"s-med", n:high, sub:"", lab:"carry a high-severity gap"},
-    {cls:"s-safe", n:safe, sub:"", lab:"control for it properly"},
+    {cls:"s-safe", n:handled, sub:"", lab:"uses OpenRouter on a real result path AND controls for it"},
+    {cls:"", n:offPath+noUse, sub:"", lab:`never route a reported result through it (${offPath} off-path, ${noUse} no call site)`},
   ];
   $("#stats").innerHTML = cards.map(c=>`<div class="stat ${c.cls}">
     <div class="n tnum">${c.n}<small>${c.sub}</small></div><div class="lab">${c.lab}</div></div>`).join("");
@@ -393,8 +411,9 @@ $("#search").addEventListener("input",e=>{ state.q=e.target.value.toLowerCase();
 $("#sortsel").addEventListener("change",e=>{ state.sort=e.target.value; render(); });
 
 function passes(d){
-  if(state.verdict==="safe" && !d.safe) return false;
-  if(state.verdict==="risk" && d.safe) return false;
+  if(state.verdict==="risk"    && d.safety_class!=="at_risk") return false;
+  if(state.verdict==="handled" && d.safety_class!=="handled") return false;
+  if(state.verdict==="na" && !["not_on_result_path","no_usage_found"].includes(d.safety_class)) return false;
   if(state.sev!=="all" && d.severity!==state.sev) return false;
   if(state.mistake && !(d.mids||[]).includes(state.mistake)) return false;
   if(state.q){ const h=(d.title+" "+d.venue).toLowerCase(); if(!h.includes(state.q)) return false; }
@@ -426,8 +445,10 @@ function impactBlock(d){
 }
 function repoCard(d,i){
   const sevcls = d.safe ? "sev-none" : (d.severity==="medium"?"sev-medium":"sev-high");
-  const vcls = d.safe ? "safe" : (d.severity==="medium"?"risk med":"risk");
-  const vtxt = d.safe ? "SAFE" : "AT RISK";
+  const KL = {handled:["handled","HANDLED"], not_on_result_path:["na","OFF RESULT PATH"],
+              no_usage_found:["na","NO OR USAGE"]}[d.safety_class];
+  const vcls = KL ? KL[0] : (d.severity==="medium"?"risk med":"risk");
+  const vtxt = KL ? KL[1] : "AT RISK";
   const chips = (d.mids||[]).slice(0,6).map(m=>`<span class="midchip">${m}</span>`).join("");
   const mt = {open_weight:"open-weight",proprietary:"proprietary",mixed:"mixed",unknown:"?"}[d.model_type]||d.model_type;
   const safeg = (d.safeguards||[]).map(s=>`<span class="tag">${esc(s.split("(")[0].trim())}</span>`).join("") || `<span class="tag">none found</span>`;
@@ -451,7 +472,8 @@ function repoCard(d,i){
         <div class="field"><div class="flab">Why it matters</div><div class="fval">${xp(d.importance,220)}</div></div>
         <div class="field"><div class="flab">What they use OpenRouter for</div><div class="fval">${xp(d.use,200)}</div></div>
         ${d.safe
-          ? `<div class="field span2"><div class="flab">Why it's safe</div><div class="fval">${xp(d.notes,280)}</div></div>`
+          ? `<div class="field span2"><div class="flab">Classification — ${esc((d.safety_class||"").replace(/_/g," "))}</div>
+               <div class="classnote ${d.safety_class==="handled"?"handled":""}">${xp(d.safety_class_reason||d.notes,340)}</div></div>`
           : `<div class="field span2"><div class="flab">The problem</div><div class="fval">${xp(d.mistakes,420)}</div></div>`}
         ${impactBlock(d)}
         <div class="field span2"><div class="flab">Safeguards present</div><div class="fval"><div class="metarow" style="margin-top:2px">${safeg}</div></div></div>

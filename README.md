@@ -46,19 +46,33 @@ reported. If your research pins none of this, "the model" you evaluated is a mov
 ## Headline findings
 
 We audited **35** influential public repos (importance-first: NeurIPS · ICML · ICLR · ACL ·
-NAACL · Nature + UK AISI · METR · Redwood · Palisade · Anthropic Fellows + LessWrong/AF) that
-route model calls through OpenRouter. Each verdict came from one audit agent **plus one
+NAACL · Nature + UK AISI · METR · Redwood · Palisade · Anthropic Fellows + LessWrong/AF) flagged
+as routing model calls through OpenRouter — **34 actually do**. Each verdict came from one audit agent **plus one
 adversarial verifier** reading the actual source. Numbers below are generated from
 [`findings/stats.json`](findings/stats.json).
 
-- **31 / 35 (89%)** leave at least one *uncontrolled* provider-routing corruption channel open.
+- **31 / 34 (91%)** of the repos that *actually* route research calls through OpenRouter leave at
+  least one **uncontrolled** provider-routing corruption channel open.
 - **32 / 35** route OpenRouter output straight into a reported number, a training set, or a safety measurement.
 - **113 specific claims/figures** across **31 repos** were traced to an OpenRouter-routed call and could
   be affected — each named down to the figure/table/number, with its mechanism and a
   *"does this really depend on OpenRouter?"* confidence. (34 high-impact, 53 medium, 26 low.)
 - **23** carry a **high-severity** gap (can distort a result, not just reproducibility).
-- Only **4** control for it properly — and the cleanest, `nostalgebraist/cot_legibility`, is
-  exemplary precisely because *provider choice is its research question*.
+- **Exactly one repo** — `nostalgebraist/cot_legibility` — both uses OpenRouter for real results
+  **and** controls for it (pins `only:[novita]`, `allow_fallbacks:False`, logs the served provider).
+  It's exemplary precisely because *provider choice is its research question*.
+- The other three previously-"safe" repos are **not** success stories, and we no longer count them
+  as such. Every row now carries a `safety_class`:
+
+  | class | n | meaning |
+  | --- | :-: | --- |
+  | `at_risk` | 31 | routes research calls through OpenRouter with an uncontrolled channel open |
+  | `handled` | 1 | routes research calls through it **and** controls for it — the only real positive |
+  | `not_on_result_path` | 2 | OpenRouter present in the repo, but no reported result depends on it |
+  | `no_usage_found` | 1 | no OpenRouter call site at all (discovery false positive; excluded from the 34) |
+
+  A repo that never routes a research call through OpenRouter has demonstrated *nothing* about
+  using OpenRouter well — lumping those in with the one genuine success overstated the good news.
 - Most pervasive gaps (all silent by default): **no provenance logging (28)**, **data-policy
   left open (27)**, **unpinned quantization (26)**, **probabilistic routing (26)**.
 

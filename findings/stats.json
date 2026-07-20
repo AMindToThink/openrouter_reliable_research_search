@@ -42,5 +42,14 @@
       "low": 26
     },
     "impact_verified_rows": 35
-  }
+  },
+  "safety_class": {
+    "at_risk": 31,
+    "not_on_result_path": 2,
+    "no_usage_found": 1,
+    "handled": 1
+  },
+  "surveyed": 35,
+  "actual_openrouter_users": 34,
+  "at_risk_pct_of_users": 91
 }

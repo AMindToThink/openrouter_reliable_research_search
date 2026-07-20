@@ -29,14 +29,38 @@ SEV = {"M1": "High", "M2": "High", "M3": "High", "M4": "High", "M5": "Med", "M6"
 n = st["n"]
 imp = st["impacted"]
 verified = imp["impact_verified_rows"]
+
+# Safety classes replace the old binary safe/unsafe split: a repo that never routes a
+# research call through OpenRouter has demonstrated nothing about using it well, so it is
+# excluded from the denominator rather than counted as a success. Written by
+# scripts/set_safety_class.py — run that before this.
+try:
+    KL = st["safety_class"]
+    USERS = st["actual_openrouter_users"]
+    PCT = st["at_risk_pct_of_users"]
+except KeyError as exc:  # fail loudly rather than silently emitting the stale framing
+    raise SystemExit(
+        f"stats.json is missing {exc.args[0]!r} — run `uv run scripts/set_safety_class.py` first. "
+        "Refusing to regenerate summary.md with the superseded safe/unsafe framing."
+    ) from exc
+AT_RISK = KL.get("at_risk", 0)
+HANDLED = KL.get("handled", 0)
+OFF_PATH = KL.get("not_on_result_path", 0)
+NO_USAGE = KL.get("no_usage_found", 0)
+CLASS_LABEL = {"at_risk": "❌ at risk", "handled": "✅ handled",
+               "not_on_result_path": "➖ off result path", "no_usage_found": "➖ no usage"}
+
 L: list[str] = []
 
 L.append("# Findings — do important research repos use OpenRouter reliably?\n")
-L.append(f"> **{st['unsafe']} of {n}** surveyed important research repos ({round(100 * st['unsafe'] / n)}%) leave at "
-         f"least one uncontrolled provider-routing corruption channel open. **{st['critical_route']} of {n}** route "
-         f"OpenRouter output straight into a reported result, a training set, or a safety measurement. We traced "
+L.append(f"> **{AT_RISK} of {USERS} ({PCT}%)** of the surveyed repos that *actually* route research calls through "
+         f"OpenRouter leave at least one uncontrolled provider-routing corruption channel open. "
+         f"**Exactly {HANDLED}** repo both uses OpenRouter for real results and controls for it. We traced "
          f"**{imp['total_findings']} specific claims/figures** across **{imp['repos_with_impacted_findings']} repos** "
          f"that could be affected.\n")
+L.append(f"> Of {n} repos surveyed, {NO_USAGE} turned out to have no OpenRouter call site at all and {OFF_PATH} keep "
+         f"it off every result path — those are recorded as `no_usage_found` / `not_on_result_path`, **not** as "
+         f"successes.\n")
 L.append("**Read this correctly.** *At risk* means *exposed to a known corruption channel that was not controlled "
          "for* — **not** that any published number is wrong. *Possibly-impacted findings* are **hypotheses worth "
          "checking, not demonstrated errors**. We audited how the code routes model calls; we did not re-run "
@@ -45,7 +69,9 @@ L.append("**Read this correctly.** *At risk* means *exposed to a known corruptio
 L.append("## Headline numbers\n")
 L.append(f"- Repos audited: **{n}** (importance-first: NeurIPS/ICML/ICLR/ACL/NAACL/Nature + "
          "UK AISI/METR/Redwood/Palisade/Anthropic-Fellows + LessWrong/AF)")
-L.append(f"- Use it **safely**: **{st['safe']}**  ·  **unsafe**: **{st['unsafe']}**")
+L.append(f"- Actually route research calls through OpenRouter: **{USERS}** (of {n} surveyed)")
+L.append(f"- Safety classes: **at_risk {AT_RISK}** · **handled {HANDLED}** · not_on_result_path {OFF_PATH} · "
+         f"no_usage_found {NO_USAGE}")
 L.append(f"- Severity: **{st['severity'].get('high', 0)} high**, {st['severity'].get('medium', 0)} medium, "
          f"{st['severity'].get('none', 0)} none")
 L.append(f"- **Specific possibly-impacted findings: {imp['total_findings']}** "
@@ -77,20 +103,29 @@ for r in rows:
     shown += 1
 L.append("")
 
-L.append("## The repos that use it safely (and why)\n")
+L.append("## The one repo that uses it properly\n")
 for r in rows:
-    if r.get("uses_safely") is True:
-        why = (r.get("audit_notes") or "")[:200].replace("\n", " ")
+    if r.get("safety_class") == "handled":
+        why = (r.get("safety_class_reason") or r.get("audit_notes") or "")[:400].replace("\n", " ")
         L.append(f"- **{r['title']}** — {why}")
 L.append("")
 
+L.append("## Not success stories (recorded separately, not counted as safe)\n")
+L.append("These repos avoid the mistakes only because no reported result depends on OpenRouter — "
+         "which demonstrates nothing about using it well.\n")
+for r in rows:
+    if r.get("safety_class") in ("not_on_result_path", "no_usage_found"):
+        why = (r.get("safety_class_reason") or "")[:300].replace("\n", " ")
+        L.append(f"- **{r['title']}** (`{r['safety_class']}`) — {why}")
+L.append("")
+
 L.append("## Full table\n")
-L.append("| Repo | Venue | Safe? | Severity | Mistakes | Impacted claims |")
+L.append("| Repo | Venue | Class | Severity | Mistakes | Impacted claims |")
 L.append("| --- | --- | :---: | :---: | --- | :---: |")
 for r in rows:
-    safe = "✅" if r.get("uses_safely") else "❌"
+    cls = CLASS_LABEL.get(r.get("safety_class", ""), r.get("safety_class", "?"))
     mids = ", ".join(r.get("mistake_ids") or []) or "—"
-    L.append(f"| {r['title'].split(' (')[0][:44]} | {(r.get('venue') or '')[:24]} | {safe} | "
+    L.append(f"| {r['title'].split(' (')[0][:44]} | {(r.get('venue') or '')[:24]} | {cls} | "
              f"{r.get('severity')} | {mids} | {len(r.get('impacted_findings') or [])} |")
 L.append("\nSee `survey.csv` / `survey.json` for full detail (evidence, call-site permalink, one-line fix, "
          "per-claim mechanism and confidence).\n")
