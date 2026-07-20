@@ -78,7 +78,7 @@ the identifier you record as "the model").
 
 ---
 
-## 3. Two recipes — only one of them is a pin
+## 3. Pin the endpoint — and if you're the library, force the choice
 
 ### 3a. Reproducibility-first (you want the *same* weights every run)
 
@@ -104,11 +104,13 @@ resp = client.chat.completions.create(
 
 Then **record the actual provider that served each response** (see §4).
 
-### 3b. Quality-floor / fleet default (many models, provider-agnostic, but never garbage)
+### 3b. If you're the library, not the caller
 
-For infrastructure that doesn't know in advance which model a caller will request, you can't pin
-one provider — but you can guarantee a floor. That's a sound idea. Redwood Research's Control
-Tower ships one implementation of it in `openrouter_provider.py`:
+Sometimes the code that talks to OpenRouter is shared infrastructure underneath many research
+call sites, and it genuinely can't hardcode a pin — it doesn't know which model any given caller
+will ask for. That's a real constraint on the library. **It is not a license for the library's
+silent default to become the caller's entire safety story** — and that is exactly the mistake
+Redwood Research's Control Tower makes in `openrouter_provider.py`:
 
 ```python
 OPENROUTER_PROVIDER_DEFAULTS = {
@@ -140,28 +142,43 @@ exists to prevent:**
 
 By the same standard applied to the 35 repos in this survey, this pattern would score `at_risk`:
 three High-severity mistakes fail outright, and the two it nominally addresses have known,
-documented holes rather than being solved. This is not a close call, and it is not improved by
-Control Tower's authorship or reputation — **it is a bad implementation of a good idea.** The
-consequence is measured, not hypothetical: Redwood Research's own other public repo, BashArena,
-never routes through this pattern at all and is flagged `at_risk` with the near-complete `M1, M2,
-M3, M4, M5, M7, M8` set in this survey (`findings/survey.csv`) — the safeguard existing in one
-file didn't stop the org's own other codebase from shipping with none of it. Treating this pattern
-as sufficient, or copying it into a downstream call site as *the* fix, is how the mistake
-propagates further: an earlier version of this exact advice did exactly that (the trap below).
+documented holes rather than being solved. The consequence is measured, not hypothetical: Redwood
+Research's own other public repo, BashArena, never routes through this pattern at all and is
+flagged `at_risk` with the near-complete `M1, M2, M3, M4, M5, M7, M8` set in this survey
+(`findings/survey.csv`) — the safeguard existing in one file didn't stop the org's own other
+codebase from shipping with none of it. That is what a floor-as-the-whole-policy actually buys
+you: a shared module that looks like it solved the problem, and a research call site next door
+that never touches it.
 
-A floor that actually holds:
+**The fix isn't a better floor. It's making the pin the thing a caller has to actively skip,
+not the thing they have to actively add:**
 
 ```python
-SAFER_FLOOR_DEFAULTS = {
+FLOOR_DEFAULTS = {
     "quantizations": ["fp8", "fp16", "bf16", "fp32"],  # no "unknown" unless you truly cannot avoid it
     "data_collection": "deny",
     "sort": "exacto",
     "require_parameters": True,
 }
+
+def make_model(name: str, *, pin: dict | None = None, floor_only_ack: bool = False):
+    """Construct a model handle. Callers must supply a hard provider pin, or explicitly
+    acknowledge that this call's result doesn't depend on which provider serves it."""
+    if pin is None and not floor_only_ack:
+        raise ValueError(
+            f"No provider pin for {name!r}. If this call's result truly doesn't depend on "
+            "which provider/quantization serves it, pass floor_only_ack=True and say why in "
+            "a comment at the call site. Otherwise pass pin={'order': [...], "
+            "'allow_fallbacks': False}."
+        )
+    return get_model(name, provider={**FLOOR_DEFAULTS, **(pin or {})})
 ```
 
-— and still log the served provider on every response (§4). A floor doesn't remove the need for
-provenance; nothing does.
+Keep the floor underneath this — it's a real backstop for the calls that legitimately opt out,
+and a guard against the worst case if a pinned endpoint goes down. What it cannot do is stand in
+for the decision, and a design that lets it stand in for the decision by default will get used
+that way, every time, by callers who never think about it — which is the whole reason this
+mistake is common enough to survey.
 
 > **⚠️ The trap:** a script that interrogates one specific "untrusted model" isn't in the same
 > position as shared infra serving arbitrary callers — it already knows which model it needs.
