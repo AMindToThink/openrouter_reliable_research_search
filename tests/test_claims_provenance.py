@@ -216,3 +216,50 @@ def test_skill_does_not_claim_llama_is_the_worst_case(skill, claims) -> None:
 def test_skill_gptoss_logprobs_example(skill, claims) -> None:
     assert (f"{claims['gptoss_endpoints_with_logprobs']} of "
             f"{claims['gptoss_endpoints']} endpoints") in skill
+
+
+# --- the shareable poster ----------------------------------------------------------
+
+POSTER = ROOT / "image" / "openrouter_findings.svg"
+
+
+@pytest.fixture(scope="module")
+def poster() -> str:
+    if not POSTER.exists():
+        pytest.fail("image/openrouter_findings.svg missing — run scripts/make_poster.py")
+    return POSTER.read_text()
+
+
+def test_poster_headline_matches_the_data(poster, claims) -> None:
+    """The poster travels further than the repo — it is the surface most likely to be
+    screenshotted and quoted, and was the only published one whose numbers nothing checked."""
+    at_risk = claims["repos_at_risk"]
+    crit = claims["repos_critical_route"]
+    assert f"{at_risk}/{crit}" in poster, f"poster headline should read {at_risk}/{crit}"
+    assert f"{round(100 * at_risk / crit)}%" in poster
+
+
+def test_poster_secondary_figures_match(poster, claims) -> None:
+    for key in ("impacted_findings_total", "repos_severity_high"):
+        assert f">{claims[key]}<" in poster, f"poster should render {claims[key]} for {key}"
+
+
+def test_poster_mistake_bars_match_frequencies(poster, claims) -> None:
+    """The poster renders only the top 8 mistakes (make_poster.py:110), so check those."""
+    freq = {k.split("_")[1]: claims[k] for k in claims if k.startswith("mistake_")}
+    top8 = sorted(freq.items(), key=lambda kv: (-kv[1], kv[0]))[:8]
+    for mid, count in top8:
+        assert f">{mid}<" in poster, f"{mid} should be among the poster's top-8 bars"
+        assert f">{count}<" in poster, f"{mid} count {count} missing from poster"
+
+
+def test_poster_is_not_stale(poster) -> None:
+    """Regenerating must be a no-op; otherwise the published image outran its data."""
+    r = subprocess.run([sys.executable, str(ROOT / "scripts" / "make_poster.py")],
+                       capture_output=True, text=True, cwd=ROOT)
+    if r.returncode != 0:
+        pytest.skip(f"make_poster.py needs cairosvg: {r.stderr.strip().splitlines()[-1:]}")
+    assert POSTER.read_text() == poster, (
+        "image/openrouter_findings.svg was stale — regenerate with "
+        "`uv run --with cairosvg scripts/make_poster.py`"
+    )
