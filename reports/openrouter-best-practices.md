@@ -78,15 +78,6 @@ the identifier you record as "the model").
 
 ## 3. Two safe recipes
 
-**Which one do you reach for?** Ask first: *is the specific model's identity — its weights,
-checkpoint, or provider — the thing your research is about?* If you're interrogating, red-teaming,
-probing, judging, or benchmarking one named model, the answer is yes, and **3a is mandatory** — a
-quality floor is not a pin, no matter how good the floor. 3b is a legitimate choice only for shared
-infrastructure that must serve whichever model a caller passes in, where no single call path knows
-or cares in advance which one that will be. Don't let "3b is Control Tower's own default" become a
-reason to skip 3a at a call site that already knows exactly which model it needs — see the trap
-below.
-
 ### 3a. Reproducibility-first (you want the *same* weights every run)
 
 Pin one provider and forbid drift. Accept that the run fails loudly if that provider is down —
@@ -114,7 +105,9 @@ Then **record the actual provider that served each response** (see §4).
 ### 3b. Quality-floor / fleet default (many models, provider-agnostic, but never garbage)
 
 You can't pin one provider across many heterogeneous models, but you can guarantee a floor.
-This is the Control Tower pattern and a good project-wide default:
+This is the Control Tower pattern and a good default **for infrastructure that doesn't know in
+advance which model a caller will request** — not for a call site whose whole job is one named
+model (interrogating, red-teaming, judging, or benchmarking it), which always needs 3a instead:
 
 ```python
 OPENROUTER_PROVIDER_DEFAULTS = {
@@ -130,14 +123,11 @@ disclose* their precision slip past the fp8 floor. They lean on the `exacto` qua
 empirical tool-call accuracy to catch bad endpoints instead. If you don't need proprietary
 models in the same call path, **drop `"unknown"`** for a hard precision floor.
 
-> **⚠️ The trap: copying the floor into an identity-sensitive call site.** A downstream research
-> script that interrogates one specific "untrusted model" (or judges it with a fixed "judge
-> model") is not in the same position as a shared library serving arbitrary callers — that script
-> already knows exactly which model it needs. Recommending the 3b floor as *the* fix for such a
-> call site — or worse, waving off `allow_fallbacks: false` with "there's no pin to protect" — gets
-> the logic backwards: the floor is what infra falls back to when it *doesn't* know the model in
-> advance. The call site should pin its endpoint (3a) on top of, not instead of, any shared floor.
-> This exact mistake is taxonomy entry **M13** (`findings/taxonomy.md`).
+> **⚠️ The trap:** a script that interrogates one specific "untrusted model" isn't in the same
+> position as shared infra serving arbitrary callers — it already knows which model it needs.
+> Recommending the 3b floor as *the* fix there, or waving off `allow_fallbacks: false` with
+> "there's no pin to protect," gets it backwards: pin the endpoint (3a) on top of, not instead of,
+> any shared floor. Still counts as **M1** (`findings/taxonomy.md`).
 
 ---
 

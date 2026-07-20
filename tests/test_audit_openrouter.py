@@ -7,8 +7,8 @@ Focus on the rules added after the survey/endpoint sweep:
   * a pin without `allow_fallbacks: false` is only a preference;
   * M4 severity matches findings/taxonomy.md (High);
   * a quantization floor with no hard pin, on a call site that looks identity-sensitive
-    (interrogating/red-teaming/probing/judging a specific model), raises M13 — a floor is
-    not a pin, and the same floor on a generic/infra call site must NOT raise it.
+    (interrogating/red-teaming/probing/judging a specific model), still raises M1 — a floor
+    is not a pin there, and the same floor on a generic/infra call site must NOT raise it.
 
     uv run pytest tests/test_audit_openrouter.py
 """
@@ -181,27 +181,19 @@ def test_non_router_file_is_ignored(audit, tmp_path):
     assert audit.audit_file(f, tmp_path) is None
 
 
-def test_floor_on_identity_sensitive_site_flags_m13(audit, tmp_path):
+def test_floor_on_identity_sensitive_site_flags_m1(audit, tmp_path):
     """A quantization floor is not a pin for a call site studying a specific model."""
     findings = scan(audit, tmp_path, FLOOR_ON_IDENTITY_SENSITIVE_SITE)
-    assert ("M13", "Fleet floor mistaken for a pin") in findings
+    assert ("M1", "Floor without a pin on an identity-sensitive call") in findings
 
 
-def test_floor_on_generic_infra_site_does_not_flag_m13(audit, tmp_path):
+def test_floor_on_generic_infra_site_does_not_flag_it(audit, tmp_path):
     """The same floor is a legitimate 3b default when no model is the specific research subject."""
-    findings = scan(audit, tmp_path, FLOOR_ON_GENERIC_INFRA_SITE)
-    ids = {mid for mid, _ in findings}
-    assert "M13" not in ids
+    ids = {mid for mid, _ in scan(audit, tmp_path, FLOOR_ON_GENERIC_INFRA_SITE)}
+    assert "M1" not in ids
 
 
-def test_floor_with_hard_pin_on_identity_sensitive_site_does_not_flag_m13(audit, tmp_path):
-    """Already pinned — M13 would be a false positive here."""
-    findings = scan(audit, tmp_path, FLOOR_WITH_HARD_PIN_ON_IDENTITY_SENSITIVE_SITE)
-    ids = {mid for mid, _ in findings}
-    assert "M13" not in ids
-
-
-def test_floor_on_identity_sensitive_site_does_not_also_flag_m1(audit, tmp_path):
-    """The floor itself does satisfy M1 — M13 is the separate, correct finding here."""
-    ids = {mid for mid, _ in scan(audit, tmp_path, FLOOR_ON_IDENTITY_SENSITIVE_SITE)}
+def test_floor_with_hard_pin_on_identity_sensitive_site_does_not_flag_it(audit, tmp_path):
+    """Already pinned — the floor-without-a-pin finding would be a false positive here."""
+    ids = {mid for mid, _ in scan(audit, tmp_path, FLOOR_WITH_HARD_PIN_ON_IDENTITY_SENSITIVE_SITE)}
     assert "M1" not in ids
