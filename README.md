@@ -36,7 +36,7 @@ reported. If your research pins none of this, "the model" you evaluated is a mov
 
 | Path | What's there |
 | --- | --- |
-| `reports/` | Best-practices guide; audit of the `interrogation-protocols` project |
+| `reports/` | Best-practices guide; the provider A/B rerun experiment plan |
 | `findings/` | The survey dataset (CSV/JSON), taxonomy of mistakes, methodology, `claims.json` |
 | `scripts/` | Everything generated is generated here — see [Provenance](#provenance-where-every-published-number-comes-from) |
 | `artifact/` | Interactive data explorer (self-contained HTML) |
@@ -101,7 +101,6 @@ adversarial verifier** reading the actual source. Numbers below are generated fr
 | 📊 **Interactive explorer** | Provider Routing Inspector — filter by verdict/severity, click a mistake to filter, "Routing Roulette" demo, per-repo link to the exact offending line: **https://claude.ai/code/artifact/6ba2006d-e72e-47b8-9e81-fe6270f8305e** (source: [`artifact/index.html`](artifact/index.html)) |
 | 🖼️ **Shareable image** | [`image/openrouter_findings.png`](image/openrouter_findings.png) — one-glance summary + the fix |
 | 📄 **Best-practices guide** | [`reports/openrouter-best-practices.md`](reports/openrouter-best-practices.md) |
-| 🔎 **`interrogation-protocols` audit** | [`reports/interrogation-protocols-openrouter-audit.md`](reports/interrogation-protocols-openrouter-audit.md) (report only — that project was not modified) |
 | 🗂️ **Dataset** | [`findings/survey.csv`](findings/survey.csv) · [`findings/survey.json`](findings/survey.json) (incl. a validated GitHub permalink to each call site) |
 | 🧾 **Taxonomy** | [`findings/taxonomy.md`](findings/taxonomy.md) — the M1–M12 mistake catalog |
 | 🛠️ **Claude skill** | [`skill/use-openrouter-safely/`](skill/use-openrouter-safely/) — guidance + a heuristic static auditor |
