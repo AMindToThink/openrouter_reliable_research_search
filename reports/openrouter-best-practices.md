@@ -5,9 +5,11 @@ served by *any* of several providers, at *any* quantization, on *any* inference 
 *silently dropped* sampling parameters — so unless you pin routing explicitly, the artifact
 you evaluated is not a fixed object and your numbers may not reproduce or generalize.
 
-This guide is grounded in OpenRouter's own docs, community practice, and one strong reference
-implementation (Redwood Research's Control Tower). It is written for people who use OpenRouter
-to *produce research results* — evals, LLM-as-judge scores, agent rollouts, or generated data.
+This guide is grounded in OpenRouter's own docs, community practice, and one partial reference
+point (Redwood Research's Control Tower `openrouter_provider.py`) — worth studying because it's
+better than doing nothing, not because it's a model to imitate uncritically; see the caveat in
+§3b. It is written for people who use OpenRouter to *produce research results* — evals,
+LLM-as-judge scores, agent rollouts, or generated data.
 
 ---
 
@@ -123,6 +125,14 @@ disclose* their precision slip past the fp8 floor. They lean on the `exacto` qua
 empirical tool-call accuracy to catch bad endpoints instead. If you don't need proprietary
 models in the same call path, **drop `"unknown"`** for a hard precision floor.
 
+**This isn't an endorsement of Control Tower overall.** Even this pattern ships without
+`require_parameters` by default — a High-severity gap by this repo's own taxonomy (M2/M9) — and
+it's opt-in: nothing stops a caller from constructing a model directly and skipping it entirely.
+That bypass isn't hypothetical: Redwood Research's *own* other public repo, BashArena, does
+exactly that and is flagged `at_risk` with the near-complete `M1, M2, M3, M4, M5, M7, M8` set in
+this survey (`findings/survey.csv`). Take this pattern as evidence that *a* floor beats *no*
+floor — not as evidence that Control Tower solved this well.
+
 > **⚠️ The trap:** a script that interrogates one specific "untrusted model" isn't in the same
 > position as shared infra serving arbitrary callers — it already knows which model it needs.
 > Recommending the 3b floor as *the* fix there, or waving off `allow_fallbacks: false` with
@@ -205,4 +215,4 @@ most controlled, at higher cost and less model coverage.
 - "The Silent Hyperparameter: Quantifying the Impact of Inference Backends on LLM Reproducibility" — <https://arxiv.org/abs/2605.19537>
 - "Chasing Shadows: Pitfalls in LLM Security Research" — <https://arxiv.org/pdf/2512.09549>
 - QwenLM/qwen-code PR #348 (rejected "avoid quantized models" default) — <https://github.com/QwenLM/qwen-code/pull/348>
-- Reference implementation: Redwood Research Control Tower `openrouter_provider.py` (fp8+ floor, `data_collection: deny`, `sort: exacto`).
+- Partial reference point: Redwood Research Control Tower `openrouter_provider.py` (fp8+ floor, `data_collection: deny`, `sort: exacto`) — a floor better than none, not an exemplar; see the caveat in §3b.
