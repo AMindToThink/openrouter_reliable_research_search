@@ -60,6 +60,45 @@ CLASSIFY: dict[str, tuple[str, str]] = {
 }
 
 
+def summary_lines(counts: dict[str, int], n: int) -> list[str]:
+    """Render the console summary.
+
+    Three denominators are each defensible and they give different rates, so report all
+    three together and mark the one the published headline uses. This used to print a
+    single unlabelled "91% of actual users", which read as a contradiction of the README's
+    97% and led a reviewer to conclude the explorer had silently reverted to the old
+    framing. It had not — but one bare percentage was enough to make it look that way.
+
+    Pure so tests/test_claims_provenance.py can pin it to findings/claims.json: console
+    output is otherwise the one published surface the provenance chain does not cover.
+    """
+    at_risk = counts.get("at_risk", 0)
+    handled = counts.get("handled", 0)
+    off_path = counts.get("not_on_result_path", 0)
+    no_usage = counts.get("no_usage_found", 0)
+
+    with_call_site = n - no_usage        # an OpenRouter call site exists somewhere in the repo
+    on_result_path = at_risk + handled   # its output reaches a published result
+
+    def rate(denom: int) -> str:
+        return f"{at_risk}/{denom} = {round(100 * at_risk / denom)}%" if denom else "n/a"
+
+    out = ["safety_class counts:"]
+    out += [f"   {k:20} {v}" for k, v in sorted(counts.items(), key=lambda kv: -kv[1])]
+    out += [
+        "",
+        "at-risk rate, by denominator:",
+        f"   {n:>3}  repos surveyed                             {rate(n)}",
+        f"   {with_call_site:>3}  contain an OpenRouter call site anywhere   {rate(with_call_site)}",
+        f"   {on_result_path:>3}  put its output on a result path            {rate(on_result_path)}   <- headline",
+        "",
+        f"excluded from the headline denominator: {off_path} off result path, "
+        f"{no_usage} with no call site",
+        f"uses OpenRouter on a result path AND controls for it: {handled}",
+    ]
+    return out
+
+
 def main() -> int:
     survey_path = ROOT / "findings/survey.json"
     survey = json.loads(survey_path.read_text())
@@ -93,18 +132,8 @@ def main() -> int:
     # one writer of stats.json and it can never disagree with the dataset.
     merge_verified.regenerate(rows)
 
-    n = len(rows)
-    no_usage = counts.get("no_usage_found", 0)
-    users = n - no_usage
-    at_risk = counts.get("at_risk", 0)
-
-    print("safety_class counts:")
-    for k, v in sorted(counts.items(), key=lambda x: -x[1]):
-        print(f"   {k:20} {v}")
-    print(f"\nsurveyed: {n} | actual OpenRouter users: {users} (excludes {no_usage} with no call site)")
-    pct = round(100 * at_risk / users) if users else 0
-    print(f"at risk: {at_risk}/{users} = {pct}% of actual users")
-    print(f"genuinely handled well: {counts.get('handled', 0)}")
+    for line in summary_lines(counts, len(rows)):
+        print(line)
     return 0
 
 

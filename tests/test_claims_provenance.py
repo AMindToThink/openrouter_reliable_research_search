@@ -14,6 +14,7 @@ hand-type a number that has no claim behind it.
 
 from __future__ import annotations
 
+import importlib.util
 import json
 import re
 import subprocess
@@ -263,3 +264,55 @@ def test_poster_is_not_stale(poster) -> None:
         "image/openrouter_findings.svg was stale — regenerate with "
         "`uv run --with cairosvg scripts/make_poster.py`"
     )
+# --- the pipeline's own console output ---------------------------------------------
+
+@pytest.fixture(scope="module")
+def summary_lines(claims):
+    """The console summary set_safety_class.py prints, rendered from the real counts."""
+    # set_safety_class imports its sibling merge_verified, so scripts/ must be importable.
+    sys.path.insert(0, str(ROOT / "scripts"))
+    spec = importlib.util.spec_from_file_location(
+        "set_safety_class", ROOT / "scripts" / "set_safety_class.py")
+    assert spec and spec.loader
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = mod
+    spec.loader.exec_module(mod)
+    counts = {
+        "at_risk": claims["repos_at_risk"],
+        "handled": claims["repos_handled"],
+        "not_on_result_path": claims["repos_not_on_result_path"],
+        "no_usage_found": claims["repos_no_usage_found"],
+    }
+    return mod.summary_lines(counts, claims["repos_surveyed"])
+
+
+def test_console_headline_rate_matches_claims(summary_lines, claims) -> None:
+    """Console output is a published surface too — pin it like the prose.
+
+    A bare, unlabelled "91% of actual users" here was read as the explorer having reverted
+    to the old denominator. The page was correct; only this message was ambiguous.
+    """
+    headline = [ln for ln in summary_lines if "<- headline" in ln]
+    assert len(headline) == 1, "exactly one denominator should be marked as the headline"
+    assert (f"{claims['repos_at_risk']}/{claims['repos_critical_route']} = "
+            f"{claims['at_risk_pct_of_critical_route']}%") in headline[0]
+
+
+def test_console_reports_every_denominator(summary_lines, claims) -> None:
+    """All three rates visible, so no single number can be mistaken for the headline."""
+    text = "\n".join(summary_lines)
+    for denom, pct in ((claims["repos_surveyed"], None),
+                       (claims["repos_routing_through_openrouter"],
+                        claims["at_risk_pct_of_users"]),
+                       (claims["repos_critical_route"],
+                        claims["at_risk_pct_of_critical_route"])):
+        assert f"{claims['repos_at_risk']}/{denom} = " in text
+        if pct is not None:
+            assert f"{claims['repos_at_risk']}/{denom} = {pct}%" in text
+
+
+def test_console_headline_denominator_is_the_result_path_one(summary_lines, claims) -> None:
+    """Guards the framing itself: the headline must be the on-result-path denominator."""
+    headline = next(ln for ln in summary_lines if "<- headline" in ln)
+    assert "result path" in headline
+    assert f"/{claims['repos_routing_through_openrouter']} = " not in headline
