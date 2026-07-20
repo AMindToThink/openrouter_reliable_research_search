@@ -188,7 +188,9 @@ def test_floor_on_identity_sensitive_site_flags_m1(audit, tmp_path):
 
 
 def test_floor_on_generic_infra_site_does_not_flag_it(audit, tmp_path):
-    """The same floor is a legitimate 3b default when no model is the specific research subject."""
+    """The auditor can't see whether this call site forces a pin elsewhere (see
+    best-practices.md §3b) — so on the identity signal alone it must not flag M1 here, though a
+    bare floor still isn't a safe default by itself, only a backstop under a forced pin/opt-out."""
     ids = {mid for mid, _ in scan(audit, tmp_path, FLOOR_ON_GENERIC_INFRA_SITE)}
     assert "M1" not in ids
 

@@ -84,14 +84,19 @@ extra_body={"provider": {
 }}
 ```
 
-**Quality-floor default** (shared infra that doesn't know the model in advance — never for a call
-site whose whole job is one named model; that always needs the preset above instead):
+**Quality-floor default** — for a call site whose whole job is one named model, this is never the
+fix; use the preset above. It's only for shared infra underneath many call sites that genuinely
+can't hardcode a pin because it doesn't know the model in advance — and even there, the floor must
+never be the caller's *entire* safety story. If you're writing that infra, make each call site
+either supply a hard pin or explicitly, visibly opt out of one (a `pin=`/`floor_only_ack=`-style
+API — see `reports/openrouter-best-practices.md` §3b for the pattern and why a bare floor fails
+this repo's own taxonomy). The floor itself:
 ```python
 provider = {
-    "quantizations": ["fp8", "fp16", "bf16", "fp32", "unknown"],  # keep "unknown" only if you need Claude/GPT/Gemini
+    "quantizations": ["fp8", "fp16", "bf16", "fp32"],  # add "unknown" only if you need Claude/GPT/Gemini
     "data_collection": "deny",
     "sort": "exacto",                # quality-first; also disables probabilistic load balancing
-    "require_parameters": True,      # add this if you pass sampling params or use structured outputs
+    "require_parameters": True,
 }
 ```
 
