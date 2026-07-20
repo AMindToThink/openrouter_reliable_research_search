@@ -102,7 +102,7 @@ adversarial verifier** reading the actual source. Numbers below are generated fr
 | 🖼️ **Shareable image** | [`image/openrouter_findings.png`](image/openrouter_findings.png) — one-glance summary + the fix |
 | 📄 **Best-practices guide** | [`reports/openrouter-best-practices.md`](reports/openrouter-best-practices.md) |
 | 🗂️ **Dataset** | [`findings/survey.csv`](findings/survey.csv) · [`findings/survey.json`](findings/survey.json) (incl. a validated GitHub permalink to each call site) |
-| 🧾 **Taxonomy** | [`findings/taxonomy.md`](findings/taxonomy.md) — the M1–M12 mistake catalog |
+| 🧾 **Taxonomy** | [`findings/taxonomy.md`](findings/taxonomy.md) — the M1–M13 mistake catalog |
 | 🛠️ **Claude skill** | [`skill/use-openrouter-safely/`](skill/use-openrouter-safely/) — guidance + a heuristic static auditor |
 
 ## Reproduce
@@ -115,7 +115,7 @@ uv run skill/use-openrouter-safely/scripts/audit_openrouter.py <path-to-repo>
 ### Use the skill
 
 `use-openrouter-safely` works in two modes: writing OpenRouter calls correctly, and auditing a
-repo's existing usage against the M1–M12 taxonomy. To install it for Claude Code:
+repo's existing usage against the M1–M13 taxonomy. To install it for Claude Code:
 
 ```bash
 cp -r skill/use-openrouter-safely ~/.claude/skills/

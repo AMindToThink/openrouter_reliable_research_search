@@ -28,7 +28,9 @@ Each candidate was audited (and the verdict adversarially re-checked by a second
    (low) vs. mixed.
 3. **Safeguards present** — `quantizations`, `require_parameters`, `data_collection:deny`,
    `order`/`only`/`sort`, and provenance logging.
-4. **Classification** against the taxonomy (`M1..M12`, see `taxonomy.md`).
+4. **Classification** against the taxonomy (`M1..M13`, see `taxonomy.md`). M13 was added after
+   this survey ran (from a real advising mistake, not a re-audit of these 35 repos), so it never
+   appears in the per-repo mistake_ids below — it has no base rate here, only a documented case.
 
 ## "Safe" vs "unsafe" — the bar
 

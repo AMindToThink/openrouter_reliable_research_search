@@ -94,6 +94,21 @@ provider = {
 }
 ```
 
+**Which one do you reach for?** If the model you're calling is the object of study — the
+"untrusted model" being interrogated/red-teamed/probed, the judge scoring it, or any model you
+benchmark or compare by name — use the reproducibility-first preset. Always. The quality-floor
+default is for shared infrastructure that must serve whatever model a caller passes in without
+knowing ahead of time which one; it's a floor under the unknown, not a downgrade path for a call
+site that already knows exactly which model it needs.
+
+> **⚠️ The trap: recommending the floor default for an identity-sensitive call site.** If a
+> repo's whole point is to study one named model, a `quantizations` floor plus `sort` is not a pin,
+> however good the floor — the model under test can still land on any provider/quantization the
+> floor allows, run to run. Telling maintainers to skip `allow_fallbacks: False` because "there's
+> no pin to protect" is exactly backwards: pin the endpoint (`only`/`order` + `allow_fallbacks:
+> False`) for that call site regardless of what floor a shared library defaults to elsewhere. This
+> is taxonomy mistake **M13**.
+
 ### Pin the endpoint, not just the vendor
 
 `only`/`order` accept **endpoint tags** of the form `provider_slug/variant` — and for most
@@ -158,7 +173,7 @@ Full guide: `reports/openrouter-best-practices.md` in the openrouter_reliable_re
 ## Mode B — Auditing a codebase's OpenRouter usage
 
 Goal: decide whether their results could be **silently corrupted** by provider routing, and
-classify any mistakes against the taxonomy (`M1..M12`, below).
+classify any mistakes against the taxonomy (`M1..M13`, below).
 
 ### Step 1 — Run the bundled static scanner (first pass)
 ```bash
@@ -183,6 +198,11 @@ For each call site, determine:
    order/only/sort · allow_fallbacks:false · provenance logging.
 4. **If they pinned — what does the pinned endpoint actually serve?** Look it up (Mode A
    pre-flight). A confident-looking pin onto an int4 endpoint is worse than it looks.
+5. **Is the model itself the research subject** (interrogation/red-teaming/probing/judge/
+   benchmark/comparison)? If yes, the correct fix is **always** recipe 3a — a hard endpoint pin.
+   Proposing recipe 3b's fleet quality-floor as the fix here, or telling maintainers a pin isn't
+   needed because a floor already exists, is itself a mistake (**M13**) — don't make it while
+   fixing M1.
 
 **`inspect_ai` is the reference plumbing.** `OpenRouterAPI.__init__` collects a `provider` dict
 model-arg and emits it as `extra_body["provider"]`, so any inspect-based eval (much of the safety
@@ -205,11 +225,14 @@ edits**. That makes "they can't easily fix this" a rare excuse, and makes the on
 | M9 | Judge on unconstrained route | High | 3/35 | `response_format`/schema without `require_parameters` |
 | M11 | Silent backend mixing | Med | 3/35 | some calls direct, some via router, same "model" |
 | M12 | Cheap/degraded route chosen | Med | 1/35 | `:floor` / `sort:price` on a research path |
+| M13 | Fleet floor mistaken for a pin | High | *(post-survey addition)* | `quantizations` floor (± `sort`) used or *recommended* for a call site whose model is the specific research subject, instead of a hard `order`/`only` pin |
 
 *"Seen in" = base rates from our 35-repo survey of published research code — check the top four
 first; they're the ones almost everyone misses.* Not in the table because nobody in the survey
 guarded against it: **context/max-output cliffs** (see the evidence section). If a repo relies on
-long prompts or long CoT and pins nothing, add it as a finding under M1's spirit.
+long prompts or long CoT and pins nothing, add it as a finding under M1's spirit. M13 was added
+after the survey (from a real advising mistake, not a re-audit of the 35 repos), so it has no
+survey base rate — that doesn't make it less real, only less measured.
 
 ### Step 4 — Verdict: use four classes, not "safe / unsafe"
 

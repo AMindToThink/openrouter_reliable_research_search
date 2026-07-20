@@ -5,7 +5,10 @@ Focus on the rules added after the survey/endpoint sweep:
     raise M1 — the previous behaviour flagged `cot_legibility`, our one exemplary repo;
   * a bare vendor pin without a quantization IS a finding (the MathArena int4 trap);
   * a pin without `allow_fallbacks: false` is only a preference;
-  * M4 severity matches findings/taxonomy.md (High).
+  * M4 severity matches findings/taxonomy.md (High);
+  * a quantization floor with no hard pin, on a call site that looks identity-sensitive
+    (interrogating/red-teaming/probing/judging a specific model), raises M13 — a floor is
+    not a pin, and the same floor on a generic/infra call site must NOT raise it.
 
     uv run pytest tests/test_audit_openrouter.py
 """
@@ -80,6 +83,45 @@ resp = client.chat.completions.create(
 )
 """
 
+FLOOR_ON_IDENTITY_SENSITIVE_SITE = BASE + """
+def get_model(untrusted_model: str):
+    return client.chat.completions.create(
+        model=untrusted_model,
+        extra_body={"provider": {
+            "quantizations": ["fp8", "fp16", "bf16", "fp32", "unknown"],
+            "sort": "exacto",
+            "data_collection": "deny",
+        }},
+    )
+log(resp.provider)
+"""
+
+FLOOR_ON_GENERIC_INFRA_SITE = BASE + """
+def make_model(name: str):
+    return client.chat.completions.create(
+        model=name,
+        extra_body={"provider": {
+            "quantizations": ["fp8", "fp16", "bf16", "fp32", "unknown"],
+            "sort": "exacto",
+            "data_collection": "deny",
+        }},
+    )
+log(resp.provider)
+"""
+
+FLOOR_WITH_HARD_PIN_ON_IDENTITY_SENSITIVE_SITE = BASE + """
+def get_model(judge_model: str):
+    return client.chat.completions.create(
+        model=judge_model,
+        extra_body={"provider": {
+            "quantizations": ["fp8", "fp16", "bf16", "fp32"],
+            "only": ["cerebras/fp16"],
+            "allow_fallbacks": False,
+        }},
+    )
+log(resp.provider)
+"""
+
 
 def test_endpoint_tag_pin_does_not_raise_m1(audit, tmp_path):
     """`only: ["targon/fp8"]` fixes the quantization — flagging M1 here is a false positive."""
@@ -137,3 +179,29 @@ def test_non_router_file_is_ignored(audit, tmp_path):
     f = tmp_path / "unrelated.py"
     f.write_text("print('hello')\n", encoding="utf-8")
     assert audit.audit_file(f, tmp_path) is None
+
+
+def test_floor_on_identity_sensitive_site_flags_m13(audit, tmp_path):
+    """A quantization floor is not a pin for a call site studying a specific model."""
+    findings = scan(audit, tmp_path, FLOOR_ON_IDENTITY_SENSITIVE_SITE)
+    assert ("M13", "Fleet floor mistaken for a pin") in findings
+
+
+def test_floor_on_generic_infra_site_does_not_flag_m13(audit, tmp_path):
+    """The same floor is a legitimate 3b default when no model is the specific research subject."""
+    findings = scan(audit, tmp_path, FLOOR_ON_GENERIC_INFRA_SITE)
+    ids = {mid for mid, _ in findings}
+    assert "M13" not in ids
+
+
+def test_floor_with_hard_pin_on_identity_sensitive_site_does_not_flag_m13(audit, tmp_path):
+    """Already pinned — M13 would be a false positive here."""
+    findings = scan(audit, tmp_path, FLOOR_WITH_HARD_PIN_ON_IDENTITY_SENSITIVE_SITE)
+    ids = {mid for mid, _ in findings}
+    assert "M13" not in ids
+
+
+def test_floor_on_identity_sensitive_site_does_not_also_flag_m1(audit, tmp_path):
+    """The floor itself does satisfy M1 — M13 is the separate, correct finding here."""
+    ids = {mid for mid, _ in scan(audit, tmp_path, FLOOR_ON_IDENTITY_SENSITIVE_SITE)}
+    assert "M1" not in ids
