@@ -337,18 +337,19 @@ function xp(text, limit){
 
 /* ---------- stats ---------- */
 (function(){
+  // Derive everything BEFORE touching the DOM. `users` was previously read one line above
+  // its own `const` declaration — a temporal-dead-zone ReferenceError that aborted the rest
+  // of this script block, so stats, chart, repo list and roulette all failed to render.
   const n = DATA.length;
-  const unsafe = DATA.filter(d=>!d.safe).length;
-  const safe = n-unsafe;
-  const crit = DATA.filter(d=>d.critical).length;
   const high = DATA.filter(d=>d.severity==="high").length;
-  $("#lede-n").textContent = n;
-  const _u = $("#lede-u"); if(_u) _u.textContent = users;
   const impacted = DATA.reduce((a,d)=>a+((d.impacted||[]).length),0);
   const kls = c => DATA.filter(d=>d.safety_class===c).length;
   const atRisk = kls("at_risk"), handled = kls("handled"),
         offPath = kls("not_on_result_path"), noUse = kls("no_usage_found");
   const users = n - noUse;                 // repos that actually route through OpenRouter
+
+  $("#lede-n").textContent = n;
+  const _u = $("#lede-u"); if(_u) _u.textContent = users;
   const cards = [
     {cls:"s-high", n:atRisk, sub:"/"+users, lab:"route research calls through OpenRouter with an uncontrolled channel open"},
     {cls:"s-high", n:Math.round(100*atRisk/users)+"%", sub:"", lab:"of repos that actually route through it"},
