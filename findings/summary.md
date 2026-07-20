@@ -28,9 +28,9 @@
 | 6 | M6 | Model version drift | Med | 22 |
 | 7 | M8 | Cross-provider comparison confound | High | 21 |
 | 8 | M10 | No reporting | Med | 13 |
-| 9 | M7 | seed→determinism assumption | Med | 3 |
-| 10 | M9 | Judge on unconstrained route | High | 3 |
-| 11 | M11 | Silent backend mixing | Med | 3 |
+| 9 | M11 | Silent backend mixing | Med | 3 |
+| 10 | M7 | seed→determinism assumption | Med | 3 |
+| 11 | M9 | Judge on unconstrained route | High | 3 |
 | 12 | M12 | Cheap/degraded route chosen | Med | 1 |
 
 ## Examples of specific possibly-impacted claims

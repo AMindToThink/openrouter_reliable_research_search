@@ -37,7 +37,8 @@ reported. If your research pins none of this, "the model" you evaluated is a mov
 | Path | What's there |
 | --- | --- |
 | `reports/` | Best-practices guide; audit of the `interrogation-protocols` project |
-| `findings/` | The survey dataset (CSV/JSON), taxonomy of mistakes, methodology |
+| `findings/` | The survey dataset (CSV/JSON), taxonomy of mistakes, methodology, `claims.json` |
+| `scripts/` | Everything generated is generated here — see [Provenance](#provenance-where-every-published-number-comes-from) |
 | `artifact/` | Interactive data explorer (self-contained HTML) |
 | `image/` | Shareable summary graphic |
 | `skill/` | `use-openrouter-safely` Claude skill |
@@ -104,10 +105,39 @@ adversarial verifier** reading the actual source. Numbers below are generated fr
 ```bash
 # audit any repo for OpenRouter reliability mistakes (heuristic first pass)
 uv run skill/use-openrouter-safely/scripts/audit_openrouter.py <path-to-repo>
-
-# regenerate the shareable image from the dataset (numbers come from the data)
-uv run scripts/make_poster.py
 ```
+
+### Provenance: where every published number comes from
+
+No statistic in this repo is hand-typed. Two files are *inputs* — the audit dataset
+(`findings/survey.json`, written by the multi-agent sweeps) and the endpoint snapshot
+(`findings/provider_spread_reference.json`, fetched from OpenRouter's API). Everything else
+is generated from them:
+
+```bash
+uv run scripts/fetch_provider_spread.py   # refetch the endpoint snapshot   ⚠️ see below
+uv run scripts/set_safety_class.py        # classify rows -> regenerates survey.csv,
+                                          #   stats.json, artifact/_data.json, index.html
+uv run scripts/build_claims.py            # derive every prose-cited statistic -> claims.json
+uv run scripts/make_summary.py            # findings/summary.md
+uv run --with cairosvg scripts/make_poster.py   # image/openrouter_findings.{svg,png}
+uv run --with pytest pytest tests/        # enforces the whole chain
+```
+
+`findings/claims.json` is the ledger: each entry records a value, its source file, and the
+derivation used. Markdown cannot `\input{}` a value, so
+[`tests/test_claims_provenance.py`](tests/test_claims_provenance.py) is the compensating
+control — it asserts the numbers written in this README, `findings/summary.md`, and the skill
+still match the data. A statistic that drifts fails a test instead of quietly going stale.
+
+Derived values are never persisted into the input snapshots, only into `claims.json`. (A
+`quant_spread` field once stored in the endpoint snapshot disagreed with its own endpoint
+list for 78 of 87 models; it was removed rather than repaired.)
+
+> ⚠️ **Refetching the endpoint snapshot moves published numbers.** Endpoints rotate
+> constantly. `fetch_provider_spread.py` will not reproduce the committed snapshot — rerun
+> `build_claims.py` and the test suite afterwards and update whatever the tests flag. Treat it
+> as a reviewed data change, not a routine refresh.
 
 The two multi-agent sweeps (importance-first discovery → per-repo audit + adversarial verify)
 were run as background workflows; the discovery record is preserved in

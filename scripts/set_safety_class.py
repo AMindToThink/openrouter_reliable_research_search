@@ -88,25 +88,22 @@ def main() -> int:
 
     survey_path.write_text(json.dumps(survey, indent=2, ensure_ascii=False))
 
-    stats_path = ROOT / "findings/stats.json"
-    stats = json.loads(stats_path.read_text())
+    # This script owns only the per-row classification. Every aggregate — including the
+    # safety_class tally — is derived from the rows by regenerate(), so there is exactly
+    # one writer of stats.json and it can never disagree with the dataset.
+    merge_verified.regenerate(rows)
+
     n = len(rows)
     no_usage = counts.get("no_usage_found", 0)
     users = n - no_usage
     at_risk = counts.get("at_risk", 0)
-    stats["safety_class"] = counts
-    stats["surveyed"] = n
-    stats["actual_openrouter_users"] = users
-    stats["at_risk_pct_of_users"] = round(100 * at_risk / users) if users else 0
-    stats_path.write_text(json.dumps(stats, indent=2))
-
-    merge_verified.regenerate(rows)
 
     print("safety_class counts:")
     for k, v in sorted(counts.items(), key=lambda x: -x[1]):
         print(f"   {k:20} {v}")
     print(f"\nsurveyed: {n} | actual OpenRouter users: {users} (excludes {no_usage} with no call site)")
-    print(f"at risk: {at_risk}/{users} = {stats['at_risk_pct_of_users']}% of actual users")
+    pct = round(100 * at_risk / users) if users else 0
+    print(f"at risk: {at_risk}/{users} = {pct}% of actual users")
     print(f"genuinely handled well: {counts.get('handled', 0)}")
     return 0
 

@@ -46,7 +46,7 @@ can move a benchmark by ~16pp (arXiv 2605.19537).
 **How much actually varies within one slug** (live endpoint sweep, 87 open-weight models —
 `findings/provider_spread_reference.json`):
 
-| What varies | Prevalence | Worst observed |
+| What varies | Prevalence | Example |
 | --- | --- | --- |
 | Endpoints per model | median 4, max 30 | — |
 | Both high-precision **and** ≤fp8 endpoints | **33/87** models | `gpt-oss-120b`: `cerebras/fp16` vs `wandb/fp4` |
@@ -57,6 +57,10 @@ can move a benchmark by ~16pp (arXiv 2605.19537).
 | `logprobs` / `top_logprobs` partial | 63/87 models | `gpt-oss-120b`: 8 of 20 endpoints |
 | `structured_outputs` partial | 56/87 models | — |
 | `response_format` partial | 41/87 models | — |
+
+`llama-3.3-70b` is used as the worked example because the survey's repos actually benchmark it
+and it shows both cliffs at once — it is *not* the extreme. The widest max-output spread in the
+snapshot is `xiaomi/mimo-v2.5` at 64.0x (16,384 vs 1,048,576).
 
 Two consequences people miss: **context/output cliffs are not a quantization problem.** A 2,048
 max-output endpoint truncates chain-of-thought mid-reasoning and a 6k-context endpoint truncates

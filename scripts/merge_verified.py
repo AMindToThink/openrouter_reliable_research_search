@@ -130,13 +130,44 @@ def regenerate(rows: list[dict]) -> None:
                 out.append("TRUE" if v is True else "FALSE" if v is False else v)
             w.writerow(out)
 
-    stats = json.loads((ROOT / "findings/stats.json").read_text())
-    stats["impacted"] = {
-        "repos_with_impacted_findings": sum(1 for r in rows if r.get("impacted_findings")),
-        "total_findings": sum(len(r.get("impacted_findings") or []) for r in rows),
-        "by_severity": {s: sum(1 for r in rows for f in (r.get("impacted_findings") or [])
-                               if f.get("severity") == s) for s in ("high", "medium", "low")},
-        "impact_verified_rows": sum(1 for r in rows if r.get("impact_verified")),
+    # stats.json is derived IN FULL from the rows. Nothing here is carried over from the
+    # previous file: a hand-carried aggregate goes stale silently the moment the survey
+    # changes, which is how `safe: 4` outlived the safe/unsafe framing it belonged to.
+    def tally(key: str) -> dict[str, int]:
+        out: dict[str, int] = {}
+        for r in rows:
+            v = r.get(key)
+            if v:
+                out[str(v)] = out.get(str(v), 0) + 1
+        return dict(sorted(out.items(), key=lambda kv: -kv[1]))
+
+    mistake_freq: dict[str, int] = {}
+    for r in rows:
+        for mid in r.get("mistake_ids") or []:
+            mistake_freq[mid] = mistake_freq.get(mid, 0) + 1
+
+    classes = tally("safety_class")
+    users = len(rows) - classes.get("no_usage_found", 0)
+    at_risk = classes.get("at_risk", 0)
+
+    stats = {
+        "n": len(rows),
+        "critical_route": sum(1 for r in rows if r.get("critical_route")),
+        "severity": tally("severity"),
+        "model_type": tally("model_type"),
+        "awareness": tally("awareness"),
+        "mistake_freq": dict(sorted(mistake_freq.items(), key=lambda kv: (-kv[1], kv[0]))),
+        "impacted": {
+            "repos_with_impacted_findings": sum(1 for r in rows if r.get("impacted_findings")),
+            "total_findings": sum(len(r.get("impacted_findings") or []) for r in rows),
+            "by_severity": {s: sum(1 for r in rows for f in (r.get("impacted_findings") or [])
+                                   if f.get("severity") == s) for s in ("high", "medium", "low")},
+            "impact_verified_rows": sum(1 for r in rows if r.get("impact_verified")),
+        },
+        "safety_class": classes,
+        "surveyed": len(rows),
+        "actual_openrouter_users": users,
+        "at_risk_pct_of_users": round(100 * at_risk / users) if users else 0,
     }
     (ROOT / "findings/stats.json").write_text(json.dumps(stats, indent=2))
 
