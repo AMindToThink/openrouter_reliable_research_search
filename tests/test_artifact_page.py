@@ -24,7 +24,9 @@ ROOT = Path(__file__).resolve().parent.parent
 TEMPLATE = ROOT / "artifact" / "index_template.html"
 PAGE = ROOT / "artifact" / "index.html"
 DATA = ROOT / "artifact" / "_data.json"
+ENDPOINTS = ROOT / "artifact" / "endpoints.json"
 PLACEHOLDER = "/*__DATA__*/[]"
+ENDPOINTS_PLACEHOLDER = '/*__ENDPOINTS__*/{"fetched_at":"","models":[]}'
 
 
 @pytest.fixture(scope="module")
@@ -77,6 +79,7 @@ def test_embedded_data_cannot_break_out_of_the_script(page: str) -> None:
 def test_page_is_in_sync_with_template_and_data(template: str, page: str) -> None:
     """index.html is generated — a hand-edit here would be silently overwritten."""
     expected = template.replace(PLACEHOLDER, DATA.read_text().strip())
+    expected = expected.replace(ENDPOINTS_PLACEHOLDER, ENDPOINTS.read_text().strip())
     assert page == expected, (
         "artifact/index.html is stale or hand-edited — regenerate with "
         "`uv run scripts/set_safety_class.py`"
@@ -85,6 +88,45 @@ def test_page_is_in_sync_with_template_and_data(template: str, page: str) -> Non
 
 def test_template_keeps_its_data_placeholder(template: str) -> None:
     assert template.count(PLACEHOLDER) == 1
+    assert template.count(ENDPOINTS_PLACEHOLDER) == 1
+
+
+# --- Routing Roulette runs on real, fetched endpoint data -------------------------
+
+def test_roulette_has_no_hardcoded_provider_quantization_pairs(template: str) -> None:
+    """Regression guard: the published widget once shipped invented vendor↔precision pairs.
+
+    Of the 12 hardcoded pairings it drew from, only 3 matched anything in our endpoint
+    snapshot — including a `DeepInfra @ int4` that appears nowhere across the 61 DeepInfra
+    endpoints we sampled. Naming real vendors with unmeasured precision claims, in a page
+    telling researchers to be rigorous about exactly that, is not a defensible trade for a
+    teaching toy. It now draws from artifact/endpoints.json instead.
+    """
+    assert "const PROVIDERS = [" not in template
+    assert "const EP = ENDPOINTS;" in template, "roulette must read the fetched snapshot"
+
+
+def test_roulette_data_is_real_and_dated() -> None:
+    ep = json.loads(ENDPOINTS.read_text())
+    assert ep.get("fetched_at"), "the page displays this date as its provenance claim"
+    assert "openrouter.ai/api" in ep.get("source", ""), "must record where it came from"
+    assert ep["models"], "no models would leave the widget empty"
+
+
+def test_every_roulette_endpoint_has_the_fields_the_widget_renders() -> None:
+    """The table reads these directly; a missing key renders as undefined, not an error."""
+    for m in json.loads(ENDPOINTS.read_text())["models"]:
+        assert m["id"] and m["why"] and m["endpoints"], m.get("id")
+        for e in m["endpoints"]:
+            assert set(e) >= {"provider", "quant", "ctx", "price_in", "supports"}, e
+            assert {"seed", "response_format"} <= set(e["supports"]), e["supports"]
+            assert isinstance(e["price_in"], (int, float)), "price drives the weighted draw"
+
+
+def test_roulette_models_are_multi_provider() -> None:
+    """A single-endpoint model cannot demonstrate routing spread — the widget's whole point."""
+    for m in json.loads(ENDPOINTS.read_text())["models"]:
+        assert len(m["endpoints"]) >= 2, f"{m['id']} has nothing to route between"
 
 
 def test_embedded_rows_match_the_survey(page: str) -> None:

@@ -198,8 +198,25 @@ def regenerate(rows: list[dict]) -> None:
     } for r in rows]
     (ROOT / "artifact/_data.json").write_text(json.dumps(art, ensure_ascii=False))
 
+    # The page inlines two datasets: the survey rows, and the real OpenRouter endpoint
+    # snapshot that drives Routing Roulette (artifact/endpoints.json, written by
+    # scripts/fetch_endpoints.py). Artifacts must be self-contained — a strict CSP blocks
+    # every external host — so both are injected here rather than fetched at runtime.
     tmpl = (ROOT / "artifact/index_template.html").read_text()
-    (ROOT / "artifact/index.html").write_text(tmpl.replace("/*__DATA__*/[]", json.dumps(art, ensure_ascii=False)))
+    endpoints_path = ROOT / "artifact/endpoints.json"
+    if not endpoints_path.exists():
+        raise SystemExit(
+            f"missing {endpoints_path.relative_to(ROOT)} — run `uv run scripts/fetch_endpoints.py`. "
+            "Refusing to build a page whose Routing Roulette has no data."
+        )
+    endpoints = endpoints_path.read_text().strip()
+    json.loads(endpoints)  # fail loudly rather than inlining malformed data
+    html = tmpl.replace("/*__DATA__*/[]", json.dumps(art, ensure_ascii=False))
+    html = html.replace('/*__ENDPOINTS__*/{"fetched_at":"","models":[]}', endpoints)
+    for placeholder in ("/*__DATA__*/[]", '/*__ENDPOINTS__*/{"fetched_at":"","models":[]}'):
+        if placeholder in html:
+            raise SystemExit(f"placeholder not substituted: {placeholder}")
+    (ROOT / "artifact/index.html").write_text(html)
     print("regenerated: survey.csv, stats.json, artifact/_data.json, artifact/index.html")
 
 

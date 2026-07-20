@@ -87,6 +87,15 @@
   .qbadge { font-family: var(--mono); font-size: .78rem; padding: 2px 7px; border-radius: 6px; margin-left: 6px; border: 1px solid var(--border); }
   .qbadge.good { background: var(--safe-bg); color: var(--safe); border-color: transparent; }
   .qbadge.bad  { background: var(--high-bg); color: var(--high); border-color: transparent; }
+  .qbadge.unk { background: var(--med-bg); color: var(--med); border-color: transparent; }
+  .epwrap { margin-top: 14px; overflow-x: auto; }
+  .eptable { border-collapse: collapse; width: 100%; font-size: .82rem; min-width: 580px; }
+  .eptable th { font-family: var(--mono); font-size: .66rem; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--faint); text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--border); font-weight: 600; }
+  .eptable td { padding: 6px 10px; border-bottom: 1px solid var(--border); font-family: var(--mono); }
+  .eptable tr.hit td { background: var(--panel); }
+  .eptable .no { color: var(--high); font-weight: 700; }
+  .eptable .yes { color: var(--safe); }
   .btn { font-family: var(--mono); font-size: .9rem; font-weight: 600; cursor: pointer; border-radius: 8px;
     border: 1px solid var(--border); background: var(--panel); color: var(--ink); padding: 10px 16px; transition: transform .05s, border-color .15s; }
   .btn:hover { border-color: var(--accent); } .btn:active { transform: translateY(1px); }
@@ -223,33 +232,37 @@
   </header>
 
   <section id="roulette-sec">
-    <div class="sec-head"><h2>▶ Routing Roulette <span class="simbadge">SIMULATED — makes no real requests</span></h2></div>
-    <p class="sec-sub">A <strong>teaching toy, not a measurement.</strong> It draws at random from an
-      <em>illustrative</em> list of provider/precision pairs to show the <em>shape</em> of what default
-      routing does — you ask for one model, OpenRouter picks a backend for you. The provider names are
-      real OpenRouter providers, but <strong>the specific provider↔quantization pairings below are made
-      up for illustration and are not claims about what any provider actually serves.</strong> For real
-      endpoint data, query OpenRouter's live models/endpoints API.</p>
+    <div class="sec-head"><h2>▶ Routing Roulette <span class="simbadge">REAL endpoint data · simulated draw</span></h2></div>
+    <p class="sec-sub">Every provider, precision, price and parameter-support flag here is <strong>real</strong> —
+      fetched from OpenRouter's public <span class="mono">/models/{id}/endpoints</span> API on
+      <span id="fetched-at" class="mono"></span>. Only the <em>draw</em> is simulated: it samples those real
+      endpoints the way OpenRouter documents its default load balancing (weighted by the inverse square of
+      price). <strong>No inference requests are made.</strong> Every model below is one that a repo in this
+      survey actually ran through OpenRouter.</p>
     <div class="roulette">
       <div class="roul-left">
-        <div class="mono" style="color:var(--faint);font-size:.82rem"><span style="color:var(--med)">[SIMULATED]</span> POST /chat/completions &nbsp;·&nbsp; model: <span style="color:var(--ink)">an open-weight model</span></div>
+        <select class="sortsel" id="roul-model" aria-label="Model"></select>
+        <div class="mono" id="roul-why" style="color:var(--faint);font-size:.76rem"></div>
+        <div class="mono" style="color:var(--faint);font-size:.82rem">POST /chat/completions &nbsp;·&nbsp;
+          <span style="color:var(--ink)">seed=42</span> &nbsp;·&nbsp; <span style="color:var(--ink)">response_format=json_schema</span></div>
         <div class="req-line"><span class="arrow">└─▶ routed to </span><span class="prov" id="roul-prov">—</span><span class="qbadge" id="roul-q">press start</span></div>
         <div class="roul-controls">
           <button class="btn primary" id="roul-btn">Send a request →</button>
           <button class="btn" id="roul-reset">Reset</button>
         </div>
-        <div class="verdict-note" id="roul-note">Simulation only — nothing is sent anywhere. Default OpenRouter routing sets no <span class="mono">quantizations</span>, no <span class="mono">order</span>, no <span class="mono">require_parameters</span>, so you get whatever is cheap and up at that moment.</div>
+        <div class="verdict-note" id="roul-note">Default routing sets no <span class="mono">quantizations</span>, no <span class="mono">order</span>, no <span class="mono">require_parameters</span> — so you get whichever of the real endpoints below happens to be cheap and up.</div>
       </div>
       <div class="roul-right">
-        <h3>Simulated request log</h3>
+        <h3>Draw log</h3>
         <div class="log" id="roul-log"></div>
         <div class="tally">
           <div class="t">Requests<b id="t-req">0</b></div>
-          <div class="t">Distinct backends<b id="t-back">0</b></div>
-          <div class="t">Quantized hits<b id="t-quant" style="color:var(--high)">0</b></div>
+          <div class="t">Distinct providers<b id="t-back">0</b></div>
+          <div class="t">Params dropped<b id="t-drop" style="color:var(--high)">0</b></div>
         </div>
       </div>
     </div>
+    <div class="epwrap"><table class="eptable" id="eptable"></table></div>
   </section>
 
   <section>
@@ -306,10 +319,9 @@
       figure of 31/34.<br><br>
       <b>“Possibly-impacted findings”</b> are specific claims/figures we traced to an OpenRouter-routed
       call. They are <b>hypotheses worth checking, not demonstrated errors</b> — each carries its own
-      “depends on OpenRouter” confidence. Rows tagged <span class="unver">unverified</span> had their
-      adversarial re-check cut short when the Anthropic account running the audit agents hit its usage
-      limit (nothing to do with OpenRouter — no OpenRouter key was ever used to build this), so treat
-      those impact lists as first-pass.</div>
+      “depends on OpenRouter” confidence. All 35 rows completed adversarial re-checking: a second
+      agent re-read each paper and its code and was told to drop any cited figure it could not find
+      in the real source. (No OpenRouter key was ever used to build this.)</div>
     <div>Method &amp; full data: <a href="https://github.com/AMindToThink/openrouter_reliable_research_search" target="_blank" rel="noopener">openrouter_reliable_research_search</a>
       · Each verdict = one audit agent + one adversarial verifier reading the actual source. · Selection was importance-first, not mistake-first.</div>
   </footer>
@@ -319,6 +331,7 @@
 
 <script>
 const DATA = /*__DATA__*/[];
+const ENDPOINTS = /*__ENDPOINTS__*/{"fetched_at":"","models":[]};
 const TAX = {
   M1:["Unpinned quantization","high"], M2:["Silent parameter dropping","high"],
   M3:["Probabilistic provider routing","high"], M4:["No provenance logging","high"],
@@ -511,29 +524,71 @@ function render(){
 }
 render();
 
-/* ---------- routing roulette ---------- */
-const PROVIDERS = [
-  ["DeepInfra","fp8"],["Together","fp16"],["Novita","fp8"],["Fireworks","bf16"],
-  ["Hyperbolic","fp16"],["DeepInfra","int4"],["Lambda","fp8"],["Nebius","fp16"],
-  ["GMICloud","int8"],["Kluster","unknown"],["Parasail","fp8"],["NCompass","fp4"]
-];
-let rReq=0, rBack=new Set(), rQuant=0;
+/* ---------- routing roulette: REAL endpoint data, simulated draw ---------- */
+const EP = ENDPOINTS;
+const fa = document.getElementById("fetched-at"); if(fa) fa.textContent = EP.fetched_at || "";
+const selEl = $("#roul-model");
+selEl.innerHTML = (EP.models||[]).map((m,i)=>`<option value="${i}">${esc(m.id)} — ${m.endpoints.length} providers</option>`).join("");
+let curIdx = 0, rReq = 0, rProv = new Set(), rDrop = 0;
+
+function quantClass(q){
+  if(["fp4","int4","int8","fp6"].includes(q)) return "bad";
+  if(q === "unknown") return "unk";
+  return "good";
+}
+function renderTable(){
+  const m = EP.models[curIdx]; if(!m) return;
+  const rows = m.endpoints.slice().sort((a,b)=>a.price_in-b.price_in).map(e=>{
+    const qc = quantClass(e.quant);
+    const qs = qc==="bad" ? `<span class="no">${esc(e.quant)}</span>`
+             : qc==="unk" ? `<span style="color:var(--med)">${esc(e.quant)}</span>` : esc(e.quant);
+    return `<tr data-p="${esc(e.provider)}"><td>${esc(e.provider)}</td><td>${qs}</td>
+      <td class="tnum">${(e.ctx||0).toLocaleString()}</td><td class="tnum">$${e.price_in.toFixed(2)}</td>
+      <td>${e.supports.seed?'<span class="yes">yes</span>':'<span class="no">NO</span>'}</td>
+      <td>${e.supports.response_format?'<span class="yes">yes</span>':'<span class="no">NO</span>'}</td></tr>`;
+  }).join("");
+  $("#eptable").innerHTML = `<thead><tr><th>provider</th><th>quantization</th><th>context</th><th>$/Mtok in</th><th>seed</th><th>response_format</th></tr></thead><tbody>${rows}</tbody>`;
+  $("#roul-why").textContent = "▸ " + m.why;
+}
+/* OpenRouter's documented default: prefer low cost, weighted by the inverse square of price */
+function pickWeighted(eps){
+  const w = eps.map(e=>1/Math.pow(Math.max(e.price_in,0.01),2));
+  const tot = w.reduce((a,b)=>a+b,0);
+  let r = Math.random()*tot;
+  for(let i=0;i<eps.length;i++){ r-=w[i]; if(r<=0) return eps[i]; }
+  return eps[eps.length-1];
+}
+function resetRoul(){
+  rReq=0; rProv=new Set(); rDrop=0;
+  $("#roul-log").innerHTML=""; $("#t-req").textContent=0; $("#t-back").textContent=0; $("#t-drop").textContent=0;
+  $("#roul-prov").textContent="—"; const qb=$("#roul-q"); qb.textContent="press start"; qb.className="qbadge";
+  document.querySelectorAll("#eptable tr").forEach(tr=>tr.classList.remove("hit"));
+  $("#roul-note").innerHTML=`Default routing sets no <span class="mono">quantizations</span>, no <span class="mono">order</span>, no <span class="mono">require_parameters</span> — so you get whichever of the real endpoints below happens to be cheap and up.`;
+}
 function roul(){
-  const [p,q] = PROVIDERS[Math.floor(Math.random()*PROVIDERS.length)];
-  rReq++; rBack.add(p+"@"+q);
-  const bad = ["int4","int8","fp4","unknown"].includes(q);
-  if(bad) rQuant++;
-  $("#roul-prov").textContent = p;
-  const qb=$("#roul-q"); qb.textContent="@ "+q; qb.className="qbadge "+(bad?"bad":"good");
-  const log=$("#roul-log");
-  const div=document.createElement("div");
-  div.innerHTML = `#${String(rReq).padStart(2,"0")} → ${p} <span style="color:${bad?'var(--high)':'var(--safe)'}">@${q}</span>`;
+  const m = EP.models[curIdx]; if(!m) return;
+  const e = pickWeighted(m.endpoints);
+  rReq++; rProv.add(e.provider);
+  const dropped = [];
+  if(!e.supports.seed) dropped.push("seed");
+  if(!e.supports.response_format) dropped.push("response_format");
+  if(dropped.length) rDrop++;
+  const qc = quantClass(e.quant);
+  const col = qc==="bad" ? "var(--high)" : qc==="unk" ? "var(--med)" : "var(--safe)";
+  $("#roul-prov").textContent = e.provider;
+  const qb=$("#roul-q"); qb.textContent="@ "+e.quant; qb.className="qbadge "+qc;
+  const log=$("#roul-log"); const div=document.createElement("div");
+  div.innerHTML = `#${String(rReq).padStart(2,"0")} → ${esc(e.provider)} <span style="color:${col}">@${esc(e.quant)}</span>`
+    + (dropped.length?` <span style="color:var(--high)">−${dropped.join(",")}</span>`:"");
   log.prepend(div); while(log.children.length>8) log.removeChild(log.lastChild);
-  $("#t-req").textContent=rReq; $("#t-back").textContent=rBack.size; $("#t-quant").textContent=rQuant;
+  $("#t-req").textContent=rReq; $("#t-back").textContent=rProv.size; $("#t-drop").textContent=rDrop;
+  document.querySelectorAll("#eptable tr").forEach(tr=>tr.classList.toggle("hit", tr.dataset.p===e.provider));
   const note=$("#roul-note");
-  if(rReq>=3 && rBack.size>=3) note.innerHTML = `<b>${rBack.size} different backends in ${rReq} requests.</b> If your eval reran here, each run measured a different artifact — and ${rQuant>0?`<b>${rQuant}</b> came back quantized`:`some will come back quantized`}. That's what mistakes <span class="mono">M1</span>+<span class="mono">M3</span> look like.`;
-  else if(bad) note.innerHTML = `⚠️ <b>Quantized.</b> You just got ${p} at <b>${q}</b> — lower precision than a bf16/fp16 route. Your prompt never asked for that.`;
-  else note.innerHTML = `Got ${p} @ ${q}. Press again — nothing pins it, so the next one can differ.`;
+  if(dropped.length) note.innerHTML = `⚠️ <b>${esc(e.provider)} silently ignores ${dropped.map(d=>`<span class="mono">${d}</span>`).join(" and ")}.</b> Your request set <span class="mono">seed=42</span> and asked for a JSON schema — this endpoint honors neither, and still returns 200 OK. That is <span class="mono">M2</span>/<span class="mono">M9</span>, straight from real endpoint data.`;
+  else if(qc==="bad") note.innerHTML = `⚠️ <b>${esc(e.quant)}.</b> ${esc(e.provider)} serves this model at <b>${esc(e.quant)}</b> — materially lower precision than the bf16/fp16 endpoints in the same list. Your prompt never asked for that. (<span class="mono">M1</span>)`;
+  else if(qc==="unk") note.innerHTML = `<b>Undisclosed precision.</b> ${esc(e.provider)} reports <span class="mono">unknown</span> — it may be full precision or not, and you cannot tell. A <span class="mono">quantizations</span> allow-list containing <span class="mono">"unknown"</span> will not protect you here.`;
+  else if(rReq>=3 && rProv.size>=2) note.innerHTML = `<b>${rProv.size} different providers in ${rReq} requests.</b> Same slug, same code — a different backend each time. Nothing pins it. (<span class="mono">M3</span>)`;
+  else note.innerHTML = `Got ${esc(e.provider)} @ ${esc(e.quant)}. Press again — nothing pins it, so the next draw can differ.`;
 }
 /* read-more toggles (delegated; stops the click from collapsing the drawer) */
 document.addEventListener("click", e => {
@@ -548,11 +603,8 @@ document.addEventListener("click", e => {
   b.textContent = showingFull ? "read more" : "show less";
 });
 
-$("#roul-btn").addEventListener("click",roul);
-$("#roul-reset").addEventListener("click",()=>{
-  rReq=0;rBack=new Set();rQuant=0;
-  $("#roul-log").innerHTML="";$("#t-req").textContent=0;$("#t-back").textContent=0;$("#t-quant").textContent=0;
-  $("#roul-prov").textContent="—";const qb=$("#roul-q");qb.textContent="press start";qb.className="qbadge";
-  $("#roul-note").innerHTML=`Simulation only — nothing is sent anywhere. Default OpenRouter routing sets no <span class="mono">quantizations</span>, no <span class="mono">order</span>, no <span class="mono">require_parameters</span>, so you get whatever is cheap and up at that moment.`;
-});
+selEl.addEventListener("change", ev=>{ curIdx=+ev.target.value; resetRoul(); renderTable(); });
+$("#roul-btn").addEventListener("click", roul);
+$("#roul-reset").addEventListener("click", resetRoul);
+renderTable();
 </script>

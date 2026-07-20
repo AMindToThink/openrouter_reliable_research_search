@@ -42,7 +42,7 @@ reported. If your research pins none of this, "the model" you evaluated is a mov
 | `artifact/` | Interactive data explorer (self-contained HTML) |
 | `image/` | Shareable summary graphic |
 | `skill/` | `use-openrouter-safely` Claude skill |
-| `research/` | Raw per-repo audit notes from subagents |
+| `tests/` | Enforces the provenance chain — prose numbers, artifact integrity, API field mappings |
 
 ## Headline findings
 
@@ -112,6 +112,19 @@ adversarial verifier** reading the actual source. Numbers below are generated fr
 # audit any repo for OpenRouter reliability mistakes (heuristic first pass)
 uv run skill/use-openrouter-safely/scripts/audit_openrouter.py <path-to-repo>
 ```
+
+### Use the skill
+
+`use-openrouter-safely` works in two modes: writing OpenRouter calls correctly, and auditing a
+repo's existing usage against the M1–M12 taxonomy. To install it for Claude Code:
+
+```bash
+cp -r skill/use-openrouter-safely ~/.claude/skills/
+```
+
+It then activates on its own whenever you're working with OpenRouter, or you can invoke it
+directly with `/use-openrouter-safely`. The guidance is plain Markdown — `skill/use-openrouter-safely/SKILL.md`
+is worth reading even if you don't use Claude Code.
 
 ### Provenance: where every published number comes from
 
