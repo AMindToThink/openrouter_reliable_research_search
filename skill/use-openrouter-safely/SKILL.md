@@ -218,14 +218,16 @@ with repos that simply never routed a result through OpenRouter. Classify as:
 
 | class | meaning | survey n |
 | --- | --- | :-: |
-| `at_risk` | routes research calls through OpenRouter with an uncontrolled channel open | 31 |
-| `handled` | routes research calls through it **and** controls for it — the only real positive | 1 |
+| `at_risk` | OpenRouter output reaches a reported result, with an uncontrolled channel open | 31 |
+| `handled` | reaches a reported result **and** controls for it — the only real positive | 1 |
 | `not_on_result_path` | OpenRouter present in the repo, but no reported result depends on it | 2 |
 | `no_usage_found` | no OpenRouter call site at all (discovery false positive) | 1 |
 
 A repo that never routes a research call through OpenRouter has demonstrated **nothing** about
-using OpenRouter well — don't credit it as a success story. Excluding `no_usage_found` from the
-denominator, the survey headline is **31/34 (91%)** at risk.
+using OpenRouter well — don't credit it as a success story, and don't put it in the denominator
+either. Score against the repos where OpenRouter output actually reaches a published result
+(`at_risk + handled`): the survey headline is **31/32 (97%)** at risk. Counting every repo that
+merely contains a call site gives the wider, weaker 31/34 (91%).
 
 **Be fair (this matters):** don't hunt for mistakes. Legitimate non-mistakes: proprietary
 single-served models (M1/M3/M8 don't apply); explicitly exploratory/qualitative work; provider

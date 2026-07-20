@@ -200,9 +200,16 @@ def test_no_const_or_let_is_used_before_it_is_declared(template: str) -> None:
     )
 
 
-def test_stats_iife_computes_users_before_rendering(template: str) -> None:
-    """Pin the specific ordering that broke: the tally must precede the DOM write."""
+def test_stats_iife_computes_the_tally_before_rendering(template: str) -> None:
+    """Pin the specific ordering that broke: the tally must precede the DOM write.
+
+    The lede number has since moved from `users` (any call site) to `onPath` (OpenRouter
+    reaches a published result); the ordering requirement is what matters, not the name.
+    """
     body = script_body(template)
-    decl = body.index("const users =")
-    use = body.index("_u.textContent = users")
-    assert decl < use, "`users` must be computed before it is written into the lede"
+    written = re.search(r"_u\.textContent\s*=\s*([A-Za-z_$][\w$]*)", body)
+    assert written, "the lede count is no longer written from a variable — update this test"
+    name = written.group(1)
+    decl = body.find(f"const {name} =")
+    assert decl != -1, f"lede is rendered from {name!r}, which is never declared with const"
+    assert decl < written.start(), f"`{name}` must be computed before it is written into the lede"

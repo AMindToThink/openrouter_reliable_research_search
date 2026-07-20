@@ -23,7 +23,8 @@ AT_RISK = KL.get("at_risk", 0); HANDLED = KL.get("handled", 0)
 NONUSERS = KL.get("not_on_result_path", 0) + KL.get("no_usage_found", 0)
 CRIT = st["critical_route"]; HIGH = st["severity"].get("high", 0)
 FINDINGS = st["impacted"]["total_findings"]
-PCT = st["at_risk_pct_of_users"]
+PCT = st["at_risk_pct_of_critical_route"]   # headline: of repos where OR feeds a result
+PCT_USERS = st["at_risk_pct_of_users"]      # secondary: of repos with any call site
 FREQ = st["mistake_freq"]
 
 TAX = {
@@ -79,8 +80,8 @@ text(W-M, 60, "openrouter reliability audit", 17, C["faint"], MONO, anchor="end"
 # hero
 text(M, 210, f"{PCT}%", 150, C["high"], MONO, "bold")
 hx = M + 300
-htxt = wrap(f"of the {USERS} influential AI-research repos that actually route research calls "
-            f"through OpenRouter leave a silent corruption channel open.", 42)
+htxt = wrap(f"of the {CRIT} influential AI-research repos whose OpenRouter output reaches a "
+            f"published result leave a silent corruption channel open.", 42)
 multiline(hx, 128, htxt, 33, 42, fill=C["ink"], weight="bold")
 
 # subline
@@ -90,7 +91,7 @@ sub = wrap("OpenRouter serves “a model” from whichever provider is cheapest-
 y = multiline(M, 300, sub, 22, 32, fill=C["muted"])
 
 # stat tiles
-tiles = [(f"{AT_RISK}/{USERS}", "at risk", C["high"]),
+tiles = [(f"{AT_RISK}/{CRIT}", "at risk, of those whose OpenRouter output reaches a result", C["high"]),
          (str(FINDINGS), "specific claims / figures possibly affected", C["high"]),
          (str(HIGH), "carry a high-severity gap", C["med"]),
          (str(HANDLED), "uses it properly — the only one", C["safe"])]
@@ -136,9 +137,9 @@ add(f'<rect x="{M}" y="{cy}" width="{W-2*M}" height="{ch}" rx="12" fill="{C["pan
 add(f'<rect x="{M}" y="{cy}" width="4" height="{ch}" rx="2" fill="{C["accent"]}"/>')
 text(M+24, cy+34, "READ THIS CORRECTLY", 15, C["accent"], MONO, "bold", spacing="1.5")
 cav = wrap("“At risk” = a known corruption channel left open and uncontrolled — not proof any published "
-           f"number is wrong. Of {N} repos surveyed, {NONUSERS} never route a reported result through OpenRouter, "
-           "so they are excluded rather than counted as successes: only ONE repo both uses OpenRouter for "
-           "real results and controls for it.", 96)
+           f"number is wrong. Of {N} repos surveyed, {USERS} contain an OpenRouter call site and {CRIT} put its "
+           f"output on a result path; the {NONUSERS} that never do are excluded rather than counted as "
+           "successes. Only ONE repo both uses OpenRouter for real results and controls for it.", 96)
 multiline(M+24, cy+62, cav, 18, 26, fill=C["muted"])
 
 # the fix panel
@@ -163,4 +164,5 @@ out_png = ROOT / "image/openrouter_findings.png"
 out_svg.write_text(svg)
 cairosvg.svg2png(bytestring=svg.encode(), write_to=str(out_png), output_width=W*2, output_height=H*2)
 print(f"wrote {out_svg.relative_to(ROOT)} and {out_png.relative_to(ROOT)} (2x = {W*2}x{H*2})")
-print(f"numbers: {PCT}% at risk ({AT_RISK}/{USERS} actual users), {FINDINGS} findings, {HIGH} high-sev, {HANDLED} handled, {NONUSERS} non-users of {N} surveyed")
+print(f"numbers: {PCT}% at risk ({AT_RISK}/{CRIT} on a result path; {PCT_USERS}% of {USERS} with any call site), "
+      f"{FINDINGS} findings, {HIGH} high-sev, {HANDLED} handled, {NONUSERS} non-users of {N} surveyed")

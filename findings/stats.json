@@ -49,5 +49,6 @@
   },
   "surveyed": 35,
   "actual_openrouter_users": 34,
-  "at_risk_pct_of_users": 91
+  "at_risk_pct_of_users": 91,
+  "at_risk_pct_of_critical_route": 97
 }

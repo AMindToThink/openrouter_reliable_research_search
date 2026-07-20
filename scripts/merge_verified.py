@@ -149,10 +149,13 @@ def regenerate(rows: list[dict]) -> None:
     classes = tally("safety_class")
     users = len(rows) - classes.get("no_usage_found", 0)
     at_risk = classes.get("at_risk", 0)
+    # Headline denominator: repos whose OpenRouter output reaches a published result.
+    # `users` (any call site anywhere) is kept as the secondary, wider figure.
+    critical = sum(1 for r in rows if r.get("critical_route"))
 
     stats = {
         "n": len(rows),
-        "critical_route": sum(1 for r in rows if r.get("critical_route")),
+        "critical_route": critical,
         "severity": tally("severity"),
         "model_type": tally("model_type"),
         "awareness": tally("awareness"),
@@ -168,6 +171,7 @@ def regenerate(rows: list[dict]) -> None:
         "surveyed": len(rows),
         "actual_openrouter_users": users,
         "at_risk_pct_of_users": round(100 * at_risk / users) if users else 0,
+        "at_risk_pct_of_critical_route": round(100 * at_risk / critical) if critical else 0,
     }
     (ROOT / "findings/stats.json").write_text(json.dumps(stats, indent=2))
 

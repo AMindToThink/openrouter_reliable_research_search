@@ -90,8 +90,26 @@ def survey_claims(c: Claims, rows: list[dict[str, Any]], stats: dict[str, Any]) 
     c.add("at_risk_pct_of_users", round(100 * at_risk / users) if users else 0, src,
           "round(100 * repos_at_risk / repos_routing_through_openrouter)")
 
-    c.add("repos_critical_route", sum(1 for r in rows if r.get("critical_route")), src,
-          "count(critical_route truthy)")
+    critical = sum(1 for r in rows if r.get("critical_route"))
+    c.add("repos_critical_route", critical, src, "count(critical_route truthy)")
+
+    # The headline denominator. A repo is only a meaningful data point about *using
+    # OpenRouter well* if OpenRouter output reaches a published result — which is exactly
+    # what critical_route records. The two partitions must coincide: every at_risk and
+    # handled row is on a critical route, and every off-path / no-usage row is not. If that
+    # ever stops holding, the headline is measuring something other than what it claims.
+    on_path = sum(1 for r in rows if r.get("safety_class") in ("at_risk", "handled"))
+    if on_path != critical:
+        mismatched = [r["title"] for r in rows
+                      if (r.get("safety_class") in ("at_risk", "handled"))
+                      != bool(r.get("critical_route"))]
+        raise SystemExit(
+            f"safety_class and critical_route disagree ({on_path} on-path vs {critical} "
+            f"critical): {mismatched}. The headline denominator is not trustworthy until "
+            "these are reconciled."
+        )
+    c.add("at_risk_pct_of_critical_route", round(100 * at_risk / critical) if critical else 0,
+          src, "round(100 * repos_at_risk / repos_critical_route)")
     c.add("repos_severity_high", sum(1 for r in rows if r.get("severity") == "high"), src,
           "count(severity == 'high')")
     c.add("rows_impact_verified", sum(1 for r in rows if r.get("impact_verified")), src,

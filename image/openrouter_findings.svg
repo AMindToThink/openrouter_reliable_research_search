@@ -4,18 +4,21 @@
 <rect x="72" y="52" width="30" height="3" fill="#6fa0e6"/>
 <text x="114" y="60" font-family="DejaVu Sans Mono, monospace" font-size="20" font-weight="bold" fill="#6fa0e6" text-anchor="start" letter-spacing="3" opacity="1">PROVIDER ROUTING INSPECTOR</text>
 <text x="1128" y="60" font-family="DejaVu Sans Mono, monospace" font-size="17" font-weight="normal" fill="#6b7789" text-anchor="end" opacity="1">openrouter reliability audit</text>
-<text x="72" y="210" font-family="DejaVu Sans Mono, monospace" font-size="150" font-weight="bold" fill="#e37363" text-anchor="start" opacity="1">91%</text>
-<text x="372" y="128" font-family="DejaVu Sans, sans-serif" font-size="33" font-weight="bold" fill="#e7edf5" text-anchor="start" opacity="1">of the 34 influential AI-research repos</text>
-<text x="372" y="170" font-family="DejaVu Sans, sans-serif" font-size="33" font-weight="bold" fill="#e7edf5" text-anchor="start" opacity="1">that actually route research calls through</text>
-<text x="372" y="212" font-family="DejaVu Sans, sans-serif" font-size="33" font-weight="bold" fill="#e7edf5" text-anchor="start" opacity="1">OpenRouter leave a silent corruption</text>
+<text x="72" y="210" font-family="DejaVu Sans Mono, monospace" font-size="150" font-weight="bold" fill="#e37363" text-anchor="start" opacity="1">97%</text>
+<text x="372" y="128" font-family="DejaVu Sans, sans-serif" font-size="33" font-weight="bold" fill="#e7edf5" text-anchor="start" opacity="1">of the 32 influential AI-research repos</text>
+<text x="372" y="170" font-family="DejaVu Sans, sans-serif" font-size="33" font-weight="bold" fill="#e7edf5" text-anchor="start" opacity="1">whose OpenRouter output reaches a</text>
+<text x="372" y="212" font-family="DejaVu Sans, sans-serif" font-size="33" font-weight="bold" fill="#e7edf5" text-anchor="start" opacity="1">published result leave a silent corruption</text>
 <text x="372" y="254" font-family="DejaVu Sans, sans-serif" font-size="33" font-weight="bold" fill="#e7edf5" text-anchor="start" opacity="1">channel open.</text>
 <text x="72" y="300" font-family="DejaVu Sans, sans-serif" font-size="22" font-weight="normal" fill="#97a3b6" text-anchor="start" opacity="1">OpenRouter serves “a model” from whichever provider is cheapest-and-up — at any</text>
 <text x="72" y="332" font-family="DejaVu Sans, sans-serif" font-size="22" font-weight="normal" fill="#97a3b6" text-anchor="start" opacity="1">quantization down to int4, silently dropping sampling params it can’t honor. Two</text>
 <text x="72" y="364" font-family="DejaVu Sans, sans-serif" font-size="22" font-weight="normal" fill="#97a3b6" text-anchor="start" opacity="1">identical requests can come back as different weights.</text>
 <rect x="72.0" y="432" width="250.5" height="132" rx="12" fill="#161d27" stroke="#28313d"/>
 <rect x="72.0" y="432" width="4" height="132" rx="2" fill="#e37363"/>
-<text x="94.0" y="498" font-family="DejaVu Sans Mono, monospace" font-size="46" font-weight="bold" fill="#e37363" text-anchor="start" opacity="1">31/34</text>
-<text x="94.0" y="526" font-family="DejaVu Sans, sans-serif" font-size="15.5" font-weight="normal" fill="#97a3b6" text-anchor="start" opacity="1">at risk</text>
+<text x="94.0" y="498" font-family="DejaVu Sans Mono, monospace" font-size="46" font-weight="bold" fill="#e37363" text-anchor="start" opacity="1">31/32</text>
+<text x="94.0" y="526" font-family="DejaVu Sans, sans-serif" font-size="15.5" font-weight="normal" fill="#97a3b6" text-anchor="start" opacity="1">at risk, of those</text>
+<text x="94.0" y="545" font-family="DejaVu Sans, sans-serif" font-size="15.5" font-weight="normal" fill="#97a3b6" text-anchor="start" opacity="1">whose OpenRouter</text>
+<text x="94.0" y="564" font-family="DejaVu Sans, sans-serif" font-size="15.5" font-weight="normal" fill="#97a3b6" text-anchor="start" opacity="1">output reaches a</text>
+<text x="94.0" y="583" font-family="DejaVu Sans, sans-serif" font-size="15.5" font-weight="normal" fill="#97a3b6" text-anchor="start" opacity="1">result</text>
 <rect x="340.5" y="432" width="250.5" height="132" rx="12" fill="#161d27" stroke="#28313d"/>
 <rect x="340.5" y="432" width="4" height="132" rx="2" fill="#e37363"/>
 <text x="362.5" y="498" font-family="DejaVu Sans Mono, monospace" font-size="46" font-weight="bold" fill="#e37363" text-anchor="start" opacity="1">113</text>
@@ -90,9 +93,9 @@
 <rect x="72" y="1058" width="4" height="150" rx="2" fill="#6fa0e6"/>
 <text x="96" y="1092" font-family="DejaVu Sans Mono, monospace" font-size="15" font-weight="bold" fill="#6fa0e6" text-anchor="start" letter-spacing="1.5" opacity="1">READ THIS CORRECTLY</text>
 <text x="96" y="1120" font-family="DejaVu Sans, sans-serif" font-size="18" font-weight="normal" fill="#97a3b6" text-anchor="start" opacity="1">“At risk” = a known corruption channel left open and uncontrolled — not proof any published</text>
-<text x="96" y="1146" font-family="DejaVu Sans, sans-serif" font-size="18" font-weight="normal" fill="#97a3b6" text-anchor="start" opacity="1">number is wrong. Of 35 repos surveyed, 3 never route a reported result through OpenRouter, so</text>
-<text x="96" y="1172" font-family="DejaVu Sans, sans-serif" font-size="18" font-weight="normal" fill="#97a3b6" text-anchor="start" opacity="1">they are excluded rather than counted as successes: only ONE repo both uses OpenRouter for real</text>
-<text x="96" y="1198" font-family="DejaVu Sans, sans-serif" font-size="18" font-weight="normal" fill="#97a3b6" text-anchor="start" opacity="1">results and controls for it.</text>
+<text x="96" y="1146" font-family="DejaVu Sans, sans-serif" font-size="18" font-weight="normal" fill="#97a3b6" text-anchor="start" opacity="1">number is wrong. Of 35 repos surveyed, 34 contain an OpenRouter call site and 32 put its output</text>
+<text x="96" y="1172" font-family="DejaVu Sans, sans-serif" font-size="18" font-weight="normal" fill="#97a3b6" text-anchor="start" opacity="1">on a result path; the 3 that never do are excluded rather than counted as successes. Only ONE</text>
+<text x="96" y="1198" font-family="DejaVu Sans, sans-serif" font-size="18" font-weight="normal" fill="#97a3b6" text-anchor="start" opacity="1">repo both uses OpenRouter for real results and controls for it.</text>
 <rect x="72" y="1242" width="1056" height="150" rx="12" fill="#161d27" stroke="#28313d"/>
 <rect x="72" y="1242" width="4" height="150" rx="2" fill="#46c08a"/>
 <text x="96" y="1276" font-family="DejaVu Sans Mono, monospace" font-size="15" font-weight="bold" fill="#46c08a" text-anchor="start" letter-spacing="1.5" opacity="1">THE FIX  ·  ~5 MINUTES</text>

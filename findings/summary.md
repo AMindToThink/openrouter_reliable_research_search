@@ -1,15 +1,15 @@
 # Findings — do important research repos use OpenRouter reliably?
 
-> **31 of 34 (91%)** of the surveyed repos that *actually* route research calls through OpenRouter leave at least one uncontrolled provider-routing corruption channel open. **Exactly 1** repo both uses OpenRouter for real results and controls for it. We traced **113 specific claims/figures** across **31 repos** that could be affected.
+> **31 of 32 (97%)** of the surveyed repos whose OpenRouter output actually reaches a reported result, a training set, or a safety measurement leave at least one uncontrolled provider-routing corruption channel open. **Exactly 1** controls for it. We traced **113 specific claims/figures** across **31 repos** that could be affected.
 
-> Of 35 repos surveyed, 1 turned out to have no OpenRouter call site at all and 2 keep it off every result path — those are recorded as `no_usage_found` / `not_on_result_path`, **not** as successes.
+> Denominators, precisely: **35** repos surveyed · **34** contain an OpenRouter call site anywhere (31/34 = 91% at risk) · **32** put its output on a result path. The headline uses 32, because a repo only demonstrates something about *using OpenRouter well* if OpenRouter reaches a published number. The 2 `not_on_result_path` and 1 `no_usage_found` repos are excluded — they are not successes, they are non-data-points.
 
 **Read this correctly.** *At risk* means *exposed to a known corruption channel that was not controlled for* — **not** that any published number is wrong. *Possibly-impacted findings* are **hypotheses worth checking, not demonstrated errors**. We audited how the code routes model calls; we did not re-run experiments across providers to measure the actual delta. See `methodology.md`.
 
 ## Headline numbers
 
 - Repos audited: **35** (importance-first: NeurIPS/ICML/ICLR/ACL/NAACL/Nature + UK AISI/METR/Redwood/Palisade/Anthropic-Fellows + LessWrong/AF)
-- Actually route research calls through OpenRouter: **34** (of 35 surveyed)
+- OpenRouter output reaches a reported result: **32** · contains any OpenRouter call site: **34** (of 35 surveyed)
 - Safety classes: **at_risk 31** · **handled 1** · not_on_result_path 2 · no_usage_found 1
 - Severity: **23 high**, 8 medium, 4 none
 - **Specific possibly-impacted findings: 113** (34 high-impact, 53 medium, 26 low) across 31/35 repos

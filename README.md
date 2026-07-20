@@ -48,13 +48,17 @@ reported. If your research pins none of this, "the model" you evaluated is a mov
 
 We audited **35** influential public repos (importance-first: NeurIPS · ICML · ICLR · ACL ·
 NAACL · Nature + UK AISI · METR · Redwood · Palisade · Anthropic Fellows + LessWrong/AF) flagged
-as routing model calls through OpenRouter — **34 actually do**. Each verdict came from one audit agent **plus one
+as routing model calls through OpenRouter. Each verdict came from one audit agent **plus one
 adversarial verifier** reading the actual source. Numbers below are generated from
 [`findings/stats.json`](findings/stats.json).
 
-- **31 / 34 (91%)** of the repos that *actually* route research calls through OpenRouter leave at
-  least one **uncontrolled** provider-routing corruption channel open.
-- **32 / 35** route OpenRouter output straight into a reported number, a training set, or a safety measurement.
+- **31 / 32 (97%)** of the repos whose OpenRouter output actually reaches a reported number, a
+  training set, or a safety measurement leave at least one **uncontrolled** provider-routing
+  corruption channel open.
+- **Three denominators, stated plainly.** 35 repos surveyed · **34** contain an OpenRouter call
+  site anywhere · **32** put its output on a result path. The headline uses **32**, because a repo
+  only demonstrates something about *using OpenRouter well* if OpenRouter reaches a published
+  number. Against the wider 34 the rate is 31/34 (91%).
 - **113 specific claims/figures** across **31 repos** were traced to an OpenRouter-routed call and could
   be affected — each named down to the figure/table/number, with its mechanism and a
   *"does this really depend on OpenRouter?"* confidence. (34 high-impact, 53 medium, 26 low.)
@@ -65,15 +69,17 @@ adversarial verifier** reading the actual source. Numbers below are generated fr
 - The other three previously-"safe" repos are **not** success stories, and we no longer count them
   as such. Every row now carries a `safety_class`:
 
-  | class | n | meaning |
-  | --- | :-: | --- |
-  | `at_risk` | 31 | routes research calls through OpenRouter with an uncontrolled channel open |
-  | `handled` | 1 | routes research calls through it **and** controls for it — the only real positive |
-  | `not_on_result_path` | 2 | OpenRouter present in the repo, but no reported result depends on it |
-  | `no_usage_found` | 1 | no OpenRouter call site at all (discovery false positive; excluded from the 34) |
+  | class | n | in the headline denominator? | meaning |
+  | --- | :-: | :-: | --- |
+  | `at_risk` | 31 | ✅ | OpenRouter feeds a reported result, with an uncontrolled channel open |
+  | `handled` | 1 | ✅ | feeds a reported result **and** controls for it — the only real positive |
+  | `not_on_result_path` | 2 | ❌ | OpenRouter present in the repo, but no reported result depends on it |
+  | `no_usage_found` | 1 | ❌ | no OpenRouter call site at all (discovery false positive) |
 
   A repo that never routes a research call through OpenRouter has demonstrated *nothing* about
   using OpenRouter well — lumping those in with the one genuine success overstated the good news.
+  The two `at_risk` + `handled` classes are exactly the 32 repos flagged `critical_route`; a build
+  check fails if that ever stops holding.
 - Most pervasive gaps (all silent by default): **no provenance logging (28)**, **data-policy
   left open (27)**, **unpinned quantization (26)**, **probabilistic routing (26)**.
 

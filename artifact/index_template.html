@@ -217,8 +217,8 @@
     <p class="lede">OpenRouter serves "a model" from whichever provider is cheapest-and-up — at any
       quantization down to int4, dropping sampling params it doesn't support, <strong>silently</strong>.
       We audited <strong id="lede-n">35</strong> influential research repos flagged as routing model calls
-      through it — <strong id="lede-u">34</strong> actually do. Here's who controls for it, who keeps it off
-      the result path, and who's rolling the dice.</p>
+      through it — in <strong id="lede-u">32</strong>, its output reaches a published result. Here's who
+      controls for it, who keeps it off the result path, and who's rolling the dice.</p>
     <div class="stats" id="stats"></div>
   </header>
 
@@ -297,8 +297,13 @@
       <b>Not all “safe” is the same.</b> <b>HANDLED</b> = actually routes research calls through OpenRouter
       and controls for it (pinned provider, logged provenance) — a real positive example.
       <b>OFF RESULT PATH</b> = OpenRouter exists in the repo but no reported result depends on it.
-      <b>NO OR USAGE</b> = no OpenRouter call site at all (a discovery false positive, excluded from the
-      “actually route through it” denominator). Only HANDLED demonstrates anything about using OpenRouter well.<br><br>
+      <b>NO OR USAGE</b> = no OpenRouter call site at all (a discovery false positive). Only HANDLED
+      demonstrates anything about using OpenRouter well.<br><br>
+      <b>The denominator.</b> The headline rate is <b>AT RISK ÷ (AT RISK + HANDLED)</b> — the repos whose
+      OpenRouter output actually reaches a published result. OFF RESULT PATH and NO OR USAGE are excluded
+      rather than counted as successes, because a repo that never routes a research call through OpenRouter
+      has demonstrated nothing about using it well. Counting them instead would give the wider, weaker
+      figure of 31/34.<br><br>
       <b>“Possibly-impacted findings”</b> are specific claims/figures we traced to an OpenRouter-routed
       call. They are <b>hypotheses worth checking, not demonstrated errors</b> — each carries its own
       “depends on OpenRouter” confidence. Rows tagged <span class="unver">unverified</span> had their
@@ -346,17 +351,21 @@ function xp(text, limit){
   const kls = c => DATA.filter(d=>d.safety_class===c).length;
   const atRisk = kls("at_risk"), handled = kls("handled"),
         offPath = kls("not_on_result_path"), noUse = kls("no_usage_found");
-  const users = n - noUse;                 // repos that actually route through OpenRouter
+  const users = n - noUse;                 // repos containing an OpenRouter call site anywhere
+  // Headline denominator: repos whose OpenRouter output reaches a published result. That is
+  // `at_risk + handled` — the two classes on a critical route. `users` is wider: it also
+  // counts the not_on_result_path repos, which by definition route no research call at all.
+  const onPath = atRisk + handled;
 
   $("#lede-n").textContent = n;
-  const _u = $("#lede-u"); if(_u) _u.textContent = users;
+  const _u = $("#lede-u"); if(_u) _u.textContent = onPath;
   const cards = [
-    {cls:"s-high", n:atRisk, sub:"/"+users, lab:"route research calls through OpenRouter with an uncontrolled channel open"},
-    {cls:"s-high", n:Math.round(100*atRisk/users)+"%", sub:"", lab:"of repos that actually route through it"},
+    {cls:"s-high", n:atRisk, sub:"/"+onPath, lab:"whose OpenRouter output reaches a published result, with an uncontrolled channel open"},
+    {cls:"s-high", n:Math.round(100*atRisk/onPath)+"%", sub:"", lab:"of repos where OpenRouter actually feeds a result"},
     {cls:"s-high", n:impacted, sub:"", lab:"specific claims / figures possibly affected"},
     {cls:"s-med", n:high, sub:"", lab:"carry a high-severity gap"},
     {cls:"s-safe", n:handled, sub:"", lab:"uses OpenRouter on a real result path AND controls for it"},
-    {cls:"", n:offPath+noUse, sub:"", lab:`never route a reported result through it (${offPath} off-path, ${noUse} no call site)`},
+    {cls:"", n:offPath+noUse, sub:"", lab:`excluded — never route a reported result through it (${offPath} off-path, ${noUse} no call site)`},
   ];
   $("#stats").innerHTML = cards.map(c=>`<div class="stat ${c.cls}">
     <div class="n tnum">${c.n}<small>${c.sub}</small></div><div class="lab">${c.lab}</div></div>`).join("");

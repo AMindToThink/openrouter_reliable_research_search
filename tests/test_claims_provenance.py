@@ -84,12 +84,28 @@ def test_every_row_was_adversarially_verified(claims) -> None:
 # --- prose agrees with the data ----------------------------------------------------
 
 def test_readme_headline_ratio(readme, claims) -> None:
+    """The headline scores against repos where OpenRouter reaches a published result."""
     at_risk = claims["repos_at_risk"]
-    users = claims["repos_routing_through_openrouter"]
-    pct = claims["at_risk_pct_of_users"]
-    assert f"**{at_risk} / {users} ({pct}%)**" in readme, (
-        f"README headline must read '{at_risk} / {users} ({pct}%)'"
+    crit = claims["repos_critical_route"]
+    pct = claims["at_risk_pct_of_critical_route"]
+    assert f"**{at_risk} / {crit} ({pct}%)**" in readme, (
+        f"README headline must read '{at_risk} / {crit} ({pct}%)'"
     )
+
+
+def test_readme_states_all_three_denominators(readme, claims) -> None:
+    """Readers must be able to tell 35 / 34 / 32 apart — conflating them is how 91% got there."""
+    assert str(claims["repos_surveyed"]) in readme
+    assert f'**{claims["repos_routing_through_openrouter"]}** contain an OpenRouter call' in readme
+    assert f'**{claims["repos_critical_route"]}** put its output on a result path' in readme
+    assert (f'31/{claims["repos_routing_through_openrouter"]} '
+            f'({claims["at_risk_pct_of_users"]}%)') in readme, "keep the wider rate visible"
+
+
+def test_on_result_path_classes_equal_critical_route(claims) -> None:
+    """The headline denominator is only meaningful if these two partitions coincide."""
+    assert (claims["repos_at_risk"] + claims["repos_handled"]
+            == claims["repos_critical_route"])
 
 
 def test_readme_safety_class_table(readme, claims) -> None:
@@ -120,8 +136,8 @@ def test_readme_pervasive_gaps_match_mistake_frequencies(readme, claims) -> None
 
 
 def test_summary_headline(summary, claims) -> None:
-    assert (f"**{claims['repos_at_risk']} of {claims['repos_routing_through_openrouter']} "
-            f"({claims['at_risk_pct_of_users']}%)**") in summary
+    assert (f"**{claims['repos_at_risk']} of {claims['repos_critical_route']} "
+            f"({claims['at_risk_pct_of_critical_route']}%)**") in summary
 
 
 def test_summary_mistake_table_matches_frequencies(summary, claims) -> None:
@@ -143,8 +159,11 @@ def test_skill_survey_base_rates(skill, claims) -> None:
 
 
 def test_skill_headline_matches_survey(skill, claims) -> None:
-    assert (f"**{claims['repos_at_risk']}/{claims['repos_routing_through_openrouter']} "
-            f"({claims['at_risk_pct_of_users']}%)**") in skill
+    assert (f"**{claims['repos_at_risk']}/{claims['repos_critical_route']} "
+            f"({claims['at_risk_pct_of_critical_route']}%)**") in skill
+    assert (f"{claims['repos_at_risk']}/{claims['repos_routing_through_openrouter']} "
+            f"({claims['at_risk_pct_of_users']}%)") in skill, (
+        "the skill should still show the wider rate so auditors can tell the two apart")
 
 
 def test_skill_safety_class_counts(skill, claims) -> None:

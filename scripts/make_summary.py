@@ -37,7 +37,9 @@ verified = imp["impact_verified_rows"]
 try:
     KL = st["safety_class"]
     USERS = st["actual_openrouter_users"]
-    PCT = st["at_risk_pct_of_users"]
+    PCT_USERS = st["at_risk_pct_of_users"]
+    CRIT = st["critical_route"]
+    PCT = st["at_risk_pct_of_critical_route"]
 except KeyError as exc:  # fail loudly rather than silently emitting the stale framing
     raise SystemExit(
         f"stats.json is missing {exc.args[0]!r} — run `uv run scripts/set_safety_class.py` first. "
@@ -53,14 +55,16 @@ CLASS_LABEL = {"at_risk": "❌ at risk", "handled": "✅ handled",
 L: list[str] = []
 
 L.append("# Findings — do important research repos use OpenRouter reliably?\n")
-L.append(f"> **{AT_RISK} of {USERS} ({PCT}%)** of the surveyed repos that *actually* route research calls through "
-         f"OpenRouter leave at least one uncontrolled provider-routing corruption channel open. "
-         f"**Exactly {HANDLED}** repo both uses OpenRouter for real results and controls for it. We traced "
+L.append(f"> **{AT_RISK} of {CRIT} ({PCT}%)** of the surveyed repos whose OpenRouter output actually reaches a "
+         f"reported result, a training set, or a safety measurement leave at least one uncontrolled "
+         f"provider-routing corruption channel open. **Exactly {HANDLED}** controls for it. We traced "
          f"**{imp['total_findings']} specific claims/figures** across **{imp['repos_with_impacted_findings']} repos** "
          f"that could be affected.\n")
-L.append(f"> Of {n} repos surveyed, {NO_USAGE} turned out to have no OpenRouter call site at all and {OFF_PATH} keep "
-         f"it off every result path — those are recorded as `no_usage_found` / `not_on_result_path`, **not** as "
-         f"successes.\n")
+L.append(f"> Denominators, precisely: **{n}** repos surveyed · **{USERS}** contain an OpenRouter call site "
+         f"anywhere ({AT_RISK}/{USERS} = {PCT_USERS}% at risk) · **{CRIT}** put its output on a result path. "
+         f"The headline uses {CRIT}, because a repo only demonstrates something about *using OpenRouter well* "
+         f"if OpenRouter reaches a published number. The {OFF_PATH} `not_on_result_path` and {NO_USAGE} "
+         f"`no_usage_found` repos are excluded — they are not successes, they are non-data-points.\n")
 L.append("**Read this correctly.** *At risk* means *exposed to a known corruption channel that was not controlled "
          "for* — **not** that any published number is wrong. *Possibly-impacted findings* are **hypotheses worth "
          "checking, not demonstrated errors**. We audited how the code routes model calls; we did not re-run "
@@ -69,7 +73,8 @@ L.append("**Read this correctly.** *At risk* means *exposed to a known corruptio
 L.append("## Headline numbers\n")
 L.append(f"- Repos audited: **{n}** (importance-first: NeurIPS/ICML/ICLR/ACL/NAACL/Nature + "
          "UK AISI/METR/Redwood/Palisade/Anthropic-Fellows + LessWrong/AF)")
-L.append(f"- Actually route research calls through OpenRouter: **{USERS}** (of {n} surveyed)")
+L.append(f"- OpenRouter output reaches a reported result: **{CRIT}** · contains any OpenRouter call site: "
+         f"**{USERS}** (of {n} surveyed)")
 L.append(f"- Safety classes: **at_risk {AT_RISK}** · **handled {HANDLED}** · not_on_result_path {OFF_PATH} · "
          f"no_usage_found {NO_USAGE}")
 L.append(f"- Severity: **{st['severity'].get('high', 0)} high**, {st['severity'].get('medium', 0)} medium, "
