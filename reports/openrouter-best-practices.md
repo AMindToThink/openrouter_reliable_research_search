@@ -25,7 +25,17 @@ given model slug (e.g. `deepseek/deepseek-r1`) there are often several providers
   down to `int4`/`fp4`. Lower precision is cheaper and faster and *usually* close — but "close"
   is not "identical," and degradation is prompt-dependent and worst on the hard/long-tail
   inputs that research often cares about. OpenRouter's own docs warn: *"Quantized models may
-  exhibit degraded performance for certain prompts, depending on the method used."*
+  exhibit degraded performance for certain prompts, depending on the method used"* — though that
+  sentence sits in the field reference for the opt-in `quantizations` knob, near the bottom of the
+  page, while the description of what you get by configuring nothing ("load balance requests
+  across providers, prioritizing price") is at the top with no such caveat.
+  Measured by us across 547 endpoints of 87 open-weight models
+  (`findings/best_practices_verification.json`): `fp8` 43.1%, **`unknown` 31.6%**, `fp4` 11.2%,
+  `bf16` 9.1%, `int4` 4.0%, `fp16` 0.9% — and `fp32` **never once**. Two consequences. An `fp32`
+  floor is theoretical on this catalog, and roughly a third of endpoints decline to state their
+  precision at all, which is why a `quantizations` floor that keeps `"unknown"` has a hole rather
+  than an edge case: 70 of 87 models mix disclosed and undisclosed endpoints, and 2 disclose
+  nothing on any endpoint.
 - **Inference engine & settings.** vLLM vs SGLang vs TensorRT-LLM vs a bespoke stack, each with
   different kernels, prefix caching, and logit-processing defaults. Independent work ("The
   Silent Hyperparameter", 2026) finds backend choice *alone* can move a benchmark score by up
@@ -40,8 +50,17 @@ given model slug (e.g. `deepseek/deepseek-r1`) there are often several providers
   load-balances: it prioritizes providers with no outage in the last ~30 seconds, then samples
   the lowest-cost ones weighted by the **inverse square of price**. (This is OpenRouter's own
   description of its internal algorithm — see the update below on how much of it can actually be
-  checked from outside.) So *two identical requests can hit two different providers*, and
-  cheaper-hence-more-quantized endpoints are favored. This isn't hypothetical: independently
+  checked from outside.) So *two identical requests can hit two different providers*.
+  **We used to add "and cheaper-hence-more-quantized endpoints are favored"; our own data only
+  partly supports that, so here is the measured version.** Ranking each model's endpoints by
+  price and by precision, the correlation is positive in **58–65% of the models with a testable
+  spread** (64.6% by prompt price, 57.8% by completion price) with a median ρ of only 0.21–0.36,
+  and it **inverts outright in 13–16 models**. The cheapest endpoint is the most quantized one
+  about 71% of the time. `openai/gpt-oss-120b` — this guide's own recurring example — is one of
+  the inversions: its cheapest disclosed endpoint is `bf16`, while pricier ones are `fp4`/`fp8`.
+  So price is a weak, unreliable proxy for precision: cheap routing *tends* toward worse weights
+  but you cannot infer either from the other. Look the endpoint up (§3) instead of reasoning from
+  its price. This isn't hypothetical: independently
   measured (not by this repo), the same `gpt-oss-120b` slug scored 93.3% via one set of providers
   and 36.7% via another on AIME25 — a 56.6-point spread under one model name — and a peer-reviewed
   audit of API endpoints found 11 of 31 tested serving distributions that didn't match the
@@ -53,6 +72,28 @@ given model slug (e.g. `deepseek/deepseek-r1`) there are often several providers
 
 Crucial consequence: **setting `provider.sort` or `provider.order` disables load balancing**
 (routing becomes deterministic-ish), while leaving them unset means routing is probabilistic.
+That one is not just vendor prose: OpenRouter's public API schema documents the `sort` field as
+*"When set, no load balancing is performed."*
+
+### What you cannot check from outside — and why that is itself the argument
+
+We probed the public endpoints API and enumerated every field it returns
+(`findings/best_practices_verification.json` → `api_visibility_gaps`). What varies between
+endpoints *is* visible: precision, context window, max output, supported parameters, price. What
+governs **which endpoint you actually get, and which one you actually got**, is not:
+
+- no selection weight, traffic share, or served-request count — so the inverse-square-of-price
+  claim, and Auto Exacto's quality tiers, cannot be audited by anyone outside OpenRouter;
+- no data-retention or training-policy field per endpoint, so `data_collection` cannot be
+  verified against the endpoints it is supposed to filter;
+- no verification alongside `quantization` — the precision is the provider's self-report;
+- the `latency_last_30m` / `throughput_last_30m` fields, which would show whether a listed
+  endpoint is even taking traffic, were `null` on every endpoint we sampled.
+
+A routing system whose routing cannot be inspected from outside is not a reason to trust its
+description of itself. It is the reason to **pin what you can pin and log what actually served
+you** (§3, §4): provenance you record yourself is the only part of this that does not depend on
+taking the vendor's word.
 
 ### The default is not the safe default — and tooling won't fix it for you
 

@@ -75,6 +75,11 @@ with every quotation located verbatim in its source: `reports/prior-work.md`):
 | `structured_outputs` partial | 56/87 models | — |
 | `response_format` partial | 41/87 models | — |
 
+These counts are from a dated snapshot, and the catalog moves under you: a same-day live refetch
+already showed `gpt-oss-120b`'s `logprobs` endpoint count change (`findings/best_practices_verification.json`
+→ `live_drift_check`). Treat every figure here as "as of the snapshot," and re-check before you
+rely on one — the drift is itself the argument for pinning and logging.
+
 `llama-3.3-70b` is used as the worked example because the survey's repos actually benchmark it
 and it shows both cliffs at once — it is *not* the extreme. The widest max-output spread in the
 snapshot is `xiaomi/mimo-v2.5` at 64.0x (16,384 vs 1,048,576).
