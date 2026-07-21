@@ -36,7 +36,7 @@ reported. If your research pins none of this, "the model" you evaluated is a mov
 
 | Path | What's there |
 | --- | --- |
-| `reports/` | Best-practices guide; the provider A/B rerun experiment plan |
+| `reports/` | Best-practices guide; prior work; the provider A/B rerun experiment plan |
 | `findings/` | The survey dataset (CSV/JSON), taxonomy of mistakes, methodology, `claims.json` |
 | `scripts/` | Everything generated is generated here — see [Provenance](#provenance-where-every-published-number-comes-from) |
 | `artifact/` | Interactive data explorer (self-contained HTML) |
@@ -101,6 +101,7 @@ adversarial verifier** reading the actual source. Numbers below are generated fr
 | 📊 **Interactive explorer** | Provider Routing Inspector — filter by verdict/severity, click a mistake to filter, "Routing Roulette" demo, per-repo link to the exact offending line: **https://claude.ai/code/artifact/6ba2006d-e72e-47b8-9e81-fe6270f8305e** (source: [`artifact/index.html`](artifact/index.html)) |
 | 🖼️ **Shareable image** | [`image/openrouter_findings.png`](image/openrouter_findings.png) — one-glance summary + the fix |
 | 📄 **Best-practices guide** | [`reports/openrouter-best-practices.md`](reports/openrouter-best-practices.md) |
+| 📚 **Prior work** | [`reports/prior-work.md`](reports/prior-work.md) — who already documented this, with every quotation pinned to its source |
 | 🗂️ **Dataset** | [`findings/survey.csv`](findings/survey.csv) · [`findings/survey.json`](findings/survey.json) (incl. a validated GitHub permalink to each call site) |
 | 🧾 **Taxonomy** | [`findings/taxonomy.md`](findings/taxonomy.md) — the M1–M12 mistake catalog |
 | 🛠️ **Claude skill** | [`skill/use-openrouter-safely/`](skill/use-openrouter-safely/) — guidance + a heuristic static auditor |
@@ -138,6 +139,8 @@ uv run scripts/set_safety_class.py        # classify rows -> regenerates survey.
                                           #   stats.json, artifact/_data.json, index.html
 uv run scripts/build_claims.py            # derive every prose-cited statistic -> claims.json
 uv run scripts/make_summary.py            # findings/summary.md
+uv run scripts/fetch_prior_work_sources.py      # re-verify every prior-work quotation at source
+uv run scripts/make_prior_work.py               # reports/prior-work.md
 uv run --with cairosvg scripts/make_poster.py   # image/openrouter_findings.{svg,png}
 uv run --with pytest pytest tests/        # enforces the whole chain
 ```

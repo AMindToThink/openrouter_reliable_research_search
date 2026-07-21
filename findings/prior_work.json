@@ -1,0 +1,398 @@
+{
+  "_note": "Curated prior-work list. Titles, authors and dates for arXiv entries are NEVER stored here -- they are fetched from the arXiv API by scripts/fetch_prior_work_sources.py into findings/prior_work_sources.json, and reports/prior-work.md is generated from the join. Every `quote` must appear verbatim in the fetched abstract (arXiv) or in the fetched page text (web); the fetch script records the surrounding context and tests/test_prior_work.py enforces the substring. Entries with \"verified\": false were surfaced by a search agent but NOT independently checked -- they carry no quote and live in the leads appendix.",
+  "entries": [
+    {
+      "key": "model-equality-testing",
+      "kind": "paper",
+      "arxiv_id": "2410.20247",
+      "venue": "ICLR 2025",
+      "tier": "direct",
+      "status": "new",
+      "verified": true,
+      "quote": "11 out of 31 endpoints serve different distributions than reference weights released by Meta",
+      "why": "The closest thing to a peer-reviewed statement of this survey's thesis: an API endpoint's advertised model name is not evidence of which weights it serves. Formalises the question as a two-sample test (MMD with a string kernel) that a caller can actually run, which makes it the natural rigorous upgrade path for anyone who cannot pin a provider.",
+      "supports": [
+        "M1",
+        "M6",
+        "M11"
+      ],
+      "rank": 0
+    },
+    {
+      "key": "rank-based-api-audit",
+      "kind": "paper",
+      "arxiv_id": "2506.06975",
+      "venue": "preprint",
+      "tier": "direct",
+      "status": "new",
+      "verified": true,
+      "quote": "API providers may discreetly serve quantized or fine-tuned variants, which can degrade performance and compromise safety",
+      "why": "Companion detection method to Model Equality Testing, aimed at the same failure: providers silently serving quantized or fine-tuned variants behind an unchanged model name. Query-efficient enough to run as a routine pre-flight check.",
+      "supports": [
+        "M1",
+        "M11"
+      ],
+      "rank": 7
+    },
+    {
+      "key": "same-model-not-same-service",
+      "kind": "paper",
+      "arxiv_id": "2605.02821",
+      "venue": "preprint",
+      "tier": "direct",
+      "status": "new",
+      "verified": true,
+      "quote": "the operational unit is a service object: a provider-specific, time-varying endpoint defined by model variant, protocol behavior, context capacity, listed price, latency and throughput distribution, reliability, and task feasibility",
+      "why": "Measurement study of hosted open-weight APIs arguing the operational unit is a provider-specific, time-varying endpoint — model variant, protocol behaviour, context capacity, latency and reliability all vary by provider and by time, not by model name. That is precisely the object this survey says research code must pin. Very recent and not yet independently corroborated.",
+      "supports": [
+        "M1",
+        "M3",
+        "M6",
+        "M11"
+      ],
+      "rank": 6
+    },
+    {
+      "key": "numerical-nondeterminism",
+      "kind": "paper",
+      "arxiv_id": "2506.09501",
+      "venue": "preprint",
+      "tier": "direct",
+      "status": "new",
+      "verified": true,
+      "quote": "can exhibit up to 9% variation in accuracy and 9,000 tokens difference in response length due to differences in GPU count, type, and evaluation batch size",
+      "why": "The mechanism underneath the whole thesis: identical weights and greedy decoding still move eval scores when the serving stack changes, because floating-point addition is not associative. This is the peer-reviewable stand-in for the batch-invariance argument, and it means a provider switch can corrupt results even with quantization held constant.",
+      "supports": [
+        "M3",
+        "M7",
+        "M11"
+      ],
+      "rank": 5
+    },
+    {
+      "key": "silent-hyperparameter",
+      "kind": "paper",
+      "arxiv_id": "2605.19537",
+      "venue": "preprint",
+      "tier": "direct",
+      "status": "already-cited",
+      "verified": true,
+      "quote": "the choice of backend alone can shift benchmark scores by up to 16.6 percentage points and induce high rates of output disagreement",
+      "why": "Already cited in reports/openrouter-best-practices.md. Establishes the inference backend as an unreported hyperparameter, with benchmark scores moving by up to 16.6 points on backend choice alone, and finds the stack is almost never reported across the ML literature.",
+      "supports": [
+        "M3",
+        "M10",
+        "M11"
+      ],
+      "rank": 4
+    },
+    {
+      "key": "chasing-shadows",
+      "kind": "paper",
+      "arxiv_id": "2512.09549",
+      "venue": "preprint",
+      "tier": "direct",
+      "status": "already-cited",
+      "verified": true,
+      "quote": "every paper contains at least one pitfall, and each pitfall appears in multiple papers. Yet only 15.7% of the present pitfalls were explicitly discussed",
+      "why": "Already cited, but under-used: its pitfall P9 (Model Ambiguity) is this survey's thesis, and it is the single most prevalent pitfall in its sample — Present in 73.6% (53/72) of papers and Partly present in a further 12.5%, with none of them acknowledging it (paper section V, P9). Its Table II measures the consequence directly: CodeLlama-7b attack success rises from 18.21% unquantized to 69.52% at 2-bit, and two nominally 4-bit builds of the same model differ 15.49% vs 58.16%. The 73.6%/0-discussed split is an independent echo of this survey's own at-risk-versus-aware result.",
+      "supports": [
+        "M1",
+        "M6",
+        "M10"
+      ],
+      "rank": 3
+    },
+    {
+      "key": "cot-illegibility-revisited",
+      "kind": "post",
+      "title": "R1 CoT illegibility revisited",
+      "author": "nostalgebraist",
+      "outlet": "LessWrong",
+      "date": "2026-04-19",
+      "url": "https://www.lesswrong.com/posts/jHnZzicKzczkCCArK/r1-cot-illegibility-revisited",
+      "tier": "direct",
+      "status": "already-cited",
+      "verified": true,
+      "quote": "I think this is pretty convincing re your original argument that my results were contaminated by bad inference setups, and that correspondingly my paper doesn't substantiate some of its claims and conclusions with good evidence",
+      "quote_attribution": "Jozdien (Arun Jose), author of the critiqued paper, in the comments",
+      "why": "The flagship case, and stronger than this repo previously recorded. Re-running the same GPQA/CoT-legibility pipeline over the same deepseek/deepseek-r1 slug with only the OpenRouter provider changed moved mean illegibility from 4.30 (Targon) to 2.30 (Novita). What this repo had not recorded is the resolution: the author of the critiqued paper conceded in the comments, adding that he \"should have been running capability evaluations with different providers\" rather than trusting OpenRouter's labels. A published AI-safety result withdrawn in substance because of provider routing, with the author agreeing.",
+      "supports": [
+        "M1",
+        "M3",
+        "M8",
+        "M11"
+      ],
+      "rank": 2
+    },
+    {
+      "key": "gpt-oss-provider-spread",
+      "kind": "post",
+      "title": "Open weight LLMs exhibit inconsistent performance across providers",
+      "author": "Simon Willison (reporting Artificial Analysis data)",
+      "outlet": "simonwillison.net",
+      "date": "2025-08-15",
+      "url": "https://simonwillison.net/2025/Aug/15/inconsistent-performance/",
+      "tier": "direct",
+      "status": "new",
+      "verified": true,
+      "quote": "with hosted models even knowing the quantization they are using isn’t necessarily enough information to be able to predict that model’s performance",
+      "why": "The best single quantitative artifact of same-slug cross-provider divergence, and it is measured on a model OpenRouter serves. On AIME25 (32 runs, reasoning effort high), identical gpt-oss-120b weights scored 93.3% via Cerebras/Nebius/Fireworks/DeepInfra/Novita/Together, 86.7% via Groq, 80.0% via Azure and 36.7% via CompactifAI — a 56.6-point spread under one model name. Willison's note that most 93.3% providers were on the latest vLLM ties the spread to the serving stack, not just precision. Groq and Azure had moved to 93.3% within five days, so the measurement also depends on when it was taken.",
+      "supports": [
+        "M1",
+        "M3",
+        "M8",
+        "M11"
+      ],
+      "rank": 1
+    },
+    {
+      "key": "epoch-benchmarking-hard",
+      "kind": "post",
+      "title": "Why benchmarking is hard",
+      "author": "Florian Brand and Jean-Stanislas Denain",
+      "outlet": "Epoch AI",
+      "date": "2025-12-23",
+      "url": "https://epoch.ai/gradient-updates/why-benchmarking-is-hard",
+      "tier": "direct",
+      "status": "new",
+      "verified": true,
+      "quote": "The selection of an appropriate provider has the biggest impact on model performance",
+      "why": "A benchmarking organisation stating the ranking outright, from experience rather than argument. The same post reports provider-specific defects that map onto this survey's taxonomy: empty or cut-off responses before max_tokens is reached (AtlasCloud, Mancer, Fireworks via OpenRouter), and providers whose real max_tokens is lower than advertised.",
+      "supports": [
+        "M2",
+        "M3",
+        "M8"
+      ],
+      "rank": 8
+    },
+    {
+      "key": "openrouter-exacto",
+      "kind": "vendor",
+      "title": "Provider Variance: Introducing Exacto",
+      "author": "Chris Clark",
+      "outlet": "OpenRouter blog",
+      "date": "2025-10-21",
+      "url": "https://openrouter.ai/blog/announcements/provider-variance-introducing-exacto/",
+      "tier": "direct",
+      "status": "new",
+      "verified": true,
+      "quote": "vary between providers significantly more than the standard benchmarking would suggest",
+      "why": "The router itself conceding the premise, from its own billions-of-calls telemetry rather than an outside benchmark — which upgrades this survey's argument from 'critics say' to 'the vendor says'. Cite with the caveat that the same post, and the March 2026 Auto Exacto follow-up, attribute more tool-call breakage to inference-engine and parser bugs than to precision alone; that is a friendly amendment to the quantization-first framing, not a contradiction of it.",
+      "supports": [
+        "M3",
+        "M11"
+      ],
+      "rank": 10
+    },
+    {
+      "key": "openrouter-provider-routing-docs",
+      "kind": "docs",
+      "title": "Provider Routing",
+      "author": "OpenRouter",
+      "outlet": "OpenRouter docs",
+      "date": "accessed 2026-07-21",
+      "url": "https://openrouter.ai/docs/features/provider-routing",
+      "tier": "direct",
+      "status": "already-cited",
+      "verified": true,
+      "quote": "Quantized models may exhibit degraded performance for certain prompts, depending on the method used",
+      "why": "Already cited. Primary-source documentation of both the hazard and the knobs — quantizations, require_parameters, allow_fallbacks, order/only — none of which are on by default. The warning is in the vendor's own docs, which removes any defence that the risk was undisclosed.",
+      "supports": [
+        "M1",
+        "M2",
+        "M3",
+        "M5"
+      ],
+      "rank": 12
+    },
+    {
+      "key": "together-not-fungible",
+      "kind": "vendor",
+      "title": "Llama 3.1: Same model, different results",
+      "author": "Together AI",
+      "outlet": "together.ai blog",
+      "date": "2024-07-31",
+      "url": "https://www.together.ai/blog/llama-31-quality",
+      "tier": "direct",
+      "status": "new",
+      "verified": true,
+      "quote": "inference services are not fungible",
+      "why": "An inference provider publishing its own precision-tier accuracy deltas and stating that identical weights do not imply an equivalent service, because implementation and quality-testing choices 'can mean the difference of a percentage point or more on a benchmark'. Useful precisely because it is a self-report: the disclosure exists only because this vendor chose to make it, which is the argument for logging what actually served each call rather than trusting a label.",
+      "supports": [
+        "M1",
+        "M8",
+        "M11"
+      ],
+      "rank": 11
+    },
+    {
+      "key": "artificial-analysis-methodology",
+      "kind": "policy",
+      "title": "Performance Benchmarking Methodology (Provider Requirements)",
+      "author": "Artificial Analysis",
+      "outlet": "artificialanalysis.ai",
+      "date": "accessed 2026-07-21",
+      "url": "https://artificialanalysis.ai/methodology/performance-benchmarking",
+      "tier": "direct",
+      "status": "new",
+      "verified": true,
+      "quote": "Serve Artificial Analysis a model, quantization, context length, or endpoint configuration that differs from what is publicly advertised and generally available under the same name",
+      "why": "A benchmarking organisation has already written this survey's failure mode into enforceable policy, listing it among prohibited provider behaviours with delisting and public disclosure as the sanctions. Institutional confirmation that endpoint configuration diverging from the advertised name is a known, adversarial-enough risk to need rules — and evidence that the fix is procedural, not merely technical.",
+      "supports": [
+        "M1",
+        "M6",
+        "M11"
+      ],
+      "rank": 9
+    },
+    {
+      "key": "reflection-70b",
+      "kind": "incident",
+      "title": "Reflection 70B benchmark dispute (independent testers could not verify what sat behind the API)",
+      "outlet": "VentureBeat / The Decoder / Artificial Analysis",
+      "date": "2024-09",
+      "url": "https://the-decoder.com/reflection-70b-launch-mired-in-controversy-as-third-party-benchmarks-disappoint/",
+      "tier": "direct",
+      "status": "lead",
+      "verified": false,
+      "why": "Reported as the textbook case of an opaque endpoint producing a headline score no one could reproduce from the released weights. Would be the strongest incident citation if confirmed against primary sources.",
+      "rank": 13
+    },
+    {
+      "key": "llama4-maverick-lmarena",
+      "kind": "incident",
+      "title": "Llama 4 Maverick: experimental variant ranked #2 on LMArena, public release ranked far lower; LMArena policy updated in response",
+      "outlet": "TechCrunch / The Register / LMArena policy",
+      "date": "2025-04",
+      "url": "https://arena.ai/blog/policy/",
+      "tier": "adjacent",
+      "status": "lead",
+      "verified": false,
+      "why": "Reported as a leaderboard-level analogue: the benchmarked artifact was not the shipped artifact. LMArena's resulting written policy reportedly requires providers to confirm the tested model is identical to the released one, with removal as the sanction.",
+      "rank": 14
+    },
+    {
+      "key": "hf-open-llm-leaderboard",
+      "kind": "policy",
+      "title": "Open LLM Leaderboard: local-inference-only policy with pinned model revisions",
+      "outlet": "Hugging Face",
+      "date": "current",
+      "url": "https://huggingface.co/docs/leaderboards/en/open_llm_leaderboard/about",
+      "tier": "adjacent",
+      "status": "lead",
+      "verified": false,
+      "why": "Reported to restrict the leaderboard to open weights because hosted APIs can change unpredictably, and to re-run everything locally with a pinned revision — a leaderboard sidestepping the problem structurally rather than pinning a provider.",
+      "rank": 15
+    },
+    {
+      "key": "helm-deployments",
+      "kind": "policy",
+      "title": "HELM: a model can have more than one deployment, named by host organisation",
+      "outlet": "Stanford CRFM",
+      "date": "current",
+      "url": "https://github.com/stanford-crfm/helm/blob/main/docs/adding_new_models.md",
+      "tier": "adjacent",
+      "status": "lead",
+      "verified": false,
+      "why": "Reported to encode provider identity into the model's canonical name (together/gemma-2-9b-it vs google/gemma-2-9b-it). Unconfirmed whether run results record which deployment served them, which is the part that would matter for M4.",
+      "rank": 16
+    },
+    {
+      "key": "inspect-ai-openrouter-docs",
+      "kind": "docs",
+      "title": "Inspect AI provider docs: OpenRouter routing and pinning guidance",
+      "outlet": "UK AI Safety Institute",
+      "date": "current",
+      "url": "https://inspect.aisi.org.uk/providers.html",
+      "tier": "direct",
+      "status": "lead",
+      "verified": false,
+      "why": "Reported to warn that OpenRouter may split one model's requests across backends and to document the pinning arguments — an eval-harness maintainer converging independently on this survey's advice. Being audited separately against the taxonomy; see reports/provider-ab-experiment-plan.md.",
+      "rank": 17
+    },
+    {
+      "key": "roo-code-11325",
+      "kind": "issue",
+      "title": "RooCodeInc/Roo-Code #11325: default OpenRouter routing to FP4/Int4 providers corrupts CJK output",
+      "outlet": "GitHub",
+      "date": "2026-02",
+      "url": "https://github.com/RooCodeInc/Roo-Code/issues/11325",
+      "tier": "direct",
+      "status": "lead",
+      "verified": false,
+      "why": "Reported user-visible corruption (raw Unicode escapes instead of Korean/Chinese/Japanese text) tied to low-bit providers on the same slug. Single-report and not independently replicated, but a concrete non-accuracy failure mode.",
+      "rank": 18
+    },
+    {
+      "key": "goose-3846",
+      "kind": "issue",
+      "title": "block/goose #3846: OpenRouter defaults to a quantization tier users cannot control per provider",
+      "outlet": "GitHub",
+      "date": "2025-08",
+      "url": "https://github.com/block/goose/issues/3846",
+      "tier": "adjacent",
+      "status": "lead",
+      "verified": false,
+      "why": "Reported downstream-tool complaint in the same family as qwen-code PR #348: the safe routing knobs exist but are not reachable where users need them.",
+      "rank": 19
+    },
+    {
+      "key": "qwen-code-348",
+      "kind": "issue",
+      "title": "QwenLM/qwen-code PR #348: rejected default to avoid quantized OpenRouter providers",
+      "outlet": "GitHub",
+      "date": "2025-08-15",
+      "url": "https://github.com/QwenLM/qwen-code/pull/348",
+      "tier": "adjacent",
+      "status": "already-cited",
+      "verified": false,
+      "why": "Already cited in reports/openrouter-best-practices.md as evidence that no one upstream will pin routing for you. Carried here for completeness; the claim of 'substantially worse output for coding' is a developer report with no measurement attached.",
+      "rank": 20
+    },
+    {
+      "key": "accuracy-is-not-all-you-need",
+      "kind": "paper",
+      "arxiv_id": "2407.09141",
+      "venue": "NeurIPS 2024",
+      "tier": "direct",
+      "status": "lead",
+      "verified": false,
+      "why": "Reported to show compressed models matching baseline accuracy while flipping large numbers of individual answers and degrading open-ended generation — i.e. benchmark parity hiding behavioural divergence. Would strengthen the argument that an unchanged headline number is not evidence of an unchanged model.",
+      "rank": 21
+    },
+    {
+      "key": "quantization-safety-reliability",
+      "kind": "paper",
+      "arxiv_id": "2502.15799",
+      "venue": "preprint",
+      "tier": "direct",
+      "status": "lead",
+      "verified": false,
+      "why": "Reported to test 66 compressed variants across 6 compression methods and find measurable safety degradation — the safety-eval-specific version of the quantization risk.",
+      "rank": 22
+    },
+    {
+      "key": "inference-engine-bugs",
+      "kind": "paper",
+      "arxiv_id": "2506.09713",
+      "venue": "ACM TOSEM",
+      "tier": "adjacent",
+      "status": "lead",
+      "verified": false,
+      "why": "Reported empirical study of 929 bugs across five inference engines, with a large share presenting as silent wrong output rather than crashes. Supports the engine-level half of provider variance.",
+      "rank": 23
+    },
+    {
+      "key": "commercial-llm-reproducibility-se",
+      "kind": "paper",
+      "arxiv_id": "2510.25506",
+      "venue": "ICSE 2026",
+      "tier": "adjacent",
+      "status": "lead",
+      "verified": false,
+      "why": "Reported that of 18 artifact-bearing papers using commercial LLM APIs, only 5 were executable and none fully reproduced — the closed-API analogue of this survey, in software engineering.",
+      "rank": 24
+    }
+  ]
+}

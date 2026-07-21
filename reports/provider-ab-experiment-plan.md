@@ -26,9 +26,22 @@ Two mechanism facts, verified by hand, shape everything below:
    Confirmed independently by `nostalgebraist/cot_legibility`, which pins with exactly this form
    (`targon/fp8`, `deepinfra/bf16`).
 
-`inspect_ai` is the reference implementation: `OpenRouterAPI.__init__` collects a `provider` dict
-model-arg and `completion_params()` emits it as `extra_body["provider"]`, so **any** inspect-based
-eval is pinnable via `-M provider='{...}'` with zero source edits.
+`inspect_ai` is plumbing, not a safety feature — checked directly against the real source
+(`UKGovernmentBEIS/inspect_ai` @ `8ebc782`), it earns no "reference implementation" label. Its
+`OpenRouterAPI.__init__` only *collects* whatever `provider` dict the caller passes via
+`-M provider=...` (`inspect_ai/model/_providers/openrouter.py:108-112`) and `completion_params()`
+forwards it to `extra_body["provider"]` unchanged (`:372-385`); it sets no default `quantizations`
+floor, `require_parameters`, `order`/`allow_fallbacks`, or `data_collection` of its own — the
+provider docs' only worked example for `provider` is `{'quantizations': ['int8']}`, and the other
+three are never mentioned (`docs/providers.qmd:1542-1549`; also <https://inspect.aisi.org.uk/providers.html>).
+It has no OpenRouter-specific provenance capture either (M4): Inspect logs the full raw response
+for every call regardless of provider (`openai_compatible.py:258-264`), and OpenRouter's response
+body now carries an `openrouter_metadata.endpoints` block naming the served provider (confirmed
+against the live `openrouter.ai/openapi.json` schema), so that provenance rides along into the
+`.eval` log by accident — undocumented, and never surfaced as a field — not because inspect_ai
+built anything to capture it. The fact worth keeping: because the caller's dict reaches the wire
+untouched, **any** inspect-based eval genuinely is pinnable via `-M provider='{...}'` with zero
+source edits — that's plumbing the recommendations below rely on, nothing more.
 
 ## The quality cliffs hiding under one model name
 

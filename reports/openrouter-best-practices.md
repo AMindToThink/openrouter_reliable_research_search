@@ -120,6 +120,10 @@ OPENROUTER_PROVIDER_DEFAULTS = {
 }
 ```
 
+Quoted as of 2026-07-21, from the public `control-tower` repo at commit `79a3c6f`
+(`src/control_tower/models/openrouter_provider.py`, lines 37–41):
+<https://github.com/linuxarena/control-tower/blob/79a3c6f76c0575292ff80d6ece04ff288c64c482/src/control_tower/models/openrouter_provider.py#L37-L41>.
+
 **Scored against this repo's own taxonomy, this implementation fails three of the mistakes it
 exists to prevent:**
 
@@ -149,6 +153,9 @@ flagged `at_risk` with the near-complete `M1, M2, M3, M4, M5, M7, M8` set in thi
 codebase from shipping with none of it. That is what a floor-as-the-whole-policy actually buys
 you: a shared module that looks like it solved the problem, and a research call site next door
 that never touches it.
+
+An upstream fix for these gaps is in progress as of this writing; the scoring above is pinned
+to the commit cited, independent of whether that fix lands.
 
 **The fix isn't a better floor. It's making the pin the thing a caller has to actively skip,
 not the thing they have to actively add:**
@@ -263,4 +270,4 @@ most controlled, at higher cost and less model coverage.
 - "The Silent Hyperparameter: Quantifying the Impact of Inference Backends on LLM Reproducibility" — <https://arxiv.org/abs/2605.19537>
 - "Chasing Shadows: Pitfalls in LLM Security Research" — <https://arxiv.org/pdf/2512.09549>
 - QwenLM/qwen-code PR #348 (rejected "avoid quantized models" default) — <https://github.com/QwenLM/qwen-code/pull/348>
-- Redwood Research Control Tower `openrouter_provider.py` — scored against this repo's own taxonomy in §3b: fails M2/M9 (`require_parameters` never set) and M4 (no provenance capture), and only nominally addresses M1/M3 (a floor with an `"unknown"` hole, an order-preference with no pin). A worked failure case, not a model to imitate.
+- Redwood Research Control Tower `openrouter_provider.py`, quoted as of 2026-07-21 at commit `79a3c6f` — <https://github.com/linuxarena/control-tower/blob/79a3c6f76c0575292ff80d6ece04ff288c64c482/src/control_tower/models/openrouter_provider.py#L37-L41> — scored against this repo's own taxonomy in §3b: fails M2/M9 (`require_parameters` never set) and M4 (no provenance capture), and only nominally addresses M1/M3 (a floor with an `"unknown"` hole, an order-preference with no pin). A worked failure case, not a model to imitate.
