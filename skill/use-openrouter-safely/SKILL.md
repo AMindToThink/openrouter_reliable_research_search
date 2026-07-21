@@ -32,16 +32,32 @@ response, running the same GPQA-diamond pipeline on the same slug `deepseek/deep
 
 | Run | Served by | Illegibility (mean ± sd) | Accuracy |
 | --- | --- | --- | --- |
-| unpinned | Targon 295/300 | **4.31** ± 2.13 | 36.6% |
-| unpinned | Targon **169**/300 | 4.18 ± 1.81 | 31.4% |
+| allow-list `[targon/fp8, Nebius]` | Targon 295/300 | **4.31** ± 2.13 | 36.6% |
+| allow-list `[targon/fp8, Nebius]` | Targon **169**/300 | 4.18 ± 1.81 | 31.4% |
 | pinned `novita` | novita | **2.31** ± 0.75 | 43.9% |
 | pinned `novita` | novita | 2.28 ± 0.75 | 40.5% |
 
-~88% swing in the headline metric and a 12.5-point accuracy spread. **One unpinned run drifted
-mid-experiment** — only 169 of 300 responses came from Targon, so a *single run* was served by
-multiple backends. *Honest caveat: the runs are ~6 months apart, so checkpoint drift is confounded
-with provider. Suggestive, not clean.* Independent work also finds inference-backend choice alone
-can move a benchmark by ~16pp (arXiv 2605.19537).
+~88% swing in the headline metric and a 12.5-point accuracy spread. *Honest caveat: the runs are
+~6 months apart, so checkpoint drift is confounded with provider. Suggestive, not clean.*
+Independent work also finds inference-backend choice alone can move a benchmark by ~16pp
+(arXiv 2605.19537).
+
+**Correction (2026-07-21).** Earlier versions of this skill said the 169/300 run "drifted
+mid-experiment" to another backend. That was wrong, and we only caught it by going back to the raw
+`inference.json`. Nebius never served a single one of those 600 requests. The missing 131 responses
+are **failures**: 125 Targon 429s, plus 6 parse/None errors. The real lesson is arguably worse —
+with `allow_fallbacks: false`, a two-entry allow-list did not spread load across its two entries;
+it hammered one provider and **turned provider saturation into 42% missing data**, silently, in a
+run whose surviving responses were still scored and reported. Verified counts for this and 27 other
+runs: `findings/observed_routing.json`.
+
+**Genuine mid-run backend mixing does happen — just not there.** In the same repo's committed
+runs, **16 of 16** `qwq` GPQA runs were served by DeepInfra *and* Nebius within a single run under
+one unchanged config, with splits ranging from 90/10 to 10/90. A Kimi-K2 run split 58 Novita / 42
+Moonshot. An R1-Distill run with an **empty** `openrouter_provider: []` list split 47 NextBit / 40
+Novita — an empty allow-list restricts nothing, it falls through to default routing. This is the
+strongest evidence in this skill: not that routing *could* change mid-experiment, but that in real
+published research it *did*, repeatedly, with the served provider recorded to prove it.
 
 <!-- PRIOR-WORK FIGURES: every number below is pinned to a verified quotation in
      findings/prior_work_sources.json and guarded by tests/test_prior_work.py. -->
@@ -149,8 +165,10 @@ that fits your longest generation · the params you actually pass (`seed`, `logp
 
 Then, non-negotiably:
 - **Record the provider that actually served each call** — the response `provider` field, or
-  `GET /api/v1/generation?id=...`. Store it **per response, not per run**: unpinned routing can
-  drift mid-experiment (see the 169/300 case above).
+  `GET /api/v1/generation?id=...` (OpenRouter's schema does not document a top-level `provider`
+  field on the chat response; the generation endpoint and the opt-in metadata header are the
+  documented routes). Store it **per response, not per run**: routing genuinely does change
+  backends mid-run — 16 of 16 `qwq` runs above split across two providers under one config.
 - **Version-pin the model slug** and record the exact string.
 - If you rely on **structured outputs / JSON schema** for a judge or parser, you *must* set
   `require_parameters: true` (or `only`/`order` to supporting endpoints) — otherwise the schema is

@@ -135,13 +135,19 @@ provider served each response (`src/inference/providers.py:104`). Same slug
 
 | Run | Served by | Illegibility (mean ± sd) | Accuracy |
 | --- | --- | --- | --- |
-| 2025-10-14 19:05 | unpinned → Targon 295/300 | **4.31** ± 2.13 (n=295) | 36.6% |
-| 2025-10-14 20:10 | unpinned → Targon **169**/300 | 4.18 ± 1.81 (n=169) | 31.4% |
+| 2025-10-14 19:05 | allow-list `[targon/fp8, Nebius]` → Targon 295/300 | **4.31** ± 2.13 (n=295) | 36.6% |
+| 2025-10-14 20:10 | allow-list `[targon/fp8, Nebius]` → Targon **169**/300 | 4.18 ± 1.81 (n=169) | 31.4% |
 | 2026-04-19 | pinned `novita` | **2.31** ± 0.75 (n=198) | 43.9% |
 | 2026-04-19 | pinned `novita` | 2.28 ± 0.75 (n=300) | 40.5% |
 
-An ~88% swing in the headline metric, and a 12.5-point accuracy spread. One unpinned run **drifted
-mid-experiment** — only 169 of 300 responses came from Targon.
+An ~88% swing in the headline metric, and a 12.5-point accuracy spread. **Correction:** an earlier
+version of this plan said the second run "drifted mid-experiment." It did not — Nebius, the second
+entry in its allow-list, served none of the 600 requests across both runs. The 131 missing
+responses are failures (125 Targon 429s, 6 parse/None errors): with `allow_fallbacks: false`, a
+two-entry allow-list did not spread load, it converted provider saturation into 42% missing data.
+Counts re-derived from the raw `inference.json` in `findings/observed_routing.json`. Mid-run
+backend *mixing* is real and documented elsewhere in the same repo (16/16 `qwq` runs split across
+DeepInfra and Nebius) — just not in this run.
 
 **Honest caveat:** those runs are ~6 months apart, so checkpoint drift is confounded with provider.
 This is suggestive, not clean — and it is exactly the argument for running the paired same-day A/B.
