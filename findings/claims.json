@@ -26,6 +26,46 @@
       "source": "findings/provider_spread_reference.json",
       "derivation": "median(model.n_endpoints)"
     },
+    "fingerprint_checked_clean": {
+      "value": 7,
+      "source": "findings/survey.json",
+      "derivation": "count(fingerprint_verdict == 'checked_clean')"
+    },
+    "fingerprint_families": {
+      "value": 17,
+      "source": "findings/fingerprints.json",
+      "derivation": "len(families)"
+    },
+    "fingerprint_families_documented_catch": {
+      "value": 13,
+      "source": "findings/fingerprints.json",
+      "derivation": "count(families with evidence_strength == 'documented_catch')"
+    },
+    "fingerprint_families_need_raw_outputs": {
+      "value": 12,
+      "source": "findings/fingerprints.json",
+      "derivation": "count(families with needs_raw_outputs)"
+    },
+    "fingerprint_fingerprints_found": {
+      "value": 8,
+      "source": "findings/survey.json",
+      "derivation": "count(fingerprint_verdict == 'fingerprints_found')"
+    },
+    "fingerprint_inconclusive": {
+      "value": 6,
+      "source": "findings/survey.json",
+      "derivation": "count(fingerprint_verdict == 'inconclusive')"
+    },
+    "fingerprint_nothing_checkable_released": {
+      "value": 14,
+      "source": "findings/survey.json",
+      "derivation": "count(fingerprint_verdict == 'nothing_checkable_released')"
+    },
+    "fingerprint_repos_checkable": {
+      "value": 21,
+      "source": "findings/survey.json",
+      "derivation": "len(rows) - count(fingerprint_verdict == 'nothing_checkable_released')"
+    },
     "gptoss_endpoints": {
       "value": 20,
       "source": "findings/provider_spread_reference.json",

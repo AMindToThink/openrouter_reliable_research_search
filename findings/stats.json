@@ -47,6 +47,12 @@
     "no_usage_found": 1,
     "handled": 1
   },
+  "fingerprint_verdict": {
+    "nothing_checkable_released": 14,
+    "fingerprints_found": 8,
+    "checked_clean": 7,
+    "inconclusive": 6
+  },
   "surveyed": 35,
   "actual_openrouter_users": 34,
   "at_risk_pct_of_users": 91,

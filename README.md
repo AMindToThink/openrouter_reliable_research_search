@@ -59,8 +59,8 @@ This survey is the missing piece: not "can routing corrupt a result" — that is
 
 | Path | What's there |
 | --- | --- |
-| `reports/` | Best-practices guide; prior work; the provider A/B rerun experiment plan |
-| `findings/` | The survey dataset (CSV/JSON), taxonomy of mistakes, methodology, `claims.json` |
+| `reports/` | Best-practices guide; prior work; detection fingerprints; the provider A/B rerun experiment plan |
+| `findings/` | The survey dataset (CSV/JSON), taxonomy of mistakes, fingerprint catalogue, methodology, `claims.json` |
 | `scripts/` | Everything generated is generated here — see [Provenance](#provenance-where-every-published-number-comes-from) |
 | `artifact/` | Interactive data explorer (self-contained HTML) |
 | `image/` | Shareable summary graphic |
@@ -117,6 +117,45 @@ adversarial verifier** reading the actual source. Numbers below are generated fr
 > it caught a first-pass agent inventing numbers for one repo, and a paper whose reproducibility
 > appendix claims a model was called "via Google AI" when the code hardcodes an OpenRouter slug.
 
+## Can you tell from the outside?
+
+The audit above reads code. A separate question is whether a **reader** — with only the paper,
+its figures, its appendix and whatever data was released — could ever notice. There is one
+famous case where someone did: nostalgebraist read the chain-of-thought transcripts published
+with an "illegible reasoning" paper, recognised them as decode-level gibberish rather than
+reasoning, re-ran the same prompts on a different OpenRouter provider, and watched the
+phenomenon vanish. The paper's author agreed his results "were contaminated by bad inference
+setups."
+
+So we went looking for the rest of that method. 18 parallel research sweeps, one adversarial
+verifier per candidate, merged into **17** fingerprint families →
+[`reports/detection-fingerprints.md`](reports/detection-fingerprints.md), data in
+[`findings/fingerprints.json`](findings/fingerprints.json). **13** rest on a documented catch
+rather than on reasoning; **12** are checkable only if the authors released raw outputs. The
+catalogue includes two explicit *negative* families — run-to-run variance, temperature-0
+non-determinism, cost and throughput side channels — because each of them looks like a
+fingerprint and is not one.
+
+Then we ran every one of the 35 surveyed projects against the catalogue, one agent per repo,
+with a second adversarial pass over every positive claim. The verdict lives in the dataset as
+**Signs provider issues messed up the paper**:
+
+| Verdict | Repos | Meaning |
+| --- | --- | --- |
+| `nothing_checkable_released` | 14 | No transcripts, per-sample data, or provider metadata. No reader could ever check. |
+| `fingerprints_found` | 8 | Something in their own published output is visibly off. |
+| `checked_clean` | 7 | Enough was released to look, and the applicable checks come back clean. |
+| `inconclusive` | 6 | Raw outputs exist but do not settle it either way. |
+
+Only **21** of 35 projects released anything a reader could check at all. Among those that did,
+the hit rate is not small — released outputs contain literal `<|endoftext|>` salad, completion
+walls below the declared `max_tokens`, near-half-empty completion rates on one model but not
+its neighbours, and `<think>` tags that appear for three hours and then stop. But the honest
+headline runs the other way: **the fingerprint that mattered most is the one nobody publishes.**
+Provider metadata survives in released data for only a handful of these projects, aggregate-only
+reporting destroys every distributional signal before publication, and the original catch itself
+needed both released transcripts *and* someone willing to pay to re-run the experiment.
+
 ## Deliverables
 
 | | |
@@ -125,6 +164,7 @@ adversarial verifier** reading the actual source. Numbers below are generated fr
 | 🖼️ **Shareable image** | [`image/openrouter_findings.png`](image/openrouter_findings.png) — one-glance summary + the fix |
 | 📄 **Best-practices guide** | [`reports/openrouter-best-practices.md`](reports/openrouter-best-practices.md) |
 | 📚 **Prior work** | [`reports/prior-work.md`](reports/prior-work.md) — who already documented this, with every quotation pinned to its source |
+| 🔍 **Detection fingerprints** | [`reports/detection-fingerprints.md`](reports/detection-fingerprints.md) — 17 things a reader can look for in a published paper, and the much longer list of what cannot be told at all |
 | 🗂️ **Dataset** | [`findings/survey.csv`](findings/survey.csv) · [`findings/survey.json`](findings/survey.json) (incl. a validated GitHub permalink to each call site) |
 | 🧾 **Taxonomy** | [`findings/taxonomy.md`](findings/taxonomy.md) — the M1–M12 mistake catalog |
 | 🛠️ **Claude skill** | [`skill/use-openrouter-safely/`](skill/use-openrouter-safely/) — guidance + a heuristic static auditor |
@@ -164,6 +204,8 @@ uv run scripts/build_claims.py            # derive every prose-cited statistic -
 uv run scripts/make_summary.py            # findings/summary.md
 uv run scripts/fetch_prior_work_sources.py      # re-verify every prior-work quotation at source
 uv run scripts/make_prior_work.py               # reports/prior-work.md
+uv run scripts/add_fingerprint_column.py  # join per-repo fingerprint verdicts onto the dataset
+uv run scripts/make_fingerprints.py       # reports/detection-fingerprints.md
 uv run --with cairosvg scripts/make_poster.py   # image/openrouter_findings.{svg,png}
 uv run --with pytest pytest tests/        # enforces the whole chain
 ```

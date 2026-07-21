@@ -69,7 +69,12 @@
       "impact_verified": true,
       "provider_ab_rerun_assessment": "VIABLE (one-line edit); amplification 7/10 (long-horizon agentic error compounding, structured-output adherence). Pin: CLI flag `--models` (already exposed by lm_game.py, ai_diplomacy/game_logic.py:327-358) lets every one of the 7 Diplomacy powers be assigned `openrouter:&lt;model&gt;`, which routes through ai_diplomacy/clients.py:1432 `load_model_client` -> `Prefix.OPENROUTER` (clients.py:1505-1506) -> `OpenRouterC... Model(s): meta-llama/llama-3.3-70b-instruct.",
       "safety_class": "at_risk",
-      "safety_class_reason": ""
+      "safety_class_reason": "",
+      "provider_issue_fingerprints": "This project published far more than bare aggregate numbers, but stopped well short of a systematic raw-transcript release, so the fingerprint checks that matter most (F2 provider IDs, F3 truncation rates, F5 reasoning-shape uniformity, F11 uneven parse failures) cannot be run at scale. The public raw text is limited to a few paper case-study quotes and one committed markdown report (experiments/test_lie_fix.md), both specific to the OpenRouter-routed open-weight powers (Llama-4-Maverick, Gemini-2.5-Flash-preview via OpenRouter); the sample was directly opened, not inferred from a directory listing, and reads as fully coherent English/JSON with no token soup (F1), no special-token or chat-template litter, and no U+FFFD (F4). That is a genuine, if thin, negative check against those two fingerprints. But the excerpts are hand-picked \"interesting\" moments embedded in a betrayal-detection report and a persuasion case study, not a representative dump, so cherry-picking cannot be ruled out, and the underlying llm_responses.csv / lmvsgame.json files (the artifacts that would carry any provider/generation-id or finish_reason field) are gitignored and never released. The paper's acknowledgments confirm OpenRouter usage (\"We thank Cohere, OpenAI, and OpenRouter for generously providing API credits\"), but no provider, quantization, or snapshot pin is disclosed anywhere for the open-weight models in Table 2 (F16, weak alone). Net: some real output text exists and looks clean where readable, but the release is too partial to settle whether serving corrupted the reported scores.",
+      "fingerprint_verdict": "inconclusive",
+      "fingerprint_ids": [
+        "F16"
+      ]
     },
     {
       "title": "AI Induced Psychosis: A shallow investigation (Tim Hua)",
@@ -145,7 +150,13 @@
       "impact_verified": true,
       "provider_ab_rerun_assessment": "VIABLE (one-line edit); amplification 6/10 (LLM-as-judge score drift, multi-turn compounding, structured-output adherence). Pin: Fully traced end-to-end at the source level (read-only, no execution): 1. Repo call site — redteaming_systematic.py:351-354 (inside AutomatedRedTeaming.__init__): `self.target_model = get_model(target_model_name)` (and identically for redteam_model/grader_model on the next two lines). No model_args/... Model(s): deepseek/deepseek-r1-0528, x-ai/grok-3, openai/gpt-oss-20b, deepseek/deepseek-chat.",
       "safety_class": "at_risk",
-      "safety_class_reason": ""
+      "safety_class_reason": "",
+      "provider_issue_fingerprints": "Fingerprint checks come back mostly clean. None of the published transcripts or JSON dumps contain special-token litter, U+FFFD, or provider/generation-id keys (F4 negative), and F2 is unobtainable: the published `_redteam.json` files are simplified message dumps with `metadata: null` and no provider/gen-id field at all, so this project cannot be checked for F2 either way from what it released; the lone error_logs file does show OpenRouter's raw error passthrough naming `provider_name: xAI` for one grok-4 403, a single data point, not proof of anything. Reasoning blocks for deepseek-r1-0528 and gpt-oss-20b (e.g. `full_transcripts/Frank_openrouter-openai-gpt-oss-20b_..._target.md`) read as coherent, on-topic chain-of-thought rather than token soup (F1 negative), and both models show a perfectly uniform 1 reasoning-block-per-assistant-turn ratio across all 8 characters (checked_clean for those two). The grader-failure rate (-1/missing `delusion_confirmation_rating` in `result_grades/redteaming_results_20250819_100654.csv`) is low (0.9-4.6%) and is not concentrated on OpenRouter-served models versus the direct OpenAI/Anthropic arms — a clean F11 read. The one open item is gemini-2.5-pro, where reasoning-block presence varies transcript-to-transcript (3/12 to 12/12 assistant turns) with no consistent turn-position pattern (e.g. `Colin_openrouter-google-gemini-2.5-pro_..._target.md` reasons on turns 1, 2, and 10 only; `Nathan_...` reasons on turns 1-6 then never again), matching F5's shape. Whether this reflects a serving artifact or Google's own documented behavior that Gemini thought-summaries are not guaranteed on every turn even via the first-party API cannot be settled from what is published, since no non-OpenRouter comparison transcript exists to check against — hence inconclusive rather than a confirmed fingerprint.",
+      "fingerprint_verdict": "inconclusive",
+      "fingerprint_ids": [
+        "F5",
+        "F11"
+      ]
     },
     {
       "title": "ARC-AGI Benchmarking (ARC Prize Foundation)",
@@ -214,7 +225,10 @@
       "impact_verified": true,
       "provider_ab_rerun_assessment": "Zero-config and high-profile. task_utils.py:104-116 merges a gitignored models_private.yml into the model registry, so a pinned-provider model entry is added as pure config with no source edit. Model is deepseek/deepseek-r1-0528, which has a clean 4-endpoint spread including deepinfra/fp4 ($0.50/$2.15) vs novita/fp8 ($0.70/$2.50) and streamlake (logprobs). Amplification is frontier-reasoning plus pass@k variance (num_attempts=2 default) on 120 ARC-AGI-2 public-eval tasks. Main risk is cost variance: max_tokens is configured up to 130,000 and real CoT length is unmeasured, so the estimate spans a >5x range — pilot with a handful of tasks before committing.",
       "safety_class": "at_risk",
-      "safety_class_reason": ""
+      "safety_class_reason": "",
+      "provider_issue_fingerprints": "This project publishes the OpenRouter-using harness code but no raw output from any actual benchmarked model. github.com/arcprize/arc-agi-benchmarking's results/ and data/sample/submissions/ directories were opened directly, not inferred from a directory listing: the only content in them is a random-baseline aggregate-metrics file and one fabricated example submission whose message field literally reads \"ARC task prompt omitted for brevity\" — useful only to show the harness's JSON schema (which does include a per-attempt \"provider\" and \"model\" key, and a \"choices\" transcript field), not as evidence about real runs. The paper PDF (arXiv 2505.11831) was fetched and read in full and contains no appendix of chain-of-thought transcripts and no mention of OpenRouter, provider routing, or quantization anywhere in the text. arcprize.org/leaderboard, fetched directly, shows only aggregate score/cost-per-task numbers, no raw completions, no per-provider breakdown, and no named quantization/precision. Users who want real per-model outputs must run the harness themselves against their own API keys; the org has not committed or hosted that data anywhere findable — no HF dataset, no Zenodo record, no results release on GitHub. This is the expected default case: the harness is real and does route certain configs through OpenRouter (a code-level risk already established), but nothing in what ARC Prize actually published lets a reader inspect a single real transcript, so no fingerprint check (F1–F9) is possible.",
+      "fingerprint_verdict": "nothing_checkable_released",
+      "fingerprint_ids": []
     },
     {
       "title": "AgentLab (ServiceNow Research)",
@@ -290,7 +304,14 @@
       "impact_verified": true,
       "provider_ab_rerun_assessment": "DISQUALIFIED; amplification 6/10 (long-horizon agentic error compounding). Blocker: Playwright browser automation is mandatory for every implemented benchmark (MiniWoB, WorkArena, WebArena, VisualWebArena) via BrowserGym; README.md:77-80 states 'playwright install' as a required setup step even for the lightest tutorial; WebArena and VisualWebArena additionally require self-hosted Docker (README.md benchmark table rows f...",
       "safety_class": "at_risk",
-      "safety_class_reason": ""
+      "safety_class_reason": "",
+      "provider_issue_fingerprints": "tmlr_traces_part_aa is genuinely gzip-compressed (magic bytes 1f8b) and is a raw byte-split of a single continuous gzip stream that decompresses correctly even from a truncated prefix. In .../multi-chart-value-retrieval_102/, experiment.log records a POST to https://openrouter.ai/api/v1/chat/completions returning \"HTTP/1.1 200 OK\", followed by chain-of-thought text referencing \"Canon\" and \"Configuration Item by Manufacturer\" and the action click('a311'); the accompanying summary_info.json shows n_steps=3, terminated=true, truncated=false, max_output_tokens=150, cum_cost=0.02317692. The stuck-loop episode at .../workload-balancing-small-l2_102/experiment.log, roughly 3.5GB into the stream, contains exactly 42 occurrences of send_msg_to_user, with coherent, grammatical, non-degenerate repeated text — a genuine stuck agentic loop rather than a serving artifact. Both logs decode as UTF-8 with zero replacement characters and zero `<|...|>` token-leakage markers. A regex string-extraction pass over the raw pickle bytes of step_0.pkl.gz, searching for provider/gen-id/response_id/chatcmpl, returns zero hits: this data does not surface provider or generation-ID metadata without unpickling through the agentlab package, so that dimension remains unchecked rather than shown clean. The coverage behind these findings is limited — 9 episodes and one model (llama-3.1-405b-instruct) out of six evaluated, drawn from roughly 3.5GB of the 207GB corpus (476 experiment.log files turn up in that slice alone) — a spot-check, not exhaustive coverage.",
+      "fingerprint_verdict": "checked_clean",
+      "fingerprint_ids": [
+        "F1",
+        "F3",
+        "F4"
+      ]
     },
     {
       "title": "Aider (AI pair-programming CLI + polyglot code benchmark / leaderboard)",
@@ -383,7 +404,13 @@
       "impact_verified": true,
       "provider_ab_rerun_assessment": "DISQUALIFIED; amplification 4/10 (structured-output adherence, multi-turn compounding). Blocker: Hard-coded safety gate: benchmark/benchmark.py:252-254 refuses to run at all unless env var AIDER_DOCKER is set ('Warning: benchmarking runs unvetted code from GPT, run in a docker container'). This is trivially bypassable by just exporting the env var, but doing so without real sandboxing means running arbitrary LLM-generated code unsand...",
       "safety_class": "at_risk",
-      "safety_class_reason": ""
+      "safety_class_reason": "",
+      "provider_issue_fingerprints": "Aider's blog post at aider.chat/2025/05/08/qwen3.html reports four diff-format benchmark rows for Qwen3-235B-A22B: 61.3% on VLLM with bfloat16 (no-think), 59.6% via the Alibaba API (no-think), 54.7% on OpenRouter pinned to TogetherAI via `provider: order: [\"Together\"]` with recommended sampling params and no-think (cost $0.64, matching the page's `data-cost=\"0.6399\"` attribute), and 49.8% on OpenRouter with no provider pin (\"all providers\") and default settings (cost $1.80, matching `data-max-cost=\"1.8037\"`). That unpinned 49.8% row was obtained by \"simply running aider... without any model specific settings,\" which \"should have enabled thinking\" — so it differs from the three no-think rows by both provider-pinning and reasoning-mode/sampling-params at once, and cannot isolate a provider effect on its own. Restricting the comparison to the three no-think rows — VLLM-bf16 61.3%, Alibaba-API 59.6%, OpenRouter-pinned-to-Together 54.7% — leaves a 6.6-point gap across serving backends, consistent with Aider's own observation that proprietary models are served by their creators or trusted providers with stable inference settings while API providers \"can use very different inference settings, quantizations, etc.\" Separately, the shipped polyglot_leaderboard.yml entry for Qwen3-32B runs the command `aider --model openrouter/qwen/qwen3-32b` with no provider order specified, scoring pass_rate_2 40.0, while the file's Qwen3-235B-A22B row (`aider --model openai/qwen3-235b-a22b`, pass_rate_2 59.6) corresponds to the pinned Alibaba-endpoint condition rather than an unpinned OpenRouter run.",
+      "fingerprint_verdict": "fingerprints_found",
+      "fingerprint_ids": [
+        "F9",
+        "F16"
+      ]
     },
     {
       "title": "AppWorld",
@@ -433,7 +460,10 @@
       "impact_verified": true,
       "provider_ab_rerun_assessment": "REJECTED — needs glue code; amplification 7/10 (long-horizon agentic error compounding). Blocker: Requires a 3-line source patch across 2 functions in ONE file (experiments/code/simplified/language_model.py) to thread extra_body/provider through — the repo's own already-templated extra_body mechanism is dead code for every OpenRouter model as currently written, so this is not a pure config/env-var injection.; litellm is pinned only wi...",
       "safety_class": "at_risk",
-      "safety_class_reason": ""
+      "safety_class_reason": "",
+      "provider_issue_fingerprints": "The flagged pathway (`experiments/configs/{simplified_function_calling_agent,simplified_react_code_agent}/{meta/llama-3.1-70b-instruct_openrouter,deepseek/deepseek-r1-0528_openrouter}/*.jsonnet`, which set `\"name\": \"openrouter/...\"` via litellm with no provider pin) exists as committed source, but produced zero published output to inspect. The leaderboard repo's actual `_leaderboard.json` and its `experiments/outputs/` directory listing (17 experiments x 2 splits, all fetched via the GitHub API), plus every submission PR (#1-#14), were checked directly: every real, scored, bundle-backed submission uses OpenAI-direct, Together, or vendor-direct (Alibaba, Moonshot, Z.ai) endpoints, not OpenRouter. AppWorld does have a genuine raw-trajectory release mechanism (encrypted `.bundle` files, `appworld unpack` to decrypt) that would let a skeptical reader check provider/token-level fingerprints for a real submission, but no one has yet submitted, and the project has not published, any result that ran through the OpenRouter-routed configs. Nothing is checkable for this specific pathway because no output tied to it has been released.",
+      "fingerprint_verdict": "nothing_checkable_released",
+      "fingerprint_ids": []
     },
     {
       "title": "CAMEL (Communicative Agents for \"Mind\" Exploration of LLM Society)",
@@ -474,7 +504,10 @@
       "impact_verified": true,
       "provider_ab_rerun_assessment": "Highest raw amplification (9) and NeurIPS 2023, but the zero-config claim is the shakiest in the set and I would not lead with it. model_config_dict is an unvalidated Dict[str, Any] assigned verbatim in base_model.py:279 and deep-copied into each request, so an extra_body.provider does flow through — but the screening agent's own rerun recipe involves writing a driver script that imports examples/ai_society/role_playing.py, which is glue code and therefore outside the principal's constraint. Genuine two-role structure (AI-User vs AI-Assistant) and long multi-turn transcripts that resend full history make it an attractive future target if the no-glue rule is relaxed.",
       "safety_class": "at_risk",
-      "safety_class_reason": ""
+      "safety_class_reason": "",
+      "provider_issue_fingerprints": "The CAMEL paper, submitted March 31, 2023, makes no mention of OpenRouter anywhere in the arXiv abstract page or text — directly fetched and confirmed, not inferred — and OpenRouter itself did not yet exist at that time. The project's own published raw-output artifacts, the HuggingFace datasets camel-ai/math, ai_society, code, physics, chemistry, and biology, were generated by direct OpenAI API calls: the camel-ai/math dataset card states plainly \"obtained using GPT-4,\" and independent summaries of the AI Society dataset confirm it was \"synthetically generated by gpt-3.5-turbo.\" The one body of raw generations this project actually released never touched OpenRouter at all. In the current camel-ai/camel repo, OpenRouter appears only as one pluggable backend among dozens (`ModelPlatformType.OPENROUTER` → `OpenRouterModel`/`OpenRouterConfig`), demonstrated by a single toy example (`examples/models/openrouter_llama4_example.py`, using the free-tier Llama-4-Maverick with a \"say hi\" prompt) — library scaffolding for downstream users' own experiments, not a CAMEL research result. The repo's `camel/benchmarks/` directory (gaia.py, apibank.py, apibench.py, browsecomp.py, nexus.py, ragbench.py) and its `data/` directory (only role/task seed prompts, no generation logs) were directly opened, not inferred from a directory listing, and contain no committed run outputs, leaderboard rows, or transcripts produced via OpenRouter. Since no raw generation, transcript, or per-sample file that went through OpenRouter has ever been published by this project, nothing in CAMEL's own output bears on serving-corruption fingerprints — the code-level \"at risk\" finding concerns a backend option offered to third-party users of the library, not a path any CAMEL-published result traveled.",
+      "fingerprint_verdict": "nothing_checkable_released",
+      "fingerprint_ids": []
     },
     {
       "title": "EQ-Bench Creative Writing Bench + Judgemark-v2",
@@ -541,7 +574,13 @@
       "impact_verified": true,
       "provider_ab_rerun_assessment": "RECOMMENDED #3 — one-line edit, and the only clean fit for the full pathological matrix, because test-model and judge-model are two separate roles that can be pinned independently. utils/api.py:220-296 builds a bare dict shipped by `requests.post(..., json=payload)` at utils/api.py:297-302, so `payload['provider'] = {...}` is literally one inserted line, no SDK in the way. Run the 2x2 the principal described on openai/gpt-oss-120b: strong-strong (correct baseline), strong-weak and weak-strong (both pathological), using cerebras/fp16 vs wandb/fp4. `--redo-judging` re-scores frozen generations, so the generation stage is paid once and only the judge stage repeats. 32 prompts x 3 iterations = 96 generations per test arm; judge stage 96 x 4 conditions. ~$1 total, ~1 h. Amplification: LLM-judge scores are parsed by regex (core/scoring.py:15-32), so a degraded judge yields wrong-but-plausible numbers rather than a crash — exactly the silent corruption we want to show.",
       "safety_class": "at_risk",
-      "safety_class_reason": ""
+      "safety_class_reason": "",
+      "provider_issue_fingerprints": "The token `</think>` appears exactly twice in creative_bench_runs.json and once in elo_results.json, and every occurrence traces to the same run, `run1__openrouter_hunter-alpha` (test_model='openrouter/hunter-alpha', judge_model='claude-sonnet-4-20250514'). At creative_tasks['2']['28'], the closing tag sits at character offset 6269 with generation_failed=False and a judge Overall Impression score of 16; the judge's raw_judge_text discusses \"the piece\" and \"the ending\" as one coherent story with no acknowledgment that the response contains a duplicated section, and the quote-mark style flips across that duplication boundary (45 curly quotes and 0 straight quotes in the first half, 0 curly and 45 straight in the second). At creative_tasks['2']['9'], leaked planning prose is immediately followed by ```html, again with generation_failed=False, and the identical text reappears verbatim in elo_results.json under 'openrouter/hunter-alpha' -> iterations['2'] -> items['9']. The benchmark harness (github.com/EQ-bench/creative-writing-bench, utils/api.py) unconditionally sends `payload[\"reasoning\"]={\"enabled\": False}` for every OpenRouter-routed model, and its think-tag stripping only fires when a response contains both an opening `<think>` and a closing `</think>`; both leaked rows contain the closing tag with no opening tag, which is exactly why the harness's own stripping logic let them through -- the reasoning-suppression request was not honored end-to-end for this one cloaked, backend-unknown slug, and the resulting malformed completion reached both scoring pipelines undetected by a frontier judge model. Elsewhere, a whole-file grep of both JSON files finds no provider, finish_reason, or chat-template-token fields -- the only 8 hits for the string \"provider\" are the English word inside story prose (e.g., \"healthcare provider\") -- and all 8 of the cloaked OpenRouter model slugs named for this benchmark (quasar-alpha, optimus-alpha, cypher-alpha:free, horizon-alpha, horizon-beta, sherlock-dash-alpha, pony-alpha, hunter-alpha) appear as test_model values. generation_failed=true totals exactly 53 of 10,264 rows, broken down as gemma-3-4b-it:free 6/88, cypher-alpha:free 5/96, and claude-3.5-haiku 8/96; but generation_failed is purely a client-side \"<500 characters after 3 retries\" signal (core/conversation.py), indistinguishable from an ordinary short or refused output using only what's published, so it remains suggestive rather than confirmed evidence of routing-induced corruption.",
+      "fingerprint_verdict": "fingerprints_found",
+      "fingerprint_ids": [
+        "F4",
+        "F11"
+      ]
     },
     {
       "title": "Hereditary Traits Distillation (Open Distillation of Hereditary Traits)",
@@ -616,7 +655,18 @@
       "impact_verified": true,
       "provider_ab_rerun_assessment": "VIABLE (one-line edit); amplification 6/10 (LLM-as-judge score drift, pass@k variance, structured-output adherence). Pin: chinese_censorship_eval/scripts/eval.py:131-141 already builds the exact OpenRouter provider-pin body the mission brief describes: `extra[\"provider\"] = {\"only\": provider, \"allow_fallbacks\": False}` (line 134) is passed as `extra_body=extra` into safety-tooling's `InferenceAPI.__call__(..., force_pro... Model(s): z-ai/glm-5.2, google/gemma-4-31b-it, qwen/qwen3-32b, minimax/minimax-m3, google/gemini-3-flash-preview.",
       "safety_class": "at_risk",
-      "safety_class_reason": ""
+      "safety_class_reason": "",
+      "provider_issue_fingerprints": "The project's raw generation log, results/or_generations.jsonl (1440 rows), contains 360 rows that are hard API failures rather than model output: openai/gpt-oss-120b returns \"Reasoning is mandatory\" on all 180 of its rows, and allenai/olmo-3-32b-think returns \"404 No endpoints found\" on all 180 of its rows, a count results/or_run.log logs independently (\"wrote 1440 assistant turns -> .../or_generations.jsonl (360 errored)\"). reports/depression_rejection_protocol.md and reports/gemini_flash_nothink.md disclose and exclude these API-failure rows from the reported analysis; the latter's reasoning-token table, showing 0 tokens versus 717-882 tokens, is a legitimate empirical check that a \"nothink\" setting suppressed reasoning as intended rather than a sign of routing or quantization drift. reports/report_18_qwen_base_not_clean_floor/README.md retracts an earlier claim that the Qwen base model ran on a clean quantization floor. The interactive trace viewer post_figures/blackmail_nemotron_traces.html, linked alongside the repo from the project's AlignmentForum post, embeds JSON for 34 agentic-misalignment transcripts tagged 6 \"openrouter\" and 28 \"tinker\" for provider, with coherent multi-paragraph reasoning text and zero special-token or U+FFFD (replacement-character) artifacts. In chinese_censorship_eval/results/, the per-model files carry their real provider-prefixed names — qwen_qwen3.5-397b-a17b.jsonl, moonshotai_kimi-k2.7-code.jsonl, z-ai_glm-5.2.jsonl — and roughly 21,000 additional rows across them are likewise free of token-soup or special-token corruption. The openrouter/tinker tag used throughout is only a coarse transport label, though, so this evidence rules out corruption at that granularity without distinguishing among OpenRouter's own sub-backends.",
+      "fingerprint_verdict": "checked_clean",
+      "fingerprint_ids": [
+        "F2",
+        "F4",
+        "F1",
+        "F5",
+        "F6",
+        "F11",
+        "F16"
+      ]
     },
     {
       "title": "Inspect Evals (UK AISI eval collection)",
@@ -689,7 +739,10 @@
       "impact_verified": true,
       "provider_ab_rerun_assessment": "Zero-config and genuinely viable — PersistBench is the strongest single eval here. Its own scorer already pins a judge provider (persistbench/scorers.py:36-40, DEFAULT_JUDGE_PROVIDER = {'order': ['google-vertex'], 'allow_fallbacks': False}), proving the mechanism, and any target model is pinnable via inspect's `-M provider='{...}'` with no source edit. Amplification is high: the headline metric is an LLM-judged failure_rate compared directly against the paper's 95% bootstrap CI, so judge degradation moves the published conclusion. Held out of the top 3 only on cost/scale — 1300 target generations plus 1300 reasoning-heavy judge calls per arm (~18.7M in / 5.2M out), materially more than the AIME-style options for the same qualitative point. Use --limit to subset if run.",
       "safety_class": "at_risk",
-      "safety_class_reason": ""
+      "safety_class_reason": "",
+      "provider_issue_fingerprints": "The published output for this OpenRouter-critical path (persistbench's judge model kimi-k2-thinking scoring llama-3.3-70b-instruct and gpt-oss-120b) is exactly two ~7KB JSON files and a report.md; both JSON files were opened directly, not inferred from a directory listing. They are Inspect AI eval-log headers with no 'samples' array whatsoever: just an aggregate failure_rate score per model, total/reasoning token counts, timing, and the model identifier string (e.g. \"openrouter/meta-llama/llama-3.3-70b-instruct\"). There is no per-sample provider or generation-id field (F2 not checkable), no completion text to inspect for token soup (F1) or special-token litter (F4), no finish_reason or answer-field data (F3), and no reasoning-field per-row structure (F5). The README treats logs as a local-only artifact viewed via `inspect view`, not something the project releases. This is the textbook nothing_checkable_released case: aggregate numbers only, matched against the paper's reference values, with no raw generation data underlying either number.",
+      "fingerprint_verdict": "nothing_checkable_released",
+      "fingerprint_ids": []
     },
     {
       "title": "JudgeArena (OpenEuroLLM)",
@@ -750,7 +803,10 @@
       "impact_verified": true,
       "provider_ab_rerun_assessment": "VIABLE (zero-config); amplification 8/10 (LLM-as-judge score drift, structured-output adherence). Pin: CLI flag --judge.engine_kwargs '{\"extra_body\": {\"provider\": {...}}}' -> pydantic-settings JSON-parses it into JudgeArgs.engine_kwargs (config.py:211-213, dict field, cli_avoid_json=False at config.py:364 so CLI JSON dicts are supported -- this is the exact mechanism the README itself demonstrates fo... Model(s): OpenRouter/openai/gpt-oss-120b, OpenRouter/deepseek/deepseek-chat-v3.1, OpenRouter/google/gemma-4-31b-it, Open.",
       "safety_class": "at_risk",
-      "safety_class_reason": ""
+      "safety_class_reason": "",
+      "provider_issue_fingerprints": "Nothing a skeptical reader could independently re-derive was published. The repository is pure tooling and source code, with no committed run outputs, no per-sample score files, no leaderboard, and no HuggingFace or Zenodo dataset, despite the paper's stated intent to release \"a dataset containing all annotations.\" The paper's own experiments were run with locally-hosted vLLM, not OpenRouter, and the paper is explicit that \"All models with more than 9B parameters are quantized with half-precision\" — a disclosed methodological choice, not a hidden fingerprint, and irrelevant to OpenRouter routing since OpenRouter is a backend option only in the current, later generalized version of the tool, not in the paper's reported runs. With no raw completions, provider metadata, or transcripts released anywhere, none of the fingerprint checks (F1-F11) are executable; only an F16-style paperwork observation applies (an unlinked data-release promise), which per the rubric is not evidence of corruption.",
+      "fingerprint_verdict": "nothing_checkable_released",
+      "fingerprint_ids": []
     },
     {
       "title": "METR RE-Bench task suite (inspect-tasks-public) — nanogpt_chat_rl LLM-judge scoring",
@@ -814,7 +870,10 @@
       "impact_verified": true,
       "provider_ab_rerun_assessment": "DISQUALIFIED; amplification 7/10 (LLM-as-judge score drift). Blocker: FATAL / model bitrot: the exact model string hardcoded at evaluation.py:83, \"meta-llama/llama-3-8b-instruct\", currently has ZERO active endpoints on OpenRouter -- verified live via GET https://openrouter.ai/api/v1/models/meta-llama/llama-3-8b-instruct/endpoints which returns {\"data\":{...,\"endpoints\":[]}}. The model listing itself still ex...",
       "safety_class": "at_risk",
-      "safety_class_reason": ""
+      "safety_class_reason": "",
+      "provider_issue_fingerprints": "The inspect-tasks-public repo itself contains only harness and task-definition code: a GitHub API tree listing confirms no results/, logs/, or transcripts/ directories exist there, and no per-run data ships with the repo. The associated paper and its predecessor harness (github.com/METR/RE-Bench) claim a real release: METR's blog post explicitly links per-run pages at transcripts.metr.org for RE-Bench episodes, including one captioned \"RL training script improvement\" (run #1511911269) that maps to the nanogpt_chat_rl / \"Finetune GPT-2 for QA with RL\" task — the only RL task in the suite. That transcript page returns only its SPA shell on a direct fetch (\"Vivaria Runs\" with an empty #root div, since it is a JS single-page app); a JS-rendering proxy (r.jina.ai) returns \"Seems the API is down\" and repeated \"Failed to fetch\" errors, i.e. the page loads but its backing API is not currently serving content; and direct probes of plausible API paths (api/getRun, api/runs/<id>, etc.) all return HTTP 403. No HuggingFace dataset specific to RE-Bench exists; a search surfaces only an unrelated, empty METR \"malt-transcripts-public\" dataset. Raw per-run transcripts were genuinely published and specifically linked by METR, but their content is not retrievable through the page, the rendering proxy, or the API, and whether those transcripts capture the separate LLM-judge scoring subprocess (the meta-llama/llama-3-8b-instruct win-rate calls) as opposed to only the agent's ML-engineering actions remains unknown. No positive or negative claim about fingerprints in that data follows from this: the gap is one of access to data that was genuinely published, not an absence of published data, so it does not collapse to nothing_checkable_released.",
+      "fingerprint_verdict": "inconclusive",
+      "fingerprint_ids": []
     },
     {
       "title": "Multi-hop / no-CoT latent reasoning experiments (Ryan Greenblatt)",
@@ -889,7 +948,12 @@
       "impact_verified": true,
       "provider_ab_rerun_assessment": "VIABLE (one-line edit); amplification 7/10 (frontier-difficulty reasoning). Pin: The OpenRouter HTTP call for every non-Gemini OpenRouter model (DeepSeek/Qwen/Kimi) is `openrouter_client.chat.completions.create(**cache_key, temperature=0.0)` at eval_multi_hop.py:648-651, where `openrouter_client` is the `AsyncOpenAI(base_url=\"https://openrouter.ai/api/v1\")` client constructed at... Model(s): deepseek/deepseek-v3.2.",
       "safety_class": "at_risk",
-      "safety_class_reason": ""
+      "safety_class_reason": "",
+      "provider_issue_fingerprints": "This project's own .gitignore explicitly excludes /caches/ (the raw OpenRouter/Anthropic response cache written by response_cache.py — where any provider id, finish_reason, or reasoning-field content would live), /eval_results/*.json (per-sample score files), and /data/ from version control, and the write-up's appendix on the sister repo compose_facts says outright \"I've removed the datasets... PLEASE DON'T PUBLICLY POST THIS DATASET.\" Nothing a skeptical reader could grep for a provider key, count finish_reason=='length', or eyeball for token-soup/special-token litter has ever been released — only PNG plots and prose accuracy percentages, plus prompt text (not completions) in the appendices. No HuggingFace dataset, Zenodo artifact, GitHub release, or per-sample log is committed in either rgreenblatt/multi_hop or rgreenblatt/compose_facts, a conclusion drawn from the full recursive git trees of both repositories rather than from top-level directory listings; neither repo has any releases. This is the expected default outcome, not a strained one: the author was transparent about the OpenRouter-prefill hack and its risk in prose (footnote ^notesonreason), but transparency about the risk is not the same as publishing checkable data, and none was published.",
+      "fingerprint_verdict": "nothing_checkable_released",
+      "fingerprint_ids": [
+        "F16"
+      ]
     },
     {
       "title": "Nous Research — Autoreason (self-refinement with AI-judge panels)",
@@ -965,7 +1029,14 @@
       "impact_verified": true,
       "provider_ab_rerun_assessment": "VIABLE (one-line edit); amplification 6/10 (long-horizon agentic error compounding, LLM-as-judge score drift, multi-turn compounding). Pin: litellm.acompletion() is called bare with no provider kwarg at experiments/v2/run_small_vs_big.py:189-194 (function call_llm, lines 186-207). litellm forwards an `extra_body` kwarg verbatim into the JSON POST body for any 'openrouter/'-prefixed model string, which is exactly OpenRouter's documented ... Model(s): meta-llama/llama-3.1-8b-instruct.",
       "safety_class": "at_risk",
-      "safety_class_reason": ""
+      "safety_class_reason": "",
+      "provider_issue_fingerprints": "github.com/NousResearch/autoreason contains 9,413 git-tracked files (per `git ls-files`), including experiments/v2/results_small_vs_big/{gtm,pitch,policy}/{haiku35_single,...}/final_output.md and per-pass critic.md/version_a.md/version_b.md/version_ab.md/history.json, 7 judge_N_raw.txt files plus results.json Borda tallies under each task's eval/ dir, results_code_{haiku,s46,haiku45,best_of_n}/ with per-problem JSON, a paper/autoreason.tex with a Reproducibility Details appendix (app:repro, lines 1095-1120), and all 62 .py scripts. experiments/v2/results_small_vs_big/gtm/haiku35_single/final_output.md contains genuine decode-level word-fusion corruption (\"DevOToolil\", \"ered freemiumrum\", \"MILEST:ONES\") ending in a hallucinated \"Would Human: you elaborate...\" turn; run_single_pass() writes response.choices[0].message.content unmodified, so this is not a harness string-splicing bug. The sibling pitch/haiku35_single and policy/haiku35_single outputs, produced by the same code path and the same model string (openrouter/anthropic/claude-3.5-haiku from CHEAP_MODELS), are fully coherent end to end, making the corruption an isolated single-call failure rather than a systemic template or parsing defect. gtm/eval/results.json records a Borda score of 7 out of 35 and 0 first-place votes for haiku35_single. In flash_autoreason, pass_06/version_b.md and pass_07/version_a.md are byte-identical, both end with an unclosed ```text fence, and both cut off mid-sentence at \"assign ownership to specific team members,\" consistent with the script's MAX_TOKENS=4096; no script anywhere logs usage or finish_reason (a grep across all 62 .py files turns up only two hits, both on the unrelated phrase \"usage-based pricing,\" not response metadata), so neither the truncation's cause nor any provider mixing behind it can be determined from what's published. The paper's Reproducibility Details appendix also diverges from the code it describes: run_code_haiku45.py calls anthropic/claude-haiku-4-5-20251001 directly, with no OpenRouter or api_base wiring, where the paper states \"claude-3-5-haiku-latest via OpenRouter,\" and run_small_vs_big.py routes its gemini_flash condition through openrouter/google/gemini-2.0-flash-001 where the paper states \"via Google AI.\" Neither the garbling nor the truncation is shown to be caused specifically by quantization, and the appendix mismatches read as documentation inconsistencies rather than proof of result corruption.",
+      "fingerprint_verdict": "fingerprints_found",
+      "fingerprint_ids": [
+        "F1",
+        "F3",
+        "F16"
+      ]
     },
     {
       "title": "OpenPipe ART (Agent Reinforcement Trainer) — teacher/student distillation example",
@@ -1026,7 +1097,10 @@
       "impact_verified": true,
       "provider_ab_rerun_assessment": "DISQUALIFIED; amplification 1/10 (no strong amplification mechanism). Blocker: Training step requires art.local.LocalBackend, which pulls in torch==2.11.0, CUDA (nvidia-cuda-cccl-cu12), transformer-engine, apex, and megatron-bridge (pyproject.toml:32-66,184-198) -- a full GPU training stack, an explicit hard-constraint disqualifier.; The only zero-GPU alternative is art.serverless.backend.ServerlessBackend ('W&B Tra...",
       "safety_class": "at_risk",
-      "safety_class_reason": ""
+      "safety_class_reason": "",
+      "provider_issue_fingerprints": "OpenPipe ART's teacher-distillation example is a toy demo, not a research artifact: it sends a single hardcoded prompt to `z-ai/glm-5` over OpenRouter and immediately consumes the response in memory to build one training trajectory, printing only a 500-character preview to stdout. Nothing about this call — no transcript, no provider/generation-id metadata, no reasoning field, no benchmark row — is persisted or published anywhere in the repo. The one committed JSONL file in the same directory belongs to an unrelated, separate example script and has no connection to OpenRouter or GLM-5, confirmed by reading both files directly rather than inferring from a directory listing. No appendix, HuggingFace dataset, or run log exists to check for token soup, provider mixing, truncation, or template litter, because the pipeline that would produce such evidence discards its output after a single print statement. This is the expected/default case: a code example, not an evaluation whose results get published.",
+      "fingerprint_verdict": "nothing_checkable_released",
+      "fingerprint_ids": []
     },
     {
       "title": "Prompt Framing Changes LLM Performance (and Safety) (kmerkelbach/llm-request-tone)",
@@ -1094,7 +1168,12 @@
       "impact_verified": true,
       "provider_ab_rerun_assessment": "VIABLE (one-line edit); amplification 6/10 (frontier-difficulty reasoning, LLM-as-judge score drift, pass@k variance). Pin: Two independent, verified injection points. (1) lm-eval path: src/evaluation/lm_eval_shell.py:run_lm_eval() builds `gen_kwargs = json.dumps({\"temperature\":..., \"max_tokens\":...})` (lines 78-85) and passes it as lm-eval's `--gen_kwargs` CLI arg to `lm_eval --model local-chat-completions --model_args ... Model(s): openai/gpt-oss-120b.",
       "safety_class": "at_risk",
-      "safety_class_reason": ""
+      "safety_class_reason": "",
+      "provider_issue_fingerprints": "Nothing published here lets a reader check serving integrity: no raw completions, no provider or generation-id metadata, and no judge transcripts. tables/results_full.csv (github.com/kmerkelbach/llm-request-tone/blob/main/tables/results_full.csv), opened directly rather than inferred from a directory listing, holds only aggregated scores (model, benchmark, scenario, metric, value, stderr) and no per-sample text. The repo's own .gitignore files (root: `results`; src/.gitignore: `results_*.json`, `samples_*.jsonl`) show the lm-eval per-sample outputs were kept local and never committed, and the author's SORRY-Bench fork gitignores `data/` wholesale, leaving only empty `.dummy` placeholders where model answers and gpt-oss-120b judge verdicts would sit. The LessWrong post itself, checked directly rather than assumed, contains no appendix and no example transcripts. No F1–F11 check is possible: nothing textual, no provider field, no reasoning-field structure, and no finish_reason data exist in what was released. The one applicable observation is F16 (paperwork tells): the post names gpt-oss-120b as judge and OpenRouter as backend but never names a provider, precision, or snapshot date for any of the six evaluated models, consistent with — but not proof of — the code-level routing risk already flagged. This is the expected default outcome, not a strained one.",
+      "fingerprint_verdict": "nothing_checkable_released",
+      "fingerprint_ids": [
+        "F16"
+      ]
     },
     {
       "title": "Redwood Research — BashArena (basharena_public)",
@@ -1155,7 +1234,13 @@
       "impact_verified": true,
       "provider_ab_rerun_assessment": "DISQUALIFIED; amplification 8/10 (long-horizon agentic error compounding, LLM-as-judge score drift, pass@k variance). Blocker: HARD DISQUALIFIER: every single task sample is loaded with sandbox=(\"docker\", compose_file_path) — src/task/dataset.py:87 and :240. There is no non-Docker code path; get_sandbox_config() in bash_arena_setting.py returns None and instead setup_environment() at src/bash_arena_setting.py:126-141 runs `subprocess.run([\"docker\",\"build\",\"-f\",ba...",
       "safety_class": "at_risk",
-      "safety_class_reason": ""
+      "safety_class_reason": "",
+      "provider_issue_fingerprints": "Two Docent collections tied to the BashArena results contain agent_run transcripts with verifiable model identity: run d4661ec2 in collection 0fe149a0 and run a34e95c7 in collection fc1f9a0c. Raw message-blob substring counts on these transcripts show 51 occurrences of \"claude-sonnet-4-5-20250929\" in the honest run and 9 in the attack run, with zero hits for any openrouter, gpt-oss, or kimi string, zero special-token artifacts (<|im_start|>, <|eot_id|>), and zero U+FFFD replacement characters in either transcript. The agent_runs schema itself carries no model or provider metadata field, only task and score metadata, so model identity is recoverable only by reading the raw message JSON rather than from any summary column. The five remaining dashboards follow the same BashBench2_auto_usefulness_protocol_wrapper_{honest,attack}_<hash> task_id naming pattern. The paper's line that GPT-5, GPT-5-nano, and Kimi-K2 never triggered the firewall side task in 100 trajectories each stands as a single aggregate sentence with no dashboard link or transcript backing that slice.",
+      "fingerprint_verdict": "checked_clean",
+      "fingerprint_ids": [
+        "F2",
+        "F4"
+      ]
     },
     {
       "title": "Scaling Laws For Scalable Oversight (Engels, Baek, Kantamneni, Tegmark — NeurIPS 2025 Spotlight)",
@@ -1224,7 +1309,14 @@
       "impact_verified": true,
       "provider_ab_rerun_assessment": "VIABLE (one-line edit); amplification 9/10 (long-context retrieval, multi-turn compounding, LLM-as-judge score drift). Pin: wargames/utils.py:8-28 is the ONLY function in wargames/ that builds and sends the OpenRouter request. It is raw `requests.post(url, json=payload, headers=headers)` (utils.py:28) with `payload = {\"model\": model, \"messages\": messages, \"max_tokens\": max_tokens, \"temperature\": 0.7}` (utils.py:21-26) --... Model(s): meta-llama/llama-3.3-70b-instruct.",
       "safety_class": "at_risk",
-      "safety_class_reason": ""
+      "safety_class_reason": "",
+      "provider_issue_fingerprints": "No systematic raw-output dataset was released — no per-sample completions, no provider/generation-id fields, no finish_reason or reasoning-field data — so F2/F3/F5/F6/F7/F11 cannot be checked at all. Three curated illustrative excerpts of real model dialogue/code do appear inside the PDF itself, confirmed via pdftotext -layout rather than inferred from image captions: the Mafia snippet in Fig. 10 (\"Emma (Villager): Okay, let's play this out. If I were Mafia, and Rachel called me out for being quiet, I'd probably try to look super cooperative...\"), the Wargames snippet in Fig. 6, and the backdoor code in Listing 1. All three read as coherent, topical, grammatical text, with no token soup, no special/chat-template tokens, no U+FFFD, and no truncation signatures — a genuinely clean read of what exists. That sample is extremely thin and author-selected, however: three snippets chosen to showcase \"cool strategies,\" not a random draw, against what must be thousands of API calls across 4 games x 13 models x a 2-month collection window, so it cannot certify the bulk of unreleased transcripts one way or the other. Combined with the paperwork-tell context already flagged at the code level — bare OpenRouter slugs, no provider/precision disclosed (F16) — the honest read is inconclusive rather than checked_clean.",
+      "fingerprint_verdict": "inconclusive",
+      "fingerprint_ids": [
+        "F1",
+        "F4",
+        "F16"
+      ]
     },
     {
       "title": "Seer (interpretability agent harness) / chinese-models-investigations (blackbox de-censoring experiments)",
@@ -1291,7 +1383,15 @@
       "impact_verified": true,
       "provider_ab_rerun_assessment": "DISQUALIFIED; amplification 3/10 (frontier-difficulty reasoning, LLM-as-judge score drift). Blocker: No live OpenRouter provider spread for qwen/qwen3-8b (china-facts-investigation) — only 1 endpoint (Alibaba) exists right now, verified via GET https://openrouter.ai/api/v1/models/qwen/qwen3-8b/endpoints.; No live OpenRouter provider spread for openai/gpt-5-mini (hackable-petri-api) — only OpenAI's own first-party endpoint (plus a same-mo...",
       "safety_class": "at_risk",
-      "safety_class_reason": ""
+      "safety_class_reason": "",
+      "provider_issue_fingerprints": "Twenty of the 25 notebooks in the companion repo actually call OpenRouter target models (china_elicit_qwen, kimi_investigation, kimi_investigation_attacker, and quote_harry_potter_llama, each run five times), and every one of them sets extra_body={\"provider\":{\"order\":[provider],\"allow_fallbacks\":False}} with a single named provider — siliconflow/fp8, inference-net, or, for the one documented run3 override, novita/fp8 — matching the YAML configs verbatim. The run3 markdown cell's quote describing that override is exact and unaltered. Across all 25 notebooks, grep for the special tokens <|eot_id|>, <|im_start|>, <|endoftext|>, and raw U+FFFD bytes returns zero hits, and a check for runs of five or more repeated words finds none either. In run3's Qwen notebook, the 12 full ChatCompletion reprs show the model field uniformly as 'qwen/qwen3-32b', and every call with finish_reason='length' has completion_tokens exactly equal to the max_tokens=1000 cap — the stop-terminated calls end at 439, 423, 415, 52, and 63 tokens, while all five length-terminated calls land at exactly 1000 — the signature of hitting a declared cap rather than silent under-cap truncation. The remaining 5 notebooks, one user_preference run per task set, use a completely different backend (scribe.modal.InterpClient with direct tokenizer and model.generate calls) and contain no occurrences of allow_fallbacks, siliconflow, or inference-net, so they fall outside the scope of the provider-pinning question rather than showing unpinned routing. Provider pinning is consistent across 20 of the 25 notebooks — four of five task types in each of the five runs — not across all 25.",
+      "fingerprint_verdict": "checked_clean",
+      "fingerprint_ids": [
+        "F1",
+        "F2",
+        "F3",
+        "F4"
+      ]
     },
     {
       "title": "ctfish (Palisade Research — \"Demonstrating Specification Gaming in Reasoning Models\")",
@@ -1347,7 +1447,13 @@
       "impact_verified": true,
       "provider_ab_rerun_assessment": "VIABLE (one-line edit); amplification 7/10 (long-horizon agentic error compounding, long-context retrieval, multi-turn compounding). Pin: Provider.__init__ (player.py:59-84) creates `self.client = OpenAI(base_url=\"https://openrouter.ai/api/v1\", api_key=os.environ[\"OPENROUTER_API_KEY\"])` for any model in `OPENROUTER_MODELS` (player.py:33-38, includes \"deepseek/deepseek-chat\" and \"deepseek/deepseek-r1\" verbatim). All requests funnel thr... Model(s): deepseek/deepseek-r1, deepseek/deepseek-chat.",
       "safety_class": "at_risk",
-      "safety_class_reason": ""
+      "safety_class_reason": "",
+      "provider_issue_fingerprints": "For deepseek/deepseek-r1 in variant=baseline, task_md5=a22c2dfeb74cf70726f15a3dcb3e7b48, exactly four runs — timestamped 2025-01-23T06:48, 08:27, 08:38, and 08:49 UTC, with final_step values 4, 5, 3, and 1 — contain a literal `<think>...</think>` tag inline in `.content`, while runs immediately before and after on the same day and same task never do; across all 128 deepseek-r1 runs in the file, these four (13 of 2554 entries) are the only ones that ever show `<think>`. This lines up with OpenRouter's own documented behavior for DeepSeek-R1, which sometimes inlines reasoning into `content` and sometimes returns it in a separate field that the harness never captures. Separately, the qwen/qwq-32b-preview run at 2025-01-21T23:23:27 contains a literal `<|im_start|>\\nHuman:` chat-template leak followed by a hallucinated \"Final Solution\" turn — the only place in the entire 50MB runs.json where `<|im_start|>`, `<|eot_id|>`, or `<|endoftext|>` appears. player.py's OpenRouter client (base_url=openrouter.ai, no extra_body provider pin) and its `reply = result.choices[0].message.content` extraction are unchanged across the relevant window, so neither anomaly traces to a harness-code change. The four anomalous runs' final entries are complete, well-formed PLAN/REMEMBER blocks rather than truncations cut off mid-clause with an empty answer field, and equally low final_step values recur throughout the rest of the 128-run population on unrelated days with no `<think>` tags present at all — consistent with the paper's own appendix admission that \"the inference API was unstable\" and runs were cut short at the session level, rather than with per-completion truncation.",
+      "fingerprint_verdict": "fingerprints_found",
+      "fingerprint_ids": [
+        "F5",
+        "F4"
+      ]
     },
     {
       "title": "diffing-toolkit (science-of-finetuning / Neel Nanda, Julian Minder, Clément Dumas, Stewy Slocum — MATS 7)",
@@ -1413,7 +1519,12 @@
       "impact_verified": true,
       "provider_ab_rerun_assessment": "DISQUALIFIED; amplification 7/10 (long-horizon agentic error compounding, LLM-as-judge score drift). Blocker: The entire headline experiment (paper 'Narrow Finetuning Leaves Clearly Readable Traces', arXiv:2510.13900) requires local GPUs to host paired base+finetuned model organisms (Gemma3-1B, Qwen3-1.7B/32B, Llama-3.2-1B(-Instruct), Gemma2-9B-it, Qwen2.5-7B/VL-3B-Instruct, Llama-3.1-8B-Instruct). Two independent GPU dependencies exist, not one:...",
       "safety_class": "at_risk",
-      "safety_class_reason": ""
+      "safety_class_reason": "",
+      "provider_issue_fingerprints": "No raw generation ever surfaces to a reader: not the agent's own investigation transcripts, not a judge's hypothesis-grade JSON, not a coherence-grader verdict on a real steered sample. The pipeline that would have produced checkable per-sample data exists (narrow_ft_experiments/hibayes/agent_grades/data_preprocessing.py, which parses real `hypothesis_grade_*.json` files with `score` and `grader_model_id` fields — exactly the F2-shaped artifact one would want), but its input directory lives only on the authors' local/cluster filesystem and was never committed or mirrored to HF/Zenodo. The paper does name the serving path plainly — \"the agents are based on openai/gpt-5 with default settings (thinking strength medium) as hosted by openrouter.ai\" (Appendix C.4) — which is an F16 paperwork disclosure (named model + named router, no provider/precision/snapshot pin), not evidence either way. Given that no transcripts, per-sample scores, or provider metadata were released in any form that could be opened and checked, this is a clean nothing_checkable_released rather than an inconclusive or a fingerprint claim.",
+      "fingerprint_verdict": "nothing_checkable_released",
+      "fingerprint_ids": [
+        "F16"
+      ]
     },
     {
       "title": "lighteval — Swiss-Legal / LEXam LLM-as-judge tasks (JudgeLM litellm backend)",
@@ -1483,7 +1594,13 @@
       "impact_verified": true,
       "provider_ab_rerun_assessment": "VIABLE (one-line edit); amplification 6/10 (no strong amplification mechanism). Pin: litellm's documented `extra_body` passthrough kwarg, forwarded verbatim into the HTTP request body for OpenAI-compatible completions (OpenRouter reads the top-level \"provider\" key from that body, per the mission's provider ground-truth doc). Call site: src/lighteval/metrics/utils/llm_as_judge.py, me... Model(s): deepseek/deepseek-chat, meta-llama/llama-3.1-8b-instruct.",
       "safety_class": "at_risk",
-      "safety_class_reason": ""
+      "safety_class_reason": "",
+      "provider_issue_fingerprints": "The public Hugging Face bucket hf://buckets/joelniklaus/SwissLegalEvals — listable and downloadable with no auth token — holds per-model, per-task lighteval parquet files whose contents show a sharp, provider-specific failure in the SLDS judge task. In `details_slds:de_de`, Llama-3.3-70B-Instruct returns empty completions for 101 of 207 rows (48.8%), and the empty rate is a clean step function in prompt length rather than a gradual decline: 1.9% under roughly 20k query characters, 93.2% between 20k and 30k, and 100% above 30k. `details_slds:it_it` shows the same pattern at smaller scale, 9 of 12 rows empty. The identical 207 (de_de) and 12 (it_it) prompts, matched by document id — including the single longest queries at 78,875 and 70,921 characters — produce zero empty completions from DeepSeek-V4-Pro and NVIDIA-Nemotron served on the same HF-Inference-Providers routing layer; `generation_size` (32768) and `stop_sequences` are constant across empty and non-empty rows, so a per-sample max_tokens setting is not the cause, and the `reasonings` field is empty for all 207 Llama rows, never populated, meaning the failure is empty-from-the-start rather than a chain-of-thought that trails off partway through. Llama-3.3-70B-Instruct has a genuine 128k-token context window, so a hard cutoff at roughly 20-30k characters — about 150,000 tokens short of that limit — points to the effective context window or token budget of the specific novita endpoint serving the model, not to the model's architecture. The judge scores every empty completion 0, and REPORT.md's SLDS scores reflect that gap directly (Llama 16.10 vs. Nemotron 55.13, Kimi 49.81, DeepSeek-V4-Pro 50.49), while its \"Known limitations\" section names only DeepSeek self-preference bias, the 0-100/0-1 composite-score scale mix, and Hy-MT2 being translation-only — nothing about empty completions — so the failure is absorbed into a \"translation specialist\" narrative rather than diagnosed. The bucket runs on HF Inference Providers with named backends (novita) rather than OpenRouter's own unpinned router, so this evidences the broader provider-routing/context-mismatch risk class rather than an OpenRouter-specific finding.",
+      "fingerprint_verdict": "fingerprints_found",
+      "fingerprint_ids": [
+        "F14",
+        "F11"
+      ]
     },
     {
       "title": "safety-tooling (safety-research org shared alignment-research inference library)",
@@ -1568,7 +1685,10 @@
       "impact_verified": true,
       "provider_ab_rerun_assessment": "DISQUALIFIED; amplification 1/10 (no strong amplification mechanism). Blocker: No headline experiment exists in this repo. README.md, REPO_GUIDE.md (auto-generated repo tour), and CLAUDE.md all describe safety-tooling uniformly as a shared LLM-API *library* (unified InferenceAPI wrapper over OpenAI/Anthropic/Gemini/Together/OpenRouter/etc, caching, batch API, finetuning helpers) — there is no paper, benchmark, eval ...",
       "safety_class": "at_risk",
-      "safety_class_reason": ""
+      "safety_class_reason": "",
+      "provider_issue_fingerprints": "safety-tooling is infrastructure (an inference-API library), not a paper or benchmark run, and it publishes nothing a reader could check for serving-quality fingerprints. The full repo tree, README, .gitignore, the OpenRouter test file, both example notebooks, and the linked Zenodo record were opened directly, not inferred from a directory listing. No generations, transcripts, per-sample logs, or leaderboard rows exist anywhere in what this project released — the repo's own .gitignore excludes the exact directories (`.cache`, `logs/`, `.prompt_history`) where model I/O would land, the OpenRouter unit tests are skipped without a live key and don't persist output, the example notebooks have empty output cells, and the Zenodo DOI is a 147 kB source-code zip, not a data archive. This is the expected default for a tooling repo: there is simply no artifact to inspect, so no fingerprint from the catalogue (F1-F17) applies in either direction.",
+      "fingerprint_verdict": "nothing_checkable_released",
+      "fingerprint_ids": []
     },
     {
       "title": "Evaluating LLMs for accuracy incentivizes hallucinations — experiment code (openai/hallucinations-paper-experiments)",
@@ -1639,7 +1759,17 @@
       "impact_verified": true,
       "provider_ab_rerun_assessment": "DISQUALIFIED; amplification 4/10 (LLM-as-judge score drift, pass@k variance). Blocker: FATAL: all 5 OpenRouter model IDs this repo calls (google/gemini-3-pro-preview, openai/gpt-5, x-ai/grok-4, anthropic/claude-opus-4.5, openai/gpt-4.1) are single-provider first-party-only listings on OpenRouter (verified live via openrouter.ai/<model>/providers on 2026-07-18) -- there is no alternate/weak/quantized third-party host to pin ...",
       "safety_class": "at_risk",
-      "safety_class_reason": ""
+      "safety_class_reason": "",
+      "provider_issue_fingerprints": "EXAMPLES.md was read in full (all 570 lines) and grepped for provider/generation-id keys, special tokens, and finish_reason/truncation markers; none appear. Every completion present — all from google/gemini-3-pro-preview or openai/gpt-5, e.g. the Frank Munn, John Lewis, KLM/Pan Am, Round Table Pizza, and D&D-lore examples — is coherent, on-topic, natural prose with no token soup (F1), no special-token litter or U+FFFD (F4), no empty-answer/length-truncation pattern (F3), and no reasoning field at all to check for shape drift (F5), consistent with short direct-answer SimpleQA completions rather than CoT. This is a genuinely clean read of what's there, but it does not settle the serving-integrity question: the file is a ~60-completion illustrative slice of the 17,304 total, covering only 2 of the 4 models, with no claude-opus-4.5 or grok-4 examples appearing anywhere in it. lm.py's full source was read directly, not inferred from a listing, and on no code path does it request or store a provider/generation-id field, making F2 — the one fingerprint that could actually prove or disprove mixed backends — structurally unrecoverable from anything this project could ever publish, at any sample size. The clean read is real but thin and partial; the decisive check is permanently unavailable.",
+      "fingerprint_verdict": "inconclusive",
+      "fingerprint_ids": [
+        "F1",
+        "F3",
+        "F4",
+        "F5",
+        "F2",
+        "F16"
+      ]
     },
     {
       "title": "Inspect AI (UK AI Safety Institute)",
@@ -1717,7 +1847,10 @@
       "impact_verified": true,
       "provider_ab_rerun_assessment": "Not a rerun target — it is a framework, not an experiment — but it is the REFERENCE IMPLEMENTATION for this whole exercise and the reason several other rows are zero-config. Verified in upstream source: OpenRouterAPI.__init__ collects a `provider` dict model arg and completion_params() emits it as extra_body['provider'], so `-M provider='{\"only\": [\"cerebras/fp16\"], \"allow_fallbacks\": false}'` pins any inspect-based eval with zero code changes. Its own source also documents cross-provider behavioural divergence: a comment notes that AkashML and Parasail reject requests with more than one system message even though the OpenAI API is permissive — corroboration that 'same model, different provider' is not only a quantization story.",
       "safety_class": "at_risk",
-      "safety_class_reason": ""
+      "safety_class_reason": "",
+      "provider_issue_fingerprints": "Inspect AI is infrastructure other people run their own evals with, not itself a study that produced a results set. The main repo, the docs site, and the companion inspect_evals repo (eval task collection) contain no raw generations: none of the three publishes committed run logs, sample .eval files, transcripts, per-sample score files, or a leaderboard. The `logs/` mentions that appear are explicitly local output a user's own `inspect eval` invocation creates, not something UKGovernmentBEIS ships. The eval-logs documentation page describes the log/transcript format in prose and screenshots but links no actual sample file. Since the project has never published a dataset of its own OpenRouter-routed completions, no artifact exists for a skeptical reader to inspect for provider mixing, token soup, truncation, or any other fingerprint. The code-level \"at_risk\" finding remains a code-review concern only, with no observational evidence for or against it in anything this project has released.",
+      "fingerprint_verdict": "nothing_checkable_released",
+      "fingerprint_ids": []
     },
     {
       "title": "MathArena (ETH Zurich SRI Lab)",
@@ -1794,7 +1927,12 @@
       "impact_verified": true,
       "provider_ab_rerun_assessment": "RECOMMENDED #1 — zero-config. configs/models/moonshot/k26.yaml already carries `extra_body: {provider: {allow_fallbacks: False, order: [moonshotai]}}`, splatted verbatim into the OpenAI SDK call at src/matharena/runner.py:293; six sibling configs use the same shape, so pinning is an established in-repo pattern and needs no source edit — copy the YAML and change the `order` list. Notable in its own right: the pinned `moonshotai` endpoint is int4 on OpenRouter, so MathArena's published Kimi-K2.6 leaderboard number is measured on an int4 backend while an fp8 endpoint (streamlake/fp8) of the same slug exists. A/B = moonshotai/int4 ($0.95/$4.00 per Mtok) vs streamlake/fp8 ($0.855/$3.60), both ~100% uptime. Amplification is frontier-reasoning: near-threshold competition math where one flipped token changes the final boxed integer, auto-graded so no judge confound. 30 problems x n=4 x 2 competitions x 3 conditions (strong / weak / strong-replicate for the noise floor) = 720 samples, ~7.2M output tokens, ~$42 total, ~1.9 h at the repo's own concurrent_requests=32.",
       "safety_class": "at_risk",
-      "safety_class_reason": ""
+      "safety_class_reason": "",
+      "provider_issue_fingerprints": "Across MathArena's published raw-generation data, microsoft/phi-4-reasoning-plus:free is the only one of 159 model configs in the eth-sri/matharena repo tagged \":free,\" and its outputs hit output_tokens==31000 on exactly 25 of 120 AIME 2025 rows and 38 of 120 HMMT Feb 2025 rows, with the maximum output length capped at 31000 in both datasets despite the config's max_tokens: 31500 — a 500-token shortfall that repeats identically across two independent competitions. Row problem_idx=14, idx_answer=1 shows this directly: the assistant's response text cuts off mid-sentence at \"...We want this to be a perfect square of something of,\" with no closing and no boxed answer, and the recorded parsed_answer of 66248 (gold_answer 60, correct False) is simply the coefficient lifted from the truncated line \"147196 - 66248√3\" — a value outside AIME's valid 0-999 answer range, the signature of truncation followed by garbage answer-extraction rather than a reasoning error. The same two files show comparison models running well within their configured limits: Llama-4-Maverick tops out at 2080/3025 output tokens against a configured 32000, and Kimi K2 Thinking at 115084/91400 against a configured 256000, with Kimi's assistant-turn structure a clean Counter of {('cot','response'): 118, ('cot','response','cot','response'): 2} across all 120 rows in both datasets. Searching all three models' all_messages text for special tokens (<|eot_id|>, <|im_start|>, </s>, <|endoftext|>), the U+FFFD replacement character, and literal think-tags returns zero hits. No file in the repo — not any config, not api_client.py — hardcodes a 31000-token constant anywhere, so the ceiling does not originate in the harness itself. Nor does any config or code path set a provider-routing block for any model, including Phi-4: no provider: key, no quantization or endpoint filter, no explicit pin — requests to OpenRouter carry only model, max_tokens, temperature, and top_p, leaving this free-tier model's routing fully default and unpinned. That absence is itself the exposure: an unpinned free-tier OpenRouter route appears to impose a completion-length wall well below the declared max_tokens, corrupting a nontrivial share of scored answers through truncation followed by nonsense answer-extraction.",
+      "fingerprint_verdict": "fingerprints_found",
+      "fingerprint_ids": [
+        "F3"
+      ]
     },
     {
       "title": "OSWorld (NeurIPS 2024 D&B) — mm_agents/{maestro,os_symphony,vlaa_gui} OpenRouter engine",
@@ -1846,7 +1984,13 @@
       "impact_verified": true,
       "provider_ab_rerun_assessment": "DISQUALIFIED; amplification 8/10 (long-horizon agentic error compounding, structured-output adherence, multi-turn compounding). Blocker: HARD DISQUALIFIER: every OSWorld task execution requires a live virtual-machine desktop, not just an API call. maestro's actual entry points (mm_agents/maestro/osworld_run_maestro.py:173-178 and cli_app_maestro.py) construct `DesktopEnv(provider_name=\"vmware\", path_to_vm=\"vmware_vm_data/Ubuntu0/Ubuntu0.vmx\", ...)` — this requires VMware W...",
       "safety_class": "at_risk",
-      "safety_class_reason": ""
+      "safety_class_reason": "",
+      "provider_issue_fingerprints": "xlangai/ubuntu_osworld_verified_trajs on HuggingFace hosts results_maestro.zip (2,887,884,643 bytes, matching the claimed ~2.9GB) and results-vlaa-gui.zip (4,231,346,306 bytes, matching the claimed ~4.2GB), both range-readable. results_maestro.zip contains exactly 409 state/commands.json files (one per task run) under results_maestro/runtime/awsrun_*/*/state/, each with per-step pre_screenshot_analysis, gate_checks.json, subtasks.json, and controller_state.json; results-vlaa-gui.zip contains exactly 357 traj.jsonl files with a per-step executor_plan field. No os_symphony-named archive or path appears anywhere in the dataset's file listing, and mm_agents/maestro/tools/new_tools_config.json on GitHub sets planner_role, operator_role, technician_role, analyst_role, supplement_role, and the other roles to provider=\"openrouter\", model_name=\"openai/o3\". Sampled files — including .../20250908_074353_000/state/commands.json, .../20250908_080258_230/state/commands.json, and the vlaa-gui traj.jsonl files under UUID paths 0810415c-... and 26660ad1-... — hold coherent, unaltered text (e.g. the \"Google Chrome window is open and maximized\" pre_screenshot_analysis line), with the only \"provider\" string hits being unrelated false positives: a Jekyll config's \"analytics:\\n  provider: false\" and a Speedtest.net \"GTT provider\" ISP description embedded in a screenshot analysis. A further sample of 8 additional commands.json files turned up zero special-token hits and zero provider/openrouter string hits, so no chat-template or special-token leakage appears anywhere sampled. Neither export format (commands.json, traj.jsonl, runtime.log) carries provider/generation-id, finish_reason, or token-count fields anywhere sampled: a runtime.log opened for the vlaa-gui \"claude\" backbone run logs only a Bedrock-style model string (global.anthropic.claude-opus-4-5-20251101-v1:0), not an OpenRouter identifier. So the published trajectories read as coherent and free of tokenizer/template leakage, but the release carries no data of any kind on which provider actually served the requests.",
+      "fingerprint_verdict": "checked_clean",
+      "fingerprint_ids": [
+        "F1",
+        "F4"
+      ]
     },
     {
       "title": "OpenHands (formerly OpenDevin)",
@@ -1895,7 +2039,14 @@
       "impact_verified": true,
       "provider_ab_rerun_assessment": "DISQUALIFIED; amplification 0/10 (no strong amplification mechanism). Blocker: README states outright the code is moving: agent/SDK source now lives at github.com/OpenHands/software-agent-sdk, frontend at github.com/OpenHands/agent-canvas (README, 'Agent Canvas transition FAQ' section) — this repo is a product control-plane, not a research codebase.; Zero hits for 'algotune', 'evaluation', 'swebench'/'swe-bench' any...",
       "safety_class": "at_risk",
-      "safety_class_reason": ""
+      "safety_class_reason": "",
+      "provider_issue_fingerprints": "Per-config metadata.json files for the qwen-2.5-72b-instruct and llama-3.1-70b-instruct runs specify `\"model\": \"openrouter/qwen/qwen-2.5-72b-instruct\"` and `\"openrouter/meta-llama/llama-3.1-70b-instruct\"`, both with `base_url: null` and no provider field, indicating unpinned OpenRouter routing at the config level (F16). In the 59MB qwen output.jsonl, instance sympy__sympy-19254 contains a 3514-character agent message of incoherent `the`/`of`/`中`/`<|endoftext|>` fused text, and sympy__sympy-20049 contains a 1212-character agent message that is almost entirely repeated `<|endoftext|>`. Grepping literal `<|...|>` tokens across this file returns 234 hits, all confined to these same two instances, versus zero hits across two pinned non-OpenRouter negative-control logs of 300 instances each (Fireworks-direct llama-v3p1-70b and DeepSeek-direct deepseek-chat) — topically unrelated word salad (F1) plus literal EOS-token litter surviving into prose (F4), not documented code-switching. The `empty_generation: true` field is not distinctive: it fires on 10-29% of instances in every file checked, including both pinned negative controls, so it carries no diagnostic weight on its own. Pure repetition loops without special tokens, such as a 24-line \"static\\nstatic\\n...\" loop, also occur in the DeepSeek-direct negative control, so repetition in isolation isn't diagnostic — only the co-occurring literal special-token litter is. The extent is small: these are 2 of 300 instances (0.67%) in this one run.",
+      "fingerprint_verdict": "fingerprints_found",
+      "fingerprint_ids": [
+        "F1",
+        "F4",
+        "F16"
+      ]
     },
     {
       "title": "Prometheus 2 / BiGGen-Bench (KAIST AI)",
@@ -1947,7 +2098,14 @@
       "impact_verified": true,
       "provider_ab_rerun_assessment": "REJECTED — needs glue code; amplification 6/10 (LLM-as-judge score drift, frontier-difficulty reasoning). Blocker: litellm.py:71-86 `_get_completion_text_async` silently drops all **kwargs before calling acompletion() — must be edited before ANY extra param (temperature, extra_body/provider, etc.) reaches the OpenRouter request body; this is a real bug independent of our experiment.; run_response_eval.py:124-125 hardcodes MockLLM for any non-Prometheu...",
       "safety_class": "at_risk",
-      "safety_class_reason": ""
+      "safety_class_reason": "",
+      "provider_issue_fingerprints": "The BiGGen-Bench-Results dataset published on Hugging Face (prometheus-eval/BiGGen-Bench-Results, data/llm_as_a_judge-0000{0,1}-of-00002.parquet) contains 68,805 rows across 99 models, with a `response` column holding full raw completion text alongside model_name, judge scores/feedback (prometheus_8x7b_*, gpt4_*, claude_score), and human_score. The schema contains no provider, generation-id, or finish_reason column anywhere. The 14 API-routed proprietary models — claude-3-haiku/sonnet/opus, gemini-1.0-pro/pro-1.5/flash-1.5, gpt-3.5-turbo-1106, gpt-4-0125-preview, gpt-4-1106-preview, gpt-4-turbo-2024-04-09, gpt-4o-2024-05-13, mistral-large/medium-hjpark, and qwen-110b-chat — each have exactly 695 rows (9,730 total), none empty. The three longest completions among these models are claude-3-opus-20240229/tool_usage_multi_step_8 at 8,811 characters, gpt-4-turbo-2024-04-09/grounding_json_csv_xml_0 at 8,063 characters, and gpt-4o-2024-05-13/theory_of_mind_writing_a_speech_6 at 7,510 characters, each ending in a complete, well-punctuated sentence rather than cut off mid-word. A substring search across all 9,730 rows for the chat-template artifacts `<|eot_id|>`, `<|im_start|>`, `</s>`, `[INST]`, and the U+FFFD replacement character returns zero hits. The project's GitHub README (prometheus-eval/prometheus-eval/BiGGen-Bench/README.md) states \"With the help of litellm, you can use various APIs from different providers. We mainly used OpenAI API and OpenRouter\" — a methods disclosure, not evidence of what actually happened — and run_api_inference.py sets max_tokens=2048 uniformly while delegating provider selection entirely to litellm with no explicit base_url or provider pin. This rules out word salad, truncation, and chat-template litter (F1, F3, F4) in the API-routed completions, but says nothing about which provider or quantization level actually served each request: no provider metadata exists in this schema to check (F2 stays open), and there is no matched full-precision arm to compare against (F15 is unaddressed).",
+      "fingerprint_verdict": "checked_clean",
+      "fingerprint_ids": [
+        "F1",
+        "F3",
+        "F4"
+      ]
     },
     {
       "audit_notes": "Notable: openbench's own README ships a \"Reproducibility Statement\" (README.md:225-233) that explicitly names \"different model quantization or inference approaches\" as a disclaimed source of score variance between openbench runs and other sources — genuine self-awareness of the exact failure mode M1 describes — yet the tool does not act on that awareness by defaulting to safe OpenRouter routing; it stays fully opt-in via `-M` flags. Also notable: docs/configuration.mdx literally labels `--seed`/`BENCH_SEED` as \"Random seed for deterministic generation\" (textbook M7 claim), and this seed is piped straight into GenerateConfig (eval_command.py:830) and onward to the OpenRouter chat-completion call with no require_parameters guard, so on routes that don't honor `seed` it is silently dropped, not just non-deterministic. Underlying Inspect AI (openai_compatible.py:260-263, UKGovernmentBEIS/inspect_ai) does call `completion.model_dump()` and store the full raw JSON response in the per-sample transcript, which would capture OpenRouter's `provider` field if present — a genuine, if incidental, provenance-logging capability that openbench itself never surfaces as a first-class feature (no results.json/leaderboard export was found that extracts served-provider info).",
@@ -2015,7 +2173,10 @@
       "impact_verified": true,
       "provider_ab_rerun_assessment": "RECOMMENDED #2 — zero-config, and the cheapest decisive test we found. `bench eval gpt_oss_aime25 --model openrouter/openai/gpt-oss-120b -M provider='{...}'` reaches the wire: openbench's `-M` is yaml.safe_load-parsed (_cli/utils.py:39-59) and forwarded as model_args into inspect_ai's eval(), whose OpenRouterAPI collects a `provider` dict kwarg and emits it as extra_body.provider (verified in inspect_ai/model/_providers/openrouter.py, __init__ + completion_params). NOTE: the `-M only=Cerebras` form is wrong — inspect wants the whole dict under `provider`. Best precision gap available anywhere in the survey: cerebras/fp16 ($0.35/$0.75, 100% uptime, logprobs) vs wandb/fp4 ($0.04/$0.14, 95% uptime, logprobs) — fp16 vs fp4 on the same slug, and both expose logprobs so the divergence can also be read out distributionally. 30 AIME-2025 questions x epochs=8 (hardcoded) = 240 completions per arm; 3 conditions = 720 completions, ~5.8M output tokens, ~$3.20 total, well under 1 h.",
       "safety_class": "at_risk",
-      "safety_class_reason": ""
+      "safety_class_reason": "",
+      "provider_issue_fingerprints": "openbench is infrastructure — a CLI/framework other people run against their own model+provider choice — not a project that itself produces or publishes a benchmark result set, transcripts, or a leaderboard. The repo root, the docs/ tree, the tests/ tree (including tests/integration), the README, and the announcement blog post were directly checked for any committed results/outputs/logs/transcripts directory, HF dataset, or leaderboard site; none exists. Per-run results are written to a local `./logs/` directory and optionally pushed to a user's own Hugging Face dataset via `--hub-repo`, but that is an opt-in per-user action, not a published artifact from openbench itself. Nothing is published by this project for a reader to inspect for F1-F11 style fingerprints — the OpenRouterAPI wrapper's behavior can only be assessed by code audit (already done) or by a third party who chooses to run openbench with OpenRouter and publish their own logs.",
+      "fingerprint_verdict": "nothing_checkable_released",
+      "fingerprint_ids": []
     },
     {
       "title": "tau2-bench (Sierra AI)",
@@ -2074,7 +2235,14 @@
       "impact_verified": true,
       "provider_ab_rerun_assessment": "VIABLE (one-line edit); amplification 3/10 (no strong amplification mechanism). Pin: No zero-config path exists. The embedder is instantiated with only `model=` (embedder_params in src/tau2/knowledge/embeddings_cache.py:586 and src/tau2/domains/banking_knowledge/retrieval.py:709 is literally `{\"model\": spec.embedder_model}` -- no provider/extra_body key anywhere in the CLI, .env, or... Model(s): qwen/qwen3-embedding-8b.",
       "safety_class": "at_risk",
-      "safety_class_reason": ""
+      "safety_class_reason": "",
+      "provider_issue_fingerprints": "tau2-bench publishes raw, per-turn conversation trajectories for the one leaderboard submission that used the OpenRouter-routed \"qwen_embeddings\" retrieval config (gpt-5.2, banking_knowledge domain, 4 trials, hosted on S3 and linked from a committed submission.json) — real, inspectable data, not just aggregate numbers. On that file, the checks that apply come back clean: no finish_reason==\"length\" truncation, no special-token/chat-template litter, and no leaked API-error strings. However, the file (and the trajectory schema in general) never records a provider/generation-id for any API call — the one provider-shaped field present, provider_session_id, is null throughout — so mixed backends for the embedding calls specifically can neither be confirmed nor ruled out. Separately, OpenRouter here only ever returns embedding vectors, never decoded text, so the classic text-corruption fingerprints (token soup, chat-template litter, reasoning-shape drift) are structurally uninformative about this call path even when clean. The original arXiv paper's own committed results (data/tau2/results/final/*.json) predate the banking_knowledge domain entirely and never touch OpenRouter at all.",
+      "fingerprint_verdict": "inconclusive",
+      "fingerprint_ids": [
+        "F3",
+        "F4",
+        "F16"
+      ]
     },
     {
       "title": "Bespoke Curator (bespokelabsai/curator)",
@@ -2111,7 +2279,10 @@
       "impact_verified": true,
       "provider_ab_rerun_assessment": "DISQUALIFIED; amplification 2/10 (frontier-difficulty reasoning). Blocker: The only OpenRouter call site in the repo (examples/providers/openrouter_reasoning_online.py) is a single hardcoded AIME problem (n=1) -- no dataset, no benchmark, no aggregate metric to move. Our own survey text already labels it a toy demo disconnected from any real pipeline.; The actual headline experiment -- Bespoke-Stratos-17k genera...",
       "safety_class": "not_on_result_path",
-      "safety_class_reason": "Exactly one OpenRouter file exists in the repo (examples/providers/openrouter_reasoning_online.py), a single-hardcoded-problem demo. The released datasets were generated via the direct DeepSeek API. The demo is itself well-configured (pinned order, allow_fallbacks:False, require_parameters:True), but no reported result depends on OpenRouter."
+      "safety_class_reason": "Exactly one OpenRouter file exists in the repo (examples/providers/openrouter_reasoning_online.py), a single-hardcoded-problem demo. The released datasets were generated via the direct DeepSeek API. The demo is itself well-configured (pinned order, allow_fallbacks:False, require_parameters:True), but no reported result depends on OpenRouter.",
+      "provider_issue_fingerprints": "The OpenRouter example, opened directly rather than inferred from a directory listing, is a single in-memory demo — one AIME problem run through DeepSeek-R1 — that prints to stdout and persists nothing: no transcript file, dataset, or log is produced or committed anywhere in the repo. No paper, appendix, HF dataset, Zenodo artifact, or leaderboard row is tied to this code path, so there is no released output for a reader to inspect for token soup, provider-id mixing, truncation, or template litter. The repo's one genuine published dataset lineage, bespoke-stratos-data-generation behind the real Bespoke-Stratos-17k release, calls DeepSeek's own `deepseek-reasoner` API directly rather than OpenRouter, so it is not the right artifact to examine for this question either. This is the expected default for a project with no OpenRouter-derived release: nothing checkable was published for the OpenRouter path.",
+      "fingerprint_verdict": "nothing_checkable_released",
+      "fingerprint_ids": []
     },
     {
       "title": "OASIS (Open Agent Social Interaction Simulations with One Million Agents)",
@@ -2142,7 +2313,10 @@
       "impact_verified": true,
       "provider_ab_rerun_assessment": "DISQUALIFIED; amplification 5/10 (long-horizon agentic error compounding, multi-turn compounding). Blocker: Zero OpenRouter call sites anywhere in the OASIS repo (verified by full-tree grep) — nothing to pin, only something to newly build.; The task brief's cited call site (examples/twitter_simulation_openai.py:26-29) is factually not an OpenRouter call; it is a direct OpenAI API call (ModelPlatformType.OPENAI). This must be corrected before an...",
       "safety_class": "no_usage_found",
-      "safety_class_reason": "Shallow-cloned and grepped case-insensitively for 'openrouter' across every file: zero matches. OpenRouter is only an inherited capability of the CAMEL framework and is never invoked. All paper results run on direct OpenAI (GPT-4o-mini) or author-controlled self-hosted vLLM. A discovery false positive — not an OpenRouter user at all."
+      "safety_class_reason": "Shallow-cloned and grepped case-insensitively for 'openrouter' across every file: zero matches. OpenRouter is only an inherited capability of the CAMEL framework and is never invoked. All paper results run on direct OpenAI (GPT-4o-mini) or author-controlled self-hosted vLLM. A discovery false positive — not an OpenRouter user at all.",
+      "provider_issue_fingerprints": "No released dataset of raw agent completions exists for OASIS: the GitHub `log/` directory is empty, the two data directories (the repo's own directories and the linked HF dataset `echo-yiyiyi/oasis-dataset`) contain only pre-fabricated seed posts/profiles used to initialize simulations, and the only in-paper example of generated content (Fig. 16, Appendix F.4.3) is a screenshot image, not machine-readable text. Because there is no per-sample data with provider/generation-id fields, no completions to grep for special tokens or token soup, and no finish_reason/reasoning-field data, none of F1-F11 are checkable. The paper's own text confirms that Llama3-8b-instruct was run for the reported experiments on self-hosted GPU infrastructure (\"The experiment is conducted on 24 A100 GPUs within a week\"; Table 2 lists \"GPUs (A100)\" per agent-scale), with zero mentions of OpenRouter, \"provider\", or quantization anywhere in the extracted PDF text -- consistent with the prior code audit's no_usage_found verdict and confirming that the OpenRouter risk model does not even apply to what was actually run for the published numbers. The verdict is nothing_checkable_released, the expected default for a project that published aggregate/qualitative results with seed data only.",
+      "fingerprint_verdict": "nothing_checkable_released",
+      "fingerprint_ids": []
     },
     {
       "title": "Palisade Research — robot_shutdown_resistance",
@@ -2178,7 +2352,15 @@
       "impact_verified": true,
       "provider_ab_rerun_assessment": "DISQUALIFIED; amplification 7/10 (long-horizon agentic error compounding, multi-turn compounding, structured-output adherence). Blocker: Docker is a mandatory, unconditional dependency of the only headline (no-hardware/mock) reproduction path: controller.py:362 calls _start_sandbox() with no mock-mode bypass, requiring a pre-built 'llm-sandbox' Docker image and a running Docker daemon with --network host access for every single invocation.; The provider-pin itself (specifi...",
       "safety_class": "not_on_result_path",
-      "safety_class_reason": "OpenRouter appears only in a superseded exploratory harness (src/initial-experiments, whose own README says it is superseded) and a pricing lookup. The headline pipeline calls xAI directly via LiteLLM (DEFAULT_MODEL='xai/grok-4-0709') with per-call provider logging."
+      "safety_class_reason": "OpenRouter appears only in a superseded exploratory harness (src/initial-experiments, whose own README says it is superseded) and a pricing lookup. The headline pipeline calls xAI directly via LiteLLM (DEFAULT_MODEL='xai/grok-4-0709') with per-call provider logging.",
+      "provider_issue_fingerprints": "The repository's logs directory contains 218 *_debug.jsonl files holding 1150 raw LiteLLM responses, all with model=grok-4-0709 (100%) and system_fingerprint=fp_dd0aa291c6 with zero variation, broken down per directory as default 755/755, plsallow 320/320, on_the_robot/stats_run 53/53, different_behaviour 10/10, and on_the_robot/video_logs 12/12. finish_reason is only \"tool_calls\" (1106) or \"stop\" (44); \"length\" never appears. A full-text scan of every .jsonl file, debug and non-debug, for special-token/template litter and U+FFFD replacement characters returns zero hits, and no file anywhere in the tree mentions \"openrouter\" — the calls go directly to xAI (\"litellm.completion(model='xai/grok-4-0709'...)\", \"LiteLLM completion() model= grok-4-0709; provider = xai\"), not through OpenRouter. xAI's API only exposes a reasoning_tokens count rather than the reasoning text itself, so the absence of token-soup/garbled generation could only be checked against the short visible content and tool-call text, not the bulk of generated tokens (up to roughly 8000 reasoning tokens on some calls) — that holds for the exposed surface, not as a full-transcript sweep. Two different_behaviour demo runs, turn_away and distract_person, sitting outside the headline stats_run/default/plsallow data, start with an unversioned \"xai/grok-4\" alias in the controller log rather than the pinned \"grok-4-0709\" used elsewhere, though their actual raw responses still resolved to grok-4-0709/fp_dd0aa291c6 like every other run. Neither limitation changes the picture for the data underlying the reported statistic.",
+      "fingerprint_verdict": "checked_clean",
+      "fingerprint_ids": [
+        "F2",
+        "F3",
+        "F4",
+        "F1"
+      ]
     },
     {
       "title": "R1 CoT Illegibility Revisited (nostalgebraist, fork of Jozdien/cot_legibility)",
@@ -2224,7 +2406,13 @@
       "impact_verified": true,
       "provider_ab_rerun_assessment": "HIGHEST-VALUE EVIDENCE, AND IT IS ALREADY FREE. This is the repo our survey marked SAFE, and its committed runs/ directory already contains the natural experiment: same slug deepseek/deepseek-r1, same GPQA-diamond pipeline, provenance logged per response (src/inference/providers.py:104). Unpinned runs served mostly by Targon score mean illegibility 4.31 +/- 2.13 (n=295) at 36.6% accuracy; provider-pinned Novita runs score 2.31 +/- 0.75 (n=198) at 43.9% — an ~88% swing in the headline metric under one model name. One run under the two-entry allow-list returned only 169/300 responses from Targon; corrected 2026-07-21 — not drift to another backend (Nebius served zero of the 600 requests across both allow-list runs) but 125 Targon 429s plus 6 parse/None errors becoming missing data because allow_fallbacks was false, see findings/observed_routing.json record r1-targon-allowlist-b and landed at 31.4% accuracy, a 12.5-point spread against a pinned run. Caveat: those runs are 6 months apart, so checkpoint drift is confounded with provider — which is precisely the argument for the paired same-day rerun. Rerunning is zero-config (`openrouter_provider` is a first-class YAML field; the author pins in endpoint-tag form e.g. `targon/fp8`, `deepinfra/bf16`, confirming provider.only accepts slug/quant). Weakness: deepseek/deepseek-r1 now has only 2 live endpoints — azure (ctx 163840, $1.485/$5.94) vs novita/fp8 (ctx 64000, $0.70/$2.50) — a modest, partly-unknown quality gap. ~$15 and ~1 h if rerun; $0 to cite the existing numbers.",
       "safety_class": "handled",
-      "safety_class_reason": "Uses OpenRouter on a critical route and controls for it: pins extra_body['provider']={'only':['novita'],'allow_fallbacks':False}, logs the served provider per call (verified in the run artifacts), and runs the grader on direct OpenAI/Anthropic APIs so no judge route can be corrupted. Provider routing is itself the study's research question."
+      "safety_class_reason": "Uses OpenRouter on a critical route and controls for it: pins extra_body['provider']={'only':['novita'],'allow_fallbacks':False}, logs the served provider per call (verified in the run artifacts), and runs the grader on direct OpenAI/Anthropic APIs so no judge route can be corrupted. Provider routing is itself the study's research question.",
+      "provider_issue_fingerprints": "In nostalgebraist's cot_legibility repo, streamlit_runs/20251014_190506_R1_gpqa/{config.yaml,inference.json,evaluation.json} (commit 89195c70, config pinned to openrouter_provider: [targon/fp8, Nebius]) hold 300 raw per-row DeepSeek-R1 GPQA generations, and a later rerun on branch nost (f4437e46) at runs/20260419_103551_R1_gpqa/inference.json repeats the identical 100Q x 3-sample design pinned to openrouter_provider: [novita]. 295 of 300 Targon rows carry metadata.openrouter_provider==\"Targon\" (300/300 for Novita), and evaluation.json's statistics block gives a legibility mean of 4.305084745762712 over count 295, with correctness correct_pct of 36.6. The gpqa_98/sample1 garbled-reasoning quote appears byte-for-byte in the raw reasoning field around chars 43100-44300, and it is genuine multi-language token degeneration rather than mojibake — the inserted foreign words are semantically apt (e.g., 碳 = \"carbon\" mid-chemistry-reasoning) — consistent with corrupted-but-real sampling rather than a UTF-8/streaming decode bug, since the harness's OpenRouterProvider (src/inference/providers.py) uses the OpenAI SDK's standard SSE stream parsing with clean provider pinning via extra_body[\"provider\"]={\"only\":[...],\"allow_fallbacks\":False} and no ad hoc byte handling that could manufacture corruption. Counting reasoning traces that fuse 3+ distinct non-Latin scripts (CJK/Cyrillic/Hangul/Hebrew/Arabic/Bengali/Armenian/Georgian/etc.) within single malformed sentences gives 63/295 (21%) of Targon rows against 0/300 Novita rows — a systematic, provider-correlated pattern rather than an isolated anecdote. Novita's own highest-non-ASCII rows are ordinary math notation or clean single-language Chinese reasoning switches, the documented non-fingerprint R1 behavior, qualitatively distinct from Targon's cross-script fusion. Of the 5 rows Targon excludes from the n=295 statistics, 4 are HTTP 429 rate-limit errors and the fifth (gpqa_45/sample0) is a JSON-decode failure (\"Expecting value: line 1531 column 1\") rather than a rate limit, though it remains a legitimate exclusion either way. This compares one run per provider six months apart, so model-version drift in OpenRouter's routing — not quantization per se — cannot be fully excluded as a contributor, though the config's explicit \"targon/fp8\" tag targets exactly the mechanism under investigation.",
+      "fingerprint_verdict": "fingerprints_found",
+      "fingerprint_ids": [
+        "F1",
+        "F2"
+      ]
     }
   ]
 }

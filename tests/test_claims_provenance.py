@@ -136,6 +136,46 @@ def test_readme_pervasive_gaps_match_mistake_frequencies(readme, claims) -> None
         assert f"({n})" in readme, f"README pervasive-gaps line: {label} ({mid}) should cite ({n})"
 
 
+def test_readme_fingerprint_verdict_table(readme, claims) -> None:
+    """The evidence-side table must match the dataset it summarises."""
+    for verdict in ("nothing_checkable_released", "fingerprints_found",
+                    "checked_clean", "inconclusive"):
+        n = claims[f"fingerprint_{verdict}"]
+        assert re.search(rf"\|\s*`{verdict}`\s*\|\s*{n}\s*\|", readme), (
+            f"README fingerprint table: `{verdict}` should be {n}"
+        )
+
+
+def test_readme_fingerprint_checkable_count(readme, claims) -> None:
+    """The honest headline: how few projects released anything a reader could check."""
+    n = claims["fingerprint_repos_checkable"]
+    total = claims["repos_surveyed"]
+    assert f"**{n}** of {total} projects released anything a reader could check" in readme
+
+
+def test_readme_fingerprint_catalogue_sizes(readme, claims) -> None:
+    assert f"merged into **{claims['fingerprint_families']}** fingerprint families" in readme
+    assert f"**{claims['fingerprint_families_documented_catch']}** rest on a documented catch" in readme
+    assert f"**{claims['fingerprint_families_need_raw_outputs']}** are checkable only" in readme
+
+
+def test_fingerprint_verdicts_partition_the_survey(claims) -> None:
+    total = sum(claims[f"fingerprint_{v}"] for v in
+                ("fingerprints_found", "checked_clean", "inconclusive",
+                 "nothing_checkable_released"))
+    assert total == claims["repos_surveyed"]
+
+
+def test_fingerprint_verdicts_do_not_track_the_code_audit(claims) -> None:
+    """The two axes measure different things; if they ever coincide, something is wrong.
+
+    31 repos are at_risk in code. If the same 31 also showed visible fingerprints, the
+    evidence side would be adding nothing — and would contradict the whole premise that
+    quantization is engineered to be hard to notice.
+    """
+    assert claims["fingerprint_fingerprints_found"] < claims["repos_at_risk"]
+
+
 def test_summary_headline(summary, claims) -> None:
     assert (f"**{claims['repos_at_risk']} of {claims['repos_critical_route']} "
             f"({claims['at_risk_pct_of_critical_route']}%)**") in summary
