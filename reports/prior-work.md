@@ -4,7 +4,7 @@
 
 This survey's claim — that a model slug behind a multi-provider router is not a fixed artifact, so unpinned routing can corrupt a research result — is not novel, and the file exists to say exactly how much of it was already established and by whom.
 
-**13 sources verified, 9 of them new to this repo. 12 further leads are recorded but unchecked.**
+**16 sources verified, 12 of them new to this repo. 10 further leads are recorded but unchecked.**
 
 Every quotation below was located verbatim in the source itself: abstracts come from the arXiv API, web quotes were found in the live page text, and both are pinned in `findings/prior_work_sources.json` with surrounding context. Titles, authors and dates for papers are fetched, never typed. Items in *Unchecked leads* were surfaced by a search agent and confirmed by nobody — they carry no quotation and must not be cited as evidence until someone verifies them.
 
@@ -96,6 +96,16 @@ Companion detection method to Model Equality Testing, aimed at the same failure:
 
 `Supports: M1, M11`
 
+### [Behavioral Consistency and Transparency Analysis on Large Language Model API Gateways](https://arxiv.org/abs/2604.21083)
+
+*paper — Guanjie Lin, Yinxin Wan, Shichao Pei et al. · preprint · arXiv:2604.21083 · 2026-04-22*
+
+> reveal frequent gaps between expected and actual behaviors, including silent model substitutions, degraded memory retention, deviations from announced pricing
+
+The first black-box audit aimed squarely at this repo's object of study — third-party API gateways, not individual providers — and it finds silent model substitution in the wild across ten commercial gateways. Important caveat that cuts both ways: the paper anonymises every platform it audits, so it cannot be cited as evidence about OpenRouter specifically, only about the class of service OpenRouter belongs to. That a measurement paper felt obliged to anonymise its subjects is itself worth noting.
+
+`Supports: M1, M6, M11`
+
 ### [Why benchmarking is hard](https://epoch.ai/gradient-updates/why-benchmarking-is-hard)
 
 *post — Florian Brand and Jean-Stanislas Denain · Epoch AI · 2025-12-23*
@@ -146,6 +156,26 @@ Already cited. Primary-source documentation of both the hazard and the knobs —
 
 `Supports: M1, M2, M3, M5`
 
+### [Accuracy is Not All You Need](https://arxiv.org/abs/2407.09141)
+
+*paper — Abhinav Dutta, Sanjeev Krishnan, Nipun Kwatra et al. · NeurIPS 2024 · arXiv:2407.09141 · 2024-07-12*
+
+> the behavior of compressed models as visible to end-users is often significantly different from the baseline model, even when accuracy is similar
+
+Kills the most common defence of a quantized route — "the benchmark score barely moved." Compressed models flip individual answers in both directions and are markedly worse on free-form generation while aggregate accuracy stays put, so an unchanged headline number is not evidence of an unchanged model. Directly relevant to any router claim that rests on a coarse aggregate metric.
+
+`Supports: M1, M8`
+
+### [Investigating the Impact of Quantization Methods on the Safety and Reliability of Large Language Models](https://arxiv.org/abs/2502.15799)
+
+*paper — Artyom Kharinaev, Viktor Moskvoretskii, Egor Shvetsov et al. · preprint · arXiv:2502.15799 · 2025-02-18, rev. 2025-06-29*
+
+> Our results show both PTQ and QAT can degrade safety alignment
+
+The safety-eval version of the quantization risk, across 66 quantized variants and six compression methods, with no method uniformly safe. Matters here because safety measurements are exactly what much of the surveyed research reports, and because vendor reassurance about quantization is generally framed around task or tool-call quality, never safety behaviour.
+
+`Supports: M1, M8`
+
 ---
 
 ## Unchecked leads
@@ -157,8 +187,6 @@ Surfaced by search, not verified by anyone here. Listed so the search does not h
 | [Reflection 70B benchmark dispute (independent testers could not verify what sat behind the API)](https://the-decoder.com/reflection-70b-launch-mired-in-controversy-as-third-party-benchmarks-disappoint/) | VentureBeat / The Decoder / Artificial Analysis 2024-09 | direct | Reported as the textbook case of an opaque endpoint producing a headline score no one could reproduce from the released weights. Would be the strongest incident citation if confirmed against primary sources. |
 | [Inspect AI provider docs: OpenRouter routing and pinning guidance](https://inspect.aisi.org.uk/providers.html) | UK AI Safety Institute current | direct | Reported to warn that OpenRouter may split one model's requests across backends and to document the pinning arguments — an eval-harness maintainer converging independently on this survey's advice. Being audited separately against the taxonomy; see reports/provider-ab-experiment-plan.md. |
 | [RooCodeInc/Roo-Code #11325: default OpenRouter routing to FP4/Int4 providers corrupts CJK output](https://github.com/RooCodeInc/Roo-Code/issues/11325) | GitHub 2026-02 | direct | Reported user-visible corruption (raw Unicode escapes instead of Korean/Chinese/Japanese text) tied to low-bit providers on the same slug. Single-report and not independently replicated, but a concrete non-accuracy failure mode. |
-| [accuracy-is-not-all-you-need](https://arxiv.org/abs/2407.09141) | arXiv:2407.09141 NeurIPS 2024 | direct | Reported to show compressed models matching baseline accuracy while flipping large numbers of individual answers and degrading open-ended generation — i.e. benchmark parity hiding behavioural divergence. Would strengthen the argument that an unchanged headline number is not evidence of an unchanged model. |
-| [quantization-safety-reliability](https://arxiv.org/abs/2502.15799) | arXiv:2502.15799 preprint | direct | Reported to test 66 compressed variants across 6 compression methods and find measurable safety degradation — the safety-eval-specific version of the quantization risk. |
 | [Llama 4 Maverick: experimental variant ranked #2 on LMArena, public release ranked far lower; LMArena policy updated in response](https://arena.ai/blog/policy/) | TechCrunch / The Register / LMArena policy 2025-04 | adjacent | Reported as a leaderboard-level analogue: the benchmarked artifact was not the shipped artifact. LMArena's resulting written policy reportedly requires providers to confirm the tested model is identical to the released one, with removal as the sanction. |
 | [Open LLM Leaderboard: local-inference-only policy with pinned model revisions](https://huggingface.co/docs/leaderboards/en/open_llm_leaderboard/about) | Hugging Face current | adjacent | Reported to restrict the leaderboard to open weights because hosted APIs can change unpredictably, and to re-run everything locally with a pinned revision — a leaderboard sidestepping the problem structurally rather than pinning a provider. |
 | [HELM: a model can have more than one deployment, named by host organisation](https://github.com/stanford-crfm/helm/blob/main/docs/adding_new_models.md) | Stanford CRFM current | adjacent | Reported to encode provider identity into the model's canonical name (together/gemma-2-9b-it vs google/gemma-2-9b-it). Unconfirmed whether run results record which deployment served them, which is the part that would matter for M4. |

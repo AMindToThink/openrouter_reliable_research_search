@@ -9,7 +9,9 @@ This guide is grounded in OpenRouter's own docs, community practice, and a score
 LinuxArena's `control-tower` `openrouter_provider.py` — which, checked against this repo's
 own taxonomy in §3b, fails three of the mistakes it exists to prevent. It's included as a worked
 failure, not a model to imitate. It is written for people who use OpenRouter to *produce research
-results* — evals, LLM-as-judge scores, agent rollouts, or generated data.
+results* — evals, LLM-as-judge scores, agent rollouts, or generated data. For how much of this
+thesis was already established elsewhere, and by whom, see
+[`reports/prior-work.md`](prior-work.md).
 
 ---
 
@@ -34,10 +36,17 @@ given model slug (e.g. `deepseek/deepseek-r1`) there are often several providers
   to `require_parameters: true`. This silently voids `temperature`, `top_p`, `seed`,
   `logprobs`, `response_format`/structured outputs, `stop`, tool-calling, etc., on providers
   that lack them.
-- **Which provider you get at all.** With no routing preferences, OpenRouter load-balances:
-  it prioritizes providers with no outage in the last ~30 seconds, then samples the
-  lowest-cost ones weighted by the **inverse square of price**. So *two identical requests can
-  hit two different providers*, and cheaper-hence-more-quantized endpoints are favored.
+- **Which provider you get at all.** With no routing preferences, OpenRouter states it
+  load-balances: it prioritizes providers with no outage in the last ~30 seconds, then samples
+  the lowest-cost ones weighted by the **inverse square of price**. (This is OpenRouter's own
+  description of its internal algorithm — see the update below on how much of it can actually be
+  checked from outside.) So *two identical requests can hit two different providers*, and
+  cheaper-hence-more-quantized endpoints are favored. This isn't hypothetical: independently
+  measured (not by this repo), the same `gpt-oss-120b` slug scored 93.3% via one set of providers
+  and 36.7% via another on AIME25 — a 56.6-point spread under one model name — and a peer-reviewed
+  audit of API endpoints found 11 of 31 tested serving distributions that didn't match the
+  reference weights they claimed to serve. See `reports/prior-work.md` for both, with sources and
+  verified quotations.
 - **What happens to your prompts.** `data_collection` defaults to **`"allow"`**, meaning
   requests may route to providers that retain prompts to train on. For proprietary eval sets,
   red-team prompts, or unpublished data, this is a leak.
@@ -50,9 +59,50 @@ Crucial consequence: **setting `provider.sort` or `provider.order` disables load
 In `QwenLM/qwen-code` PR #348, a contributor tried to make the tool default to full-precision
 providers (`provider.quantizations = fp8+`) because quantized routing "can result in
 substantially worse output for coding." **The PR was rejected** — maintainers considered a
-baked-in precision opinion too paternalistic ("would silently change behavior for everyone").
+baked-in precision opinion too paternalistic ("silently changes behavior for everyone using
+OpenRouter today").
 The lesson for researchers: *no one upstream is going to pin this for you.* If your results
 depend on which weights actually ran, you must set the routing yourself.
+
+### 2026 update: "Auto Exacto" narrows part of this, for a slice of traffic — it doesn't fix it
+
+In March 2026 OpenRouter shipped "Auto Exacto." Everything in this subsection is **OpenRouter's
+own description of its own algorithm** — there is no field on the response that confirms it fired
+on a given call, and unlike the gpt-oss-120b/Model-Equality-Testing findings just above, this repo
+has no independent measurement of it. Read it as a vendor claim, not a verified fact.
+
+- **Scope: requests with `tools`, not all requests.** OpenRouter's announcement: *"For requests
+  that include tools, it's on by default."* A call without a `tools` array — most eval scoring,
+  judging, and plain generation calls — is, by OpenRouter's own account, still governed by the
+  price-weighted default described above.
+- **Coverage is unclear, and OpenRouter's two own sources don't agree.** The announcement says
+  OpenRouter *"enabled auto exacto globally for a chosen selection of our top tool calling models
+  — notably GLM-4.7, GLM-5, DeepSeek V3.2, and gpt-oss-120b."* OpenRouter's current docs page
+  instead says it runs *"by default on every tool-calling request, requiring no configuration,"*
+  with no model list at all. We could not determine from outside which is current, or whether any
+  specific model you use is covered — nothing in the API response says either way, so treat this
+  as **unverifiable from outside**, not as "on for everyone now."
+- **It reorders, it does not replace, the inverse-square-of-price sampling above.** OpenRouter's
+  own account of the mechanism: providers are grouped into quality tiers using three signals
+  (throughput, tool-call telemetry, benchmark scores) that OpenRouter says it recomputes "roughly
+  every 5 minutes," and *"within each tier, the original routing order (price, latency, your
+  preferences) stays intact. [...] We just push lowest performing providers to the back."* So even
+  on the traffic it covers, the price-weighted sampling this guide describes is still what picks
+  among whichever providers survive the quality cut — this is a pre-filter, not a different
+  algorithm, and it is not a pin.
+- **The older, opt-in mechanism is broader and separate.** `:exacto` (equivalently
+  `provider.sort: "exacto"`, confirmed as a valid value in OpenRouter's public API schema) still
+  exists on its own, and per OpenRouter "works across all models and all request types" — tool
+  calls or not. That is the mechanism the `sort` row in §2 refers to; it is unaffected by any of
+  the above.
+
+**This doesn't change the guide's conclusion.** Taking OpenRouter's account at face value: Auto
+Exacto is scoped to tool-calling requests on an unconfirmed set of models, it reorders among
+still-multiple eligible providers rather than pinning one, and it leaves `allow_fallbacks`,
+`quantizations`, and `data_collection` at their old, unsafe-for-research defaults. A
+quality-weighted unpin is still an unpin. If anything, a default that reportedly changes
+composition on a ~5-minute cycle with no caller-visible signal is a stronger argument for logging
+the served provider on every call (§4), not a weaker one.
 
 ---
 
@@ -66,15 +116,21 @@ Inspect users: the `provider=` model arg; raw HTTP: top-level `"provider"`).
 | `quantizations` | *(unset → any)* | `["fp8","fp16","bf16","fp32"]` (add `"unknown"` only if you must reach proprietary models) | Stop silently landing on int4/fp4/int8 — but this is a floor, not a pin: it narrows the set of eligible providers, it doesn't fix one. Not sufficient by itself when the model's identity is the thing your research is about (§3). |
 | `require_parameters` | `false` | `true` | Force routing only to providers that honor your `temperature`/`seed`/`response_format`/tools. Prevents silent parameter dropping. |
 | `data_collection` | `"allow"` | `"deny"` | Don't send prompts to train-on-your-data providers. Use ZDR/`zdr:true` to also exclude operational retention. |
+| `enforce_distillable_text` | *(unset → any)* | `true`, only if your research pipeline generates training/distillation data (§6) | A *licensing* filter, not a privacy one: restricts routing to models whose author has authorized using outputs to train/distill another model. Doesn't stop a provider retaining or training on *your prompts* — that's `data_collection`/`zdr`, above. |
 | `order` | *(unset)* | `["provider-slug"]` | Pin a single named provider for maximum reproducibility (disables load balancing). |
 | `only` / `ignore` | *(unset)* | allow-list / block-list of slugs | Whitelist trusted providers, or exclude a known-bad one. `ignore` is safer than `only` (excluding one bad provider can't 404 you the way pinning one can if it goes down). |
 | `allow_fallbacks` | `true` | `false` **only** if you pinned `order`/`only` and want hard reproducibility | With fallbacks on, you can still drift among the *filtered* set. Off = fail rather than silently switch. |
-| `sort` | *(unset)* | `"exacto"` (quality-first, tool-call-accuracy sort) or `"throughput"`/`"latency"`/`"price"` | Deterministic ordering; `exacto` favors higher-quality endpoints. Note: setting `sort` disables load balancing. |
+| `sort` | *(unset)* | `"exacto"` (quality-first, tool-call-accuracy sort) or `"throughput"`/`"latency"`/`"price"` | Deterministic ordering; `exacto` favors higher-quality endpoints. Note: setting `sort` (like `order`) disables load balancing — confirmed directly in OpenRouter's public API schema. |
+| `max_price` / `preferred_min_throughput` / `preferred_max_latency` | *(unset)* | a price ceiling (`{"prompt": …, "completion": …}`, USD/1M tokens) or a throughput/latency threshold | Cost/performance *preferences*, not filters or pins — endpoints outside the threshold are deprioritized, not excluded. Combine with a floor/pin (§3); don't use instead of one. |
 
 Model-slug shortcuts: `:nitro` = `sort:throughput`, `:floor` = `sort:price`, `:exacto` =
-`sort:exacto`. Prefer the `provider` dict over the slug suffix so the **model name stays clean**
-in your logs, cost accounting, and metadata (routing preference belongs in `provider`, not in
-the identifier you record as "the model").
+`sort:exacto` (the *opt-in* Exacto mechanism — see the 2026 update in §1 for how this differs from
+the newer, on-by-default "Auto Exacto"). Prefer the `provider` dict over the slug suffix so the
+**model name stays clean** in your logs, cost accounting, and metadata (routing preference belongs
+in `provider`, not in the identifier you record as "the model").
+
+Full documented `quantizations` value set, per OpenRouter's public API schema: `int4`, `int8`,
+`fp4`, `fp6`, `fp8`, `fp16`, `bf16`, `fp32`, `unknown`.
 
 ---
 
@@ -206,17 +262,26 @@ Treat the provider/inference stack as a first-class hyperparameter — because i
 - [ ] **Pin the provider** (`order` + `allow_fallbacks:false`) for any headline number you want
       to reproduce, or at minimum `sort`/`only` to a trusted set.
 - [ ] **Set `data_collection: "deny"`** (or `zdr`) for any non-public prompt data.
-- [ ] **Log the served provider for every call.** OpenRouter returns it: the response `provider`
-      field, or query the generation via `GET /api/v1/generation?id=...`. Save it alongside
-      outputs. "We used deepseek-r1 via OpenRouter" is *not* a reproducible method statement.
+- [ ] **Log the served provider for every call.** Two mechanisms are confirmed in OpenRouter's
+      public API schema: query `GET /api/v1/generation?id=...` (returns `provider_name`), or opt in
+      per-request with the `X-OpenRouter-Metadata: enabled` header to get an `openrouter_metadata`
+      block — naming the selected provider — on the chat-completion response itself. (Older
+      guidance pointed at a bare response-level `provider` field; OpenRouter's current published
+      schema for `/chat/completions` does not document one, so verify against your own response
+      bodies rather than assuming it's there.) Save whichever you use alongside outputs. "We used
+      deepseek-r1 via OpenRouter" is *not* a reproducible method statement.
 - [ ] **Report the routing config** (the whole `provider` dict) and the observed provider
       distribution in your paper/appendix, the same way you'd report temperature.
 - [ ] **Don't assume `seed` gives determinism.** Even honored, most providers don't guarantee
       bitwise reproducibility; batching/kernels make it best-effort. Verify empirically.
 - [ ] **Version-pin the model slug.** A bare slug can silently point at an updated snapshot;
       prefer dated/versioned slugs where they exist and record the exact string.
-- [ ] **Spot-check across the routes you'll actually hit.** OpenRouter's own advice: *"flexibility
-      requires measurement — evaluate important models across the actual provider routes."*
+- [ ] **Spot-check across the routes you'll actually hit.** Flexibility requires measurement: run
+      the models your result depends on across the provider routes you might actually be served,
+      and compare. Nobody upstream measures this for you, and no vendor claim substitutes for it.
+      (Earlier versions of this guide attributed that first clause to OpenRouter. It is not their
+      wording — we searched their provider-routing docs and both routing blog posts and could not
+      find it — so it is stated here as our own advice.)
 
 ---
 
@@ -264,10 +329,22 @@ most controlled, at higher cost and less model coverage.
 
 ## Sources
 
-- OpenRouter — Provider Routing docs: <https://openrouter.ai/docs/features/provider-routing>
+See also [`reports/prior-work.md`](prior-work.md) — independently-sourced, quotation-verified
+evidence (13 checked sources) that this survey's thesis predates it, including the gpt-oss-120b
+cross-provider spread and Model Equality Testing findings cited in §1.
+
+OpenRouter's own docs/blog entries below are the vendor's description of its own system, not an
+independently audited one — flagged inline in §1 and §2 wherever this guide relies on them for a
+behavioral claim.
+
+- OpenRouter — Provider Routing docs (redirects to the current URL as of 2026-07-21): <https://openrouter.ai/docs/guides/routing/provider-selection>
+- OpenRouter — public API schema (used to verify `provider`-object field names/defaults, the `sort` enum incl. `"exacto"`, and the `/chat/completions` response shape): <https://openrouter.ai/openapi.json>
+- OpenRouter — "Auto Exacto: Adaptive Quality Routing, On by Default" (blog, 2026-03-12): <https://openrouter.ai/blog/announcements/auto-exacto/>
+- OpenRouter — Auto Exacto docs guide: <https://openrouter.ai/docs/guides/routing/auto-exacto>
+- OpenRouter — "Provider Variance: Introducing Exacto" (blog, 2025-10-21): <https://openrouter.ai/blog/announcements/provider-variance-introducing-exacto/>
 - OpenRouter — Model Routing (blog): <https://openrouter.ai/blog/insights/model-routing/>
 - OpenRouter — Reliability/Failover (blog): <https://openrouter.ai/blog/insights/reliability-failover/>
 - "The Silent Hyperparameter: Quantifying the Impact of Inference Backends on LLM Reproducibility" — <https://arxiv.org/abs/2605.19537>
 - "Chasing Shadows: Pitfalls in LLM Security Research" — <https://arxiv.org/pdf/2512.09549>
-- QwenLM/qwen-code PR #348 (rejected "avoid quantized models" default) — <https://github.com/QwenLM/qwen-code/pull/348>
+- QwenLM/qwen-code PR #348 (rejected "avoid quantized models" default; closed, not merged, 2026-04-27) — <https://github.com/QwenLM/qwen-code/pull/348>
 - LinuxArena `control-tower` `openrouter_provider.py`, quoted as of 2026-07-21 at commit `79a3c6f` — <https://github.com/linuxarena/control-tower/blob/79a3c6f76c0575292ff80d6ece04ff288c64c482/src/control_tower/models/openrouter_provider.py#L37-L41> — scored against this repo's own taxonomy in §3b: fails M2/M9 (`require_parameters` never set) and M4 (no provenance capture), and only nominally addresses M1/M3 (a floor with an `"unknown"` hole, an order-preference with no pin). A worked failure case, not a model to imitate.
