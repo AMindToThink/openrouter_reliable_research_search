@@ -6,7 +6,7 @@ served by *any* of several providers, at *any* quantization, on *any* inference 
 you evaluated is not a fixed object and your numbers may not reproduce or generalize.
 
 This guide is grounded in OpenRouter's own docs, community practice, and a scored case study of
-Redwood Research's Control Tower `openrouter_provider.py` — which, checked against this repo's
+LinuxArena's `control-tower` `openrouter_provider.py` — which, checked against this repo's
 own taxonomy in §3b, fails three of the mistakes it exists to prevent. It's included as a worked
 failure, not a model to imitate. It is written for people who use OpenRouter to *produce research
 results* — evals, LLM-as-judge scores, agent rollouts, or generated data.
@@ -110,7 +110,7 @@ Sometimes the code that talks to OpenRouter is shared infrastructure underneath 
 call sites, and it genuinely can't hardcode a pin — it doesn't know which model any given caller
 will ask for. That's a real constraint on the library. **It is not a license for the library's
 silent default to become the caller's entire safety story** — and that is exactly the mistake
-Redwood Research's Control Tower makes in `openrouter_provider.py`:
+LinuxArena's `control-tower` makes in `openrouter_provider.py`:
 
 ```python
 OPENROUTER_PROVIDER_DEFAULTS = {
@@ -131,7 +131,7 @@ exists to prevent:**
   `require_parameters` is never set. Any judge call built on this default that depends on
   provider-enforced structured output can be silently routed to a provider that ignores the
   schema — exactly the failure mode this guide is written to stop.
-- **M4 (no provenance logging) — FAIL.** Nothing in Control Tower's `models/` code captures
+- **M4 (no provenance logging) — FAIL.** Nothing in `control-tower`'s `models/` code captures
   which provider actually served a call. Without that, a bad route can't even be diagnosed after
   the fact, let alone reproduced.
 - **M1 (unpinned quantization) — nominally addressed, with a self-inflicted hole.** The floor
@@ -146,13 +146,13 @@ exists to prevent:**
 
 By the same standard applied to the 35 repos in this survey, this pattern would score `at_risk`:
 three High-severity mistakes fail outright, and the two it nominally addresses have known,
-documented holes rather than being solved. The consequence is measured, not hypothetical: Redwood
-Research's own other public repo, BashArena, never routes through this pattern at all and is
-flagged `at_risk` with the near-complete `M1, M2, M3, M4, M5, M7, M8` set in this survey
-(`findings/survey.csv`) — the safeguard existing in one file didn't stop the org's own other
-codebase from shipping with none of it. That is what a floor-as-the-whole-policy actually buys
-you: a shared module that looks like it solved the problem, and a research call site next door
-that never touches it.
+documented holes rather than being solved. The consequence is measured, not hypothetical:
+BashArena (`redwoodresearch/basharena_public`), a Control-research codebase in the same
+ecosystem this library was written for, never routes through this pattern at all and is flagged
+`at_risk` with the near-complete `M1, M2, M3, M4, M5, M7, M8` set in this survey
+(`findings/survey.csv`) — a safeguard living in one shared library did not reach the research
+repo next door. That is what a floor-as-the-whole-policy actually buys you: a shared module that
+looks like it solved the problem, and a research call site that never touches it.
 
 An upstream fix for these gaps is in progress as of this writing; the scoring above is pinned
 to the commit cited, independent of whether that fix lands.
@@ -270,4 +270,4 @@ most controlled, at higher cost and less model coverage.
 - "The Silent Hyperparameter: Quantifying the Impact of Inference Backends on LLM Reproducibility" — <https://arxiv.org/abs/2605.19537>
 - "Chasing Shadows: Pitfalls in LLM Security Research" — <https://arxiv.org/pdf/2512.09549>
 - QwenLM/qwen-code PR #348 (rejected "avoid quantized models" default) — <https://github.com/QwenLM/qwen-code/pull/348>
-- Redwood Research Control Tower `openrouter_provider.py`, quoted as of 2026-07-21 at commit `79a3c6f` — <https://github.com/linuxarena/control-tower/blob/79a3c6f76c0575292ff80d6ece04ff288c64c482/src/control_tower/models/openrouter_provider.py#L37-L41> — scored against this repo's own taxonomy in §3b: fails M2/M9 (`require_parameters` never set) and M4 (no provenance capture), and only nominally addresses M1/M3 (a floor with an `"unknown"` hole, an order-preference with no pin). A worked failure case, not a model to imitate.
+- LinuxArena `control-tower` `openrouter_provider.py`, quoted as of 2026-07-21 at commit `79a3c6f` — <https://github.com/linuxarena/control-tower/blob/79a3c6f76c0575292ff80d6ece04ff288c64c482/src/control_tower/models/openrouter_provider.py#L37-L41> — scored against this repo's own taxonomy in §3b: fails M2/M9 (`require_parameters` never set) and M4 (no provenance capture), and only nominally addresses M1/M3 (a floor with an `"unknown"` hole, an order-preference with no pin). A worked failure case, not a model to imitate.
