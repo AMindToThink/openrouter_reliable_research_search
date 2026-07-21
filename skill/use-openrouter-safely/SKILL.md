@@ -43,6 +43,23 @@ multiple backends. *Honest caveat: the runs are ~6 months apart, so checkpoint d
 with provider. Suggestive, not clean.* Independent work also finds inference-backend choice alone
 can move a benchmark by ~16pp (arXiv 2605.19537).
 
+<!-- PRIOR-WORK FIGURES: every number below is pinned to a verified quotation in
+     findings/prior_work_sources.json and guarded by tests/test_prior_work.py. -->
+**Three external results worth quoting instead of arguing from first principles** (full list,
+with every quotation located verbatim in its source: `reports/prior-work.md`):
+
+- **The endpoint may not be serving the weights.** *Model Equality Testing* (ICLR 2025) ran a
+  two-sample test against commercial APIs and found **11 out of 31 endpoints serve different
+  distributions than reference weights released by Meta**. If you need to know which artifact
+  answered you and cannot pin, this is the test to run.
+- **The spread can be enormous.** Identical `gpt-oss-120b` weights on AIME25: **93.3%** via
+  Cerebras/Nebius/Fireworks/DeepInfra/Novita/Together, **86.7%** Groq, **80.0%** Azure,
+  **36.7%** CompactifAI.
+- **Nobody reports it.** *Chasing Shadows* audited all 72 LLM-security papers at leading venues
+  from 2023–2024; being unable to identify the model instance behind a result was its most
+  prevalent pitfall, **present in 73.6% (53) of papers**, discussed by none of them.
+<!-- END PRIOR-WORK FIGURES -->
+
 **How much actually varies within one slug** (live endpoint sweep, 87 open-weight models —
 `findings/provider_spread_reference.json`):
 
@@ -193,10 +210,14 @@ For each call site, determine:
    benchmark/comparison)? If yes, a `quantizations` floor with no `order`/`only` pin is still
    **M1** — the fix is recipe 3a, a hard endpoint pin, never recipe 3b's fleet floor.
 
-**`inspect_ai` is the reference plumbing.** `OpenRouterAPI.__init__` collects a `provider` dict
-model-arg and emits it as `extra_body["provider"]`, so any inspect-based eval (much of the safety
-ecosystem — Inspect Evals, openbench, …) is pinnable via `-M provider='{...}'` with **zero source
-edits**. That makes "they can't easily fix this" a rare excuse, and makes the one-line fix concrete.
+**`inspect_ai` is plumbing, not a safeguard — but the plumbing is enough.** `OpenRouterAPI.__init__`
+only *collects* whatever `provider` dict the caller passes and `completion_params()` forwards it to
+`extra_body["provider"]` unchanged; it sets no `quantizations` floor, no `require_parameters`, no
+`order`/`allow_fallbacks`, no `data_collection` of its own, and captures no provenance beyond the
+raw response it logs for every provider. So don't credit an inspect-based repo for safety it didn't
+configure — but equally, any inspect-based eval (much of the safety ecosystem — Inspect Evals,
+openbench, …) *is* pinnable via `-M provider='{...}'` with **zero source edits**. "They can't
+easily fix this" is a rare excuse, and the one-line fix is concrete.
 
 ### Step 3 — Classify against the taxonomy
 
