@@ -101,7 +101,21 @@
         "M6",
         "M10"
       ],
-      "rank": 3
+      "rank": 3,
+      "body_quotes": [
+        {
+          "quote": "73.6% (53) of all papers, andPartly presentin 12.5% (9)",
+          "locator": "§V, pitfall P9 prevalence (spacing as extracted from the PDF)"
+        },
+        {
+          "quote": "CodeLlama 7b (Ollama)69.52%40.95%15.49%18.61%15.69%14.29%18.21%",
+          "locator": "Table II, CodeLlama-7b (Ollama) row: 2-bit through no-quantization"
+        },
+        {
+          "quote": "CodeLlama 7b (TheBloke)67.35%70.41%58.16%62.24%61.22%63.27%19.39%",
+          "locator": "Table II, CodeLlama-7b (TheBloke) row"
+        }
+      ]
     },
     {
       "key": "cot-illegibility-revisited",
@@ -123,7 +137,13 @@
         "M8",
         "M11"
       ],
-      "rank": 2
+      "rank": 2,
+      "body_quotes": [
+        {
+          "quote": "average illegibility score of only 2.30 (vs. 4.30 in the paper)",
+          "locator": "the post's headline comparison"
+        }
+      ]
     },
     {
       "key": "gpt-oss-provider-spread",
@@ -144,7 +164,13 @@
         "M8",
         "M11"
       ],
-      "rank": 1
+      "rank": 1,
+      "body_quotes": [
+        {
+          "quote": "93.3%: Cerebras, Nebius Base, Fireworks, Deepinfra, Novita, Together.ai, vLLM 0.1.0 90.0%: Parasail 86.7%: Groq 83.3%: Amazon 80.0%: Azure 36.7%: CompactifAI",
+          "locator": "the per-provider AIME25 result list"
+        }
+      ]
     },
     {
       "key": "epoch-benchmarking-hard",

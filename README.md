@@ -32,6 +32,29 @@ don't support** (`temperature`, `seed`, `logprobs`, `response_format`) unless yo
 benchmark score by **up to ~16 percentage points**, yet the inference stack is almost never
 reported. If your research pins none of this, "the model" you evaluated is a moving target.
 
+## This isn't a new claim — and that's the point
+
+The mechanism is established. What was missing is evidence about whether working research code
+does anything about it. Four sources, each quoted verbatim and pinned in
+[`reports/prior-work.md`](reports/prior-work.md):
+
+- **It is measurable, and it was measured at a top venue.** *Model Equality Testing* (ICLR 2025)
+  ran a two-sample test against commercial APIs and found **11 out of 31 endpoints serve
+  different distributions than reference weights released by Meta**.
+- **The gap can be enormous.** On AIME25, identical `gpt-oss-120b` weights scored **93.3%** via
+  Cerebras/Nebius/Fireworks/DeepInfra/Novita/Together, **86.7%** via Groq, **80.0%** via Azure
+  and **36.7%** via CompactifAI — one slug, one benchmark, one week.
+- **The field does not notice.** *Chasing Shadows* audited all 72 LLM-security papers at leading
+  venues from 2023–2024. Its pitfall P9 — being unable to tell which model instance produced a
+  result — was the most prevalent one it found, **present in 73.6% (53) of papers**, and
+  **not one of them discussed it**.
+- **It has already invalidated published work.** After a re-run changed only the OpenRouter
+  provider, the author of the critiqued paper conceded his results "were contaminated by bad
+  inference setups."
+
+This survey is the missing piece: not "can routing corrupt a result" — that is settled — but
+**how many real research repos leave the channel open.** The answer is most of them.
+
 ## Layout
 
 | Path | What's there |

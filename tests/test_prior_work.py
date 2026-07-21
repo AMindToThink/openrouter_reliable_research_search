@@ -108,6 +108,32 @@ def test_generated_doc_is_in_sync() -> None:
                     "Edit findings/prior_work.json and rerun scripts/make_prior_work.py.")
 
 
+def test_readme_prior_work_figures_are_quoted_from_a_source(sources: dict) -> None:
+    """Every figure the README borrows from prior work must exist in a verified quotation.
+
+    The README's own statistics are pinned by tests/test_claims_provenance.py against
+    claims.json. Numbers taken from someone else's paper have no claim behind them, so they
+    are pinned here instead: to the quote, quote context, or body-quote text that
+    scripts/fetch_prior_work_sources.py located in the source itself.
+    """
+    readme = (ROOT / "README.md").read_text()
+    section = readme.split("## This isn't a new claim", 1)
+    assert len(section) == 2, "the README prior-work section is missing"
+    block = section[1].split("\n## ", 1)[0]
+
+    haystack = norm(" ".join(
+        str(rec.get("abstract", "")) + " " + str(rec.get("quote_context", "")) + " "
+        + " ".join(bq["context"] for bq in rec.get("body_quotes", []))
+        for rec in sources.values()))
+
+    # standalone numeric tokens only: skips M1, fp8, r1, 2023-2024 and similar identifiers
+    figures = set(re.findall(r"(?<![A-Za-z0-9.\-])\d+(?:\.\d+)?%?(?![A-Za-z0-9.\-])", block))
+    unsourced = [f for f in figures if norm(f) not in haystack]
+    assert not unsourced, (
+        f"README cites prior-work figures that appear in no verified quotation: {sorted(unsourced)}. "
+        "Add a body_quote that contains them and rerun scripts/fetch_prior_work_sources.py.")
+
+
 def test_doc_marks_unverified_leads_as_unverified() -> None:
     doc = DOC.read_text()
     assert "## Unchecked leads" in doc

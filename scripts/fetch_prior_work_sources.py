@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # /// script
 # requires-python = ">=3.10"
-# dependencies = []
+# dependencies = ["pypdf"]
 # ///
 """Fetch and pin the sources behind findings/prior_work.json.
 
@@ -12,6 +12,9 @@ authoritative source and records what it found:
     lists come from arXiv rather than from anyone's memory.
   * web entries   -> the live page, reduced to text, with the surrounding context of the
     quoted line recorded verbatim.
+  * `body_quotes` -> the paper PDF itself, for figures that live in the body rather than the
+    abstract (a table cell, a prevalence rate). These are the numbers most likely to be
+    misremembered, so they get the same verbatim treatment as everything else.
 
 Every `quote` in prior_work.json must appear verbatim in the fetched abstract or page text.
 A quote that does not match is a hard failure here -- a misquotation is exactly the defect
@@ -57,6 +60,19 @@ def page_text(url: str) -> str:
     raw = get(url)
     stripped = re.sub(r"<script.*?</script>|<style.*?</style>", " ", raw, flags=re.S | re.I)
     return re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", " ", stripped))).strip()
+
+
+def pdf_text(arxiv_id: str) -> str:
+    """Extract the full text of an arXiv PDF so body figures can be checked against it."""
+    import io
+
+    import pypdf
+
+    req = urllib.request.Request(f"https://arxiv.org/pdf/{arxiv_id}", headers=UA)
+    with urllib.request.urlopen(req, timeout=120) as r:
+        raw = r.read()
+    pages = pypdf.PdfReader(io.BytesIO(raw)).pages
+    return re.sub(r"\s+", " ", " ".join(p.extract_text() or "" for p in pages))
 
 
 def norm(s: str) -> str:
@@ -132,6 +148,22 @@ def main() -> None:
         rec["quote"] = quote
         rec["quote_found_in"] = where
         rec["quote_context"] = h[max(0, i - CONTEXT_CHARS): i + len(quote) + CONTEXT_CHARS]
+
+        if e.get("body_quotes"):
+            # Figures that live in the body of a paper (a table cell, a prevalence rate) or
+            # further down a page than the pull-quote. Same verbatim rule as everything else.
+            body = norm(pdf_text(e["arxiv_id"])) if "arxiv_id" in e else h
+            checked = []
+            for bq in e["body_quotes"]:
+                j = body.lower().find(norm(bq["quote"]).lower())
+                if j < 0:
+                    failures.append(f"{key}: body quote not found in the PDF of "
+                                    f"{e['arxiv_id']}\n    {bq['quote']!r}")
+                    continue
+                checked.append({**bq, "context": body[max(0, j - CONTEXT_CHARS):
+                                                      j + len(bq["quote"]) + CONTEXT_CHARS]})
+            rec["body_quotes"] = checked
+
         records[key] = rec
 
     if failures:
