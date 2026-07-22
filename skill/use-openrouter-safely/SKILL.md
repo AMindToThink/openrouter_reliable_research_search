@@ -21,6 +21,17 @@ different context windows and output caps, on different inference engines, with 
 parameters. If a result depends on which weights actually ran and you pinned nothing, the result
 may not reproduce or generalize — and you won't get an error.
 
+**Source repo — every `reports/…` and `findings/…` path in this file lives there:**
+<https://github.com/AMindToThink/openrouter_reliable_research_search>. This skill distills that
+public audit; go there for the full evidence: the 35-repo survey dataset (`findings/survey.csv`),
+the complete best-practices guide
+([`reports/openrouter-best-practices.md`](https://github.com/AMindToThink/openrouter_reliable_research_search/blob/master/reports/openrouter-best-practices.md)),
+prior work with every
+quotation verified at source (`reports/prior-work.md`), the 17-fingerprint detection catalogue
+(`reports/detection-fingerprints.md`), the 22-provider transparency audit and grades
+(`reports/provider-transparency.md`), the dated endpoint snapshot behind the numbers below
+(`findings/provider_spread_reference.json`), and an interactive data explorer.
+
 This skill has two modes. Pick based on the task. **Both start with Step 0.**
 
 ---
@@ -284,7 +295,8 @@ Key facts (so you can reason about edge cases):
 - Proprietary models (Claude/GPT/Gemini) are effectively single-served → quantization/provider
   risk is low; open-weight models are where it bites hardest.
 
-Full guide: `reports/openrouter-best-practices.md` in the openrouter_reliable_research_search repo.
+Full guide: [`reports/openrouter-best-practices.md`](https://github.com/AMindToThink/openrouter_reliable_research_search/blob/master/reports/openrouter-best-practices.md)
+in the openrouter_reliable_research_search repo.
 
 ---
 
