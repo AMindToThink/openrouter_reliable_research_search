@@ -144,20 +144,24 @@ so "my params went through" intuitions built on `temperature` are misleading.
 
 ## Mode A — Authoring: call OpenRouter properly
 
-### First, ask what to prioritize — no endpoint is good at everything
+### First, ask what to prioritize — nobody scores an A
 
-"Transparent" turns out to mean three unrelated things, and in our 22-provider audit
-(`reports/provider-transparency.md`) **no provider was strong on all three**:
+The 22-provider audit (`reports/provider-transparency.md`) grades the 10 verified providers out of
+8 — two points each on four criteria (`findings/provider_grades.json`; explorable at
+`artifact/provider-transparency.html`). **The top score is 6. The A band is vacant.**
 
-| Axis | The question | Verified examples |
+| Criterion | Asks | Scores solid (2) |
 | --- | --- | --- |
-| **A** serves-now | Does it publish precision / context / engine per model? | Cloudflare states fp8 in the docs *and* the model ID; Chutes returns `quantization` **and the inference engine** per model from its own API; Cerebras describes its scheme precisely enough to be falsifiable |
-| **B** when-it-changed | Is there a dated record of a change to an existing endpoint? | Groq's changelog is a public git repo with an Atom feed; Cloudflare's model catalog is JSON in a public repo, so a precision change is a diffable commit |
-| **C** what-happens-next | Is there a written notice period, and a promise the weights won't move? | Azure states *"Weights and APIs are fixed"* for GA models and ships `versionUpgradeOption: NoAutoUpgrade`; Anthropic gives ≥60 days and a full dated retirement history; OpenAI ≥6 months |
+| **A** serves-now | Does it say what it serves — precision, context, engine — specifically enough to check? | Cerebras · Cloudflare · Chutes |
+| **B** when-it-changed | Is there a dated record of serving *changes*, not just launches and retirements? | Together · Cloudflare · Groq · DeepSeek |
+| **C** what-happens-next | Is there a notice period stated in advance? | Azure · Together · Anthropic · OpenAI |
+| **P** pinnable | Can a caller fix the artifact — an immutable ID, or a written promise the weights won't move? | Cerebras · Azure · xAI |
 
-The split is systematic, not incidental: **the labs and hyperscalers document lifecycle and never
-state serving precision; the GPU clouds do the reverse.** And 31% of sampled endpoints decline to
-declare a quantization to OpenRouter at all.
+Read the right-hand column carefully: **A and P are almost disjoint.** Cerebras is the only
+provider that both tells you what it serves and promises not to change it. Everyone else makes you
+choose between knowing the precision and being able to pin the artifact. The split is systematic —
+the labs and hyperscalers document lifecycle and never state serving precision; the GPU clouds do
+the reverse — and 31% of sampled endpoints decline to declare a quantization at all.
 
 So there is no "best provider" to hand over, and choosing one silently for the researcher hides a
 tradeoff that is theirs. **Ask them** (`AskUserQuestion`), then map the answer to a config:
