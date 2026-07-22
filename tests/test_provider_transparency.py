@@ -138,6 +138,33 @@ def test_readme_headline_matches_the_measurement(snapshot: dict) -> None:
         f"README provider-transparency line must cite {pct}% — refetching moved it.")
 
 
+def test_skill_and_guide_cite_the_audit_correctly(entries: list[dict], snapshot: dict) -> None:
+    """The skill and the guide borrow figures from this audit; hold them to the data.
+
+    Neither file is generated, so this assertion is the only thing keeping their prose in
+    step with a refetch. The audit is the argument for pinning; a stale number in the
+    advice would undercut exactly the discipline it is asking researchers to adopt.
+    """
+    m = snapshot["measured"]
+    skill = (ROOT / "skill" / "use-openrouter-safely" / "SKILL.md").read_text()
+    guide = (ROOT / "reports" / "openrouter-best-practices.md").read_text()
+
+    n_verified = sum(1 for e in entries if e.get("verified"))
+    n_leads = len(entries) - n_verified
+
+    for name, text in (("SKILL.md", skill), ("best-practices", guide)):
+        assert f"{len(entries)} provider" in text, (
+            f"{name} must say how many providers were audited ({len(entries)})")
+        assert f"{m['undeclared_pct']}%" in text, (
+            f"{name} cites a declaration rate that is no longer {m['undeclared_pct']}%")
+
+    assert f"{n_verified} verified" in guide and f"{n_leads} recorded as unchecked" in guide, (
+        f"the guide must state the split ({n_verified} verified / {n_leads} leads) — a reader "
+        "who is not told how thin the evidence is will over-trust it")
+    assert f"{m['endpoints_total']} serving endpoints" in guide
+    assert f"{len(m['providers_always_undeclared'])} providers" in guide
+
+
 def test_report_is_regenerable(doc: str) -> None:
     """The strongest guard against hand-typed numbers: the file must rebuild byte-identically."""
     before = doc
