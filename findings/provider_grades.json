@@ -1,0 +1,145 @@
+{
+  "_note": "Grades layered on top of findings/provider_transparency.json. Kept in a separate file because this is interpretation, not evidence: the audit records what each provider does and does not disclose, and this file scores it. Every score cites the audit entry it came from, and no letter is stored here — scripts/make_provider_transparency_artifact.py computes the letter from the scores so a hand-typed grade cannot drift from its own reasoning. Only entries verified against a live page are graded; the unchecked leads are ungraded by construction, on the same rule that denies them quotations.",
+  "_rubric": {
+    "question": "If a researcher wanted to know what actually served their result, and whether it has changed since, could they find out from this provider's own disclosures?",
+    "criteria": {
+      "A": {
+        "label": "Serves-now",
+        "asks": "Does it say what it is serving — precision, context, engine — specifically enough to be checked?",
+        "axis": "A"
+      },
+      "B": {
+        "label": "When-it-changed",
+        "asks": "Is there a dated record of serving changes, not just launches and retirements?",
+        "axis": "B"
+      },
+      "C": {
+        "label": "What-happens-next",
+        "asks": "Is there a deprecation policy with a notice period stated in advance?",
+        "axis": "C"
+      },
+      "P": {
+        "label": "Pinnable",
+        "asks": "Can a caller fix the artifact — an immutable ID, or a written guarantee that the weights behind one will not move?",
+        "axis": null
+      }
+    },
+    "levels": {
+      "0": "absent",
+      "1": "partial",
+      "2": "solid"
+    },
+    "bands": [
+      [8, "A"],
+      [6, "B"],
+      [4, "C"],
+      [2, "D"],
+      [0, "F"]
+    ],
+    "cap_on_flag": "C",
+    "cap_note": "A documented mechanism that can change what serves a caller without the caller changing anything caps the grade at C. No flagged provider scored above C on its own, so the cap currently corrects nothing — the flag is doing descriptive work, and the rule is there for the provider that eventually earns a high score while keeping the clause.",
+    "a_note": "An A requires 8/8 — solid on all four. The highest score in the sweep is 6. That no provider gets an A is the finding, not an artifact of a harsh scale: the two strengths are held by disjoint sets of providers, and nobody publishes a dated record of a serving change to an endpoint that keeps its name."
+  },
+  "grades": {
+    "cerebras": {
+      "scores": { "A": 2, "B": 1, "C": 1, "P": 2 },
+      "reasons": {
+        "A": "States what it serves platform-wide, and specifically enough to be falsified: unpruned weights, weight-only quantization applied at storage, with activations, attention and the KV cache left unquantized. Not per-model.",
+        "B": "A dated deprecations log exists, but it records removals — not changes to how a surviving endpoint is served.",
+        "C": "Deprecations are logged as they happen. No notice period is stated in advance.",
+        "P": "The only forward-looking fixity commitment found anywhere in the sweep: the original models, for all existing endpoints, without modification."
+      },
+      "flag": null
+    },
+    "azure-foundry": {
+      "scores": { "A": 0, "B": 1, "C": 2, "P": 2 },
+      "reasons": {
+        "A": "Never states serving precision.",
+        "B": "Lifecycle events are dated and published ahead of time — the gpt-4o auto-upgrade names its date and eight regions — but nothing logs a serving-config change to a deployment that survives.",
+        "C": "The strongest lifecycle contract in the sweep: a published upgrade schedule, with lifecycleStatus and deprecation.inference queryable from the API.",
+        "P": "Weights and APIs are fixed for production deployments, and versionUpgradeOption: NoAutoUpgrade refuses the forward-roll outright. Preview deployments get no opt-out."
+      },
+      "flag": null
+    },
+    "cloudflare-workers-ai": {
+      "scores": { "A": 2, "B": 2, "C": 0, "P": 0 },
+      "reasons": {
+        "A": "Precision is in the model ID and stated in the docs, with the context window alongside it.",
+        "B": "The catalog is generated from JSON in a public git repository, so a change to declared precision or context is a dated commit anyone can diff — the only reconstructible serving history in the sweep.",
+        "C": "No deprecation policy or notice period found.",
+        "P": "Deprecated slugs are aliased forward to a successor rather than frozen, so an ID that keeps working can stop meaning what it meant."
+      },
+      "flag": "Deprecated IDs alias forward to a successor"
+    },
+    "together": {
+      "scores": { "A": 1, "B": 2, "C": 2, "P": 0 },
+      "reasons": {
+        "A": "Launch entries can name precision and context — but of five recent serverless launches checked, only one stated a quantization.",
+        "B": "The best dated changelog in the sweep: entries name precision and context at launch.",
+        "C": "Deprecations carry stated notice periods.",
+        "P": "Policy permits an 'upgrade' to redirect an existing model ID after three days' notice — the single most dangerous clause found in any provider's documentation for research use."
+      },
+      "flag": "A live model ID can be redirected after three days' notice"
+    },
+    "xai": {
+      "scores": { "A": 0, "B": 0, "C": 0, "P": 2 },
+      "reasons": {
+        "A": "No precision disclosure.",
+        "B": "No changelog found.",
+        "C": "No deprecation policy or notice period found.",
+        "P": "States the pin guarantee explicitly, and names the tradeoff: the dated ID will not be updated, the floating alias will."
+      },
+      "flag": null
+    },
+    "anthropic": {
+      "scores": { "A": 0, "B": 1, "C": 2, "P": 1 },
+      "reasons": {
+        "A": "Never states serving precision.",
+        "B": "A complete dated history back to 2024 — of retirements, not of serving changes.",
+        "C": "Best-in-class: at least 60 days' notice, an Active/Legacy/Deprecated/Retired taxonomy, named replacements, and a commitment to preserving retired weights.",
+        "P": "Dated IDs are stable by convention. There is no written guarantee that the weights behind one are fixed."
+      },
+      "flag": null
+    },
+    "openai": {
+      "scores": { "A": 0, "B": 1, "C": 2, "P": 1 },
+      "reasons": {
+        "A": "Never states serving precision.",
+        "B": "Dated retirement tables run back to 2022 — again, deaths rather than changes.",
+        "C": "The longest stated notice period in the sweep: at least 6 months for generally available models.",
+        "P": "Dated snapshot IDs exist, with no written statement that the weights behind them will not change."
+      },
+      "flag": null
+    },
+    "deepseek": {
+      "scores": { "A": 0, "B": 2, "C": 0, "P": 0 },
+      "reasons": {
+        "A": "No precision disclosure.",
+        "B": "The rarest disclosure in the sweep: the changelog dates the in-place checkpoint swaps. It logs the mutation, not just the launch and the death.",
+        "C": "No general deprecation policy.",
+        "P": "The API exposes only floating names — there is no way to pin a call to a fixed snapshot at all. Dated tags like DeepSeek-R1-0528 are open-weight release labels, not API parameters."
+      },
+      "flag": "No pinnable ID exists"
+    },
+    "groq": {
+      "scores": { "A": 0, "B": 2, "C": 0, "P": 0 },
+      "reasons": {
+        "A": "Publishes no precision anywhere, and reports quantization 'unknown' to OpenRouter.",
+        "B": "The most machine-followable changelog in the sweep: a public git repository with an Atom feed on its commits — a diff, not a page.",
+        "C": "No deprecation policy found.",
+        "P": "No pin guarantee found."
+      },
+      "flag": null
+    },
+    "chutes": {
+      "scores": { "A": 2, "B": 0, "C": 0, "P": 1 },
+      "reasons": {
+        "A": "The most complete current-config disclosure found anywhere: quantization, context, max output and the inference engine, per model, from a live JSON API.",
+        "B": "No changelog. It tells you the current config precisely and its history not at all.",
+        "C": "No deprecation policy.",
+        "P": "No written guarantee, but per-deployment source is inspectable with a locked model revision, and a watchdog hashes served weight files at random offsets — verification standing in for a promise."
+      },
+      "flag": null
+    }
+  }
+}

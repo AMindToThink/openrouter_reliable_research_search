@@ -106,6 +106,51 @@ description of itself. It is the reason to **pin what you can pin and log what a
 you** (§3, §4): provenance you record yourself is the only part of this that does not depend on
 taking the vendor's word.
 
+### Nor do the providers publish it — we checked 22 of them
+
+The obvious rejoinder to the section above is that the router is the wrong place to look: if
+OpenRouter can't tell you what changed, go read the provider's own docs. We tried. The audit is
+[`provider-transparency.md`](provider-transparency.md) — 22 providers, 10 verified verbatim against
+the live page, 12 recorded as unchecked leads.
+
+"Transparent" turned out to mean three unrelated things, and **no provider was strong on all
+three**: whether it says what it serves now (precision, context, engine), whether it says when that
+changed, and whether it says what happens next (notice period, weight-fixity). The split is
+systematic — the first-party labs and hyperscalers document lifecycle in detail and *never* state
+serving precision; the GPU clouds do the reverse.
+
+The finding that matters for research is narrower and worse than "documentation is patchy":
+
+> **Providers announce launches and they announce retirements. Almost none publish a dated record
+> of a change to how an existing endpoint serves an existing model ID** — which is precisely the
+> event that invalidates a result while nothing in the caller's code changes.
+
+Cloudflare is the one place such a change is reconstructible, and by accident: its model catalog is
+published as JSON in a public git repository, so a precision or context change is a dated commit
+anyone can diff. Everyone else gives you a current value with no history.
+
+Two verified findings sharpen the guidance rather than restate it:
+
+- **A written weight-fixity guarantee exists**, so it is a reasonable thing to demand. Azure states
+  it as a lifecycle contract — GA models are *"Production-ready. Weights and APIs are fixed"*, while
+  Preview models *"Weights, runtime, and API schema might change"* — and ships the enforcement knob,
+  `versionUpgradeOption: NoAutoUpgrade`, which refuses the silent forward-roll outright. That is a
+  hard pin rather than a floor. Treat "we use dated model IDs" *without* such a statement as a
+  convention that could change; neither OpenAI's nor Anthropic's deprecation pages promise it.
+- **A pinnable ID is not universal.** DeepSeek's API exposes only floating names
+  (`deepseek-v4-flash`, `deepseek-v4-pro`); its dated tags are open-weight release labels, not
+  callable `model` values. For a provider like that there is no correct configuration — only
+  measurement after the fact. Check that pinning is even available before promising it.
+
+And one number that is ours rather than a vendor's: across 42 serving endpoints for 6 widely-served
+open-weight models, **31% declared no quantization to OpenRouter at all**, with 7 providers
+declaring nothing anywhere in the sample. A missing label is the provider's silence, not
+OpenRouter's.
+
+The practical consequence runs the same direction as the section above. Since the disclosure you'd
+need is not published, **the endpoint record you snapshot yourself at run time is the only
+change-detector available** — see the checklist in §4.
+
 ### The default is not the safe default — and tooling won't fix it for you
 
 In `QwenLM/qwen-code` PR #348, a contributor tried to make the tool default to full-precision
@@ -327,7 +372,15 @@ Treat the provider/inference stack as a first-class hyperparameter — because i
 - [ ] **Don't assume `seed` gives determinism.** Even honored, most providers don't guarantee
       bitwise reproducibility; batching/kernels make it best-effort. Verify empirically.
 - [ ] **Version-pin the model slug.** A bare slug can silently point at an updated snapshot;
-      prefer dated/versioned slugs where they exist and record the exact string.
+      prefer dated/versioned slugs where they exist and record the exact string. **Check that one
+      exists** — some providers (DeepSeek) expose only floating names, and dated tags on their
+      open-weight releases are not callable `model` values. Where the vendor states a weight-fixity
+      guarantee, prefer that route and cite it; where it doesn't, treat the dated ID as a convention.
+- [ ] **Store the endpoints record alongside the results, every run.** Snapshot
+      `GET /api/v1/models/{author}/{slug}/endpoints` and save it with the outputs, not just as a
+      pre-flight glance. Providers almost never publish a dated record of a change to an endpoint
+      that keeps its name (see §1), so diffing your own stored snapshot between runs is the only
+      reliable way to notice that what you pinned started serving something else.
 - [ ] **Spot-check across the routes you'll actually hit.** Flexibility requires measurement: run
       the models your result depends on across the provider routes you might actually be served,
       and compare. Nobody upstream measures this for you, and no vendor claim substitutes for it.

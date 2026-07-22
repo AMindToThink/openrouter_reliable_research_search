@@ -21,7 +21,41 @@ different context windows and output caps, on different inference engines, with 
 parameters. If a result depends on which weights actually ran and you pinned nothing, the result
 may not reproduce or generalize — and you won't get an error.
 
-This skill has two modes. Pick based on the task.
+This skill has two modes. Pick based on the task. **Both start with Step 0.**
+
+---
+
+## Step 0 — re-check the world before you advise (dispatch subagents, in parallel)
+
+Everything below has a shelf life of weeks. Endpoints rotate, providers requantize without
+announcing it, and vendor lifecycle policies get rewritten under stable URLs. We audited
+22 providers for whether they publish serving changes (`reports/provider-transparency.md`):
+**almost none do.** Providers announce launches and they announce retirements; a change to how an
+endpoint serves an existing model ID is the event nobody logs — and it is exactly the event that
+invalidates a result without changing a line of the caller's code.
+
+So do not answer from this file alone. Before giving routing advice for a specific project, send
+these out **concurrently, in one message**, and wait:
+
+| Agent | Question | Must return |
+| --- | --- | --- |
+| **endpoints** | For each model slug this project actually uses, what endpoints exist *right now*? | The live `GET /api/v1/models/{author}/{slug}/endpoints` JSON — quantization, context, max output, `supported_parameters` per endpoint. A call, not a search. |
+| **the pinned provider** | For the endpoint we're about to recommend, what does the provider currently say it serves, and has it changed? | Provider's own docs/changelog + a direct quote with a URL. Say "not found" rather than inferring. |
+| **router defaults** | Have OpenRouter's routing defaults, `provider` fields, or slug suffixes changed since this skill was written? | Current docs for `require_parameters`, `allow_fallbacks`, `data_collection`, `sort`, `only`/`order`, `quantizations`. |
+| **new measurements** | Any new independent measurement of cross-provider divergence since 2026-07? | Citations with numbers, or an explicit "nothing new found." |
+
+Two rules for what comes back:
+
+1. **Rank the evidence and say which class each finding is.** Our own measurement beats independent
+   prior work beats a vendor's assertion about itself. A provider's docs are *testimony* — usable,
+   attributable, and not proof. Label it that way in what you tell the user.
+2. **A quantization label is self-reported and unaudited, whoever repeats it.** If the answer
+   matters, the endpoints API is a stronger source than a docs page, and an actual A/B rerun
+   (`reports/provider-ab-experiment-plan.md`) is stronger than both.
+
+Skip Step 0 only for a question that doesn't depend on current state ("what does
+`require_parameters` do?"). Anything of the form "which provider should I use" or "is this repo
+safe" depends on it.
 
 ---
 
@@ -110,6 +144,50 @@ so "my params went through" intuitions built on `temperature` are misleading.
 
 ## Mode A — Authoring: call OpenRouter properly
 
+### First, ask what to prioritize — nobody scores an A
+
+The 22-provider audit (`reports/provider-transparency.md`) grades the 10 verified providers out of
+8 — two points each on four criteria (`findings/provider_grades.json`; explorable at
+`artifact/provider-transparency.html`). **The top score is 6. The A band is vacant.**
+
+| Criterion | Asks | Scores solid (2) |
+| --- | --- | --- |
+| **A** serves-now | Does it say what it serves — precision, context, engine — specifically enough to check? | Cerebras · Cloudflare · Chutes |
+| **B** when-it-changed | Is there a dated record of serving *changes*, not just launches and retirements? | Together · Cloudflare · Groq · DeepSeek |
+| **C** what-happens-next | Is there a notice period stated in advance? | Azure · Together · Anthropic · OpenAI |
+| **P** pinnable | Can a caller fix the artifact — an immutable ID, or a written promise the weights won't move? | Cerebras · Azure · xAI |
+
+Read the right-hand column carefully: **A and P are almost disjoint.** Cerebras is the only
+provider that both tells you what it serves and promises not to change it. Everyone else makes you
+choose between knowing the precision and being able to pin the artifact. The split is systematic —
+the labs and hyperscalers document lifecycle and never state serving precision; the GPU clouds do
+the reverse — and 31% of sampled endpoints decline to declare a quantization at all.
+
+So there is no "best provider" to hand over, and choosing one silently for the researcher hides a
+tradeoff that is theirs. **Ask them** (`AskUserQuestion`), then map the answer to a config:
+
+| If they prioritize… | Then | Because |
+| --- | --- | --- |
+| **Reproducibility** — a headline number, a comparison, anything re-run later | Hard endpoint pin (`only: ["provider/quant"]`, `allow_fallbacks: False`), plus per-response provenance logging | Fixes the weights. Costs you availability: a down endpoint is now a hard error, which is the point |
+| **Knowing what actually ran** — the model's identity is the research subject | Prefer providers that publish precision per model *and* re-verify it against the endpoints API each run; log the endpoint record with the results | Self-reported labels are unaudited; the strongest version of this is Model Equality Testing, not a docs page |
+| **Being told when it changes** — a long-running eval, a leaderboard you maintain | Prefer a provider whose changelog is machine-followable, and snapshot the endpoint record every run so *you* hold the diff | Nobody logs the mutation. Your own stored snapshots are the only reliable change-detector |
+| **Cost or throughput** — exploration, pilot runs, non-reported work | Default routing or a quantization floor is genuinely fine — say so | Don't sell a pin to someone whose output never reaches a reported number (§6 of the full guide) |
+
+If they can't answer or don't care, **default to reproducibility** and say that's what you did —
+it's the only choice that can be loosened later without invalidating what you already ran.
+
+Two facts worth stating plainly when this comes up:
+
+- **A written weight-fixity guarantee exists and is worth asking a vendor for.** Azure states it as
+  a lifecycle contract rather than a convention. That is the shape of a real pin; treat "we use
+  dated model IDs" without such a statement as a convention that could change.
+- **A pinnable ID is not universal.** DeepSeek's API exposes only floating names — the dated tags
+  are open-weight release labels, not API `model` values. For providers like that there is no
+  correct configuration to recommend, only measurement after the fact. Check before you promise a
+  researcher that pinning is available.
+
+### Then set the routing
+
 Set routing preferences under the `provider` key. Two presets, only one of which is a pin:
 
 **Reproducibility-first** (you want the *same* weights every run — headline numbers, comparisons):
@@ -163,6 +241,12 @@ Confirm: the quantization you expect · a context window that fits your prompts 
 that fits your longest generation · the params you actually pass (`seed`, `logprobs`,
 `response_format`). Endpoints rotate — re-check immediately before a run that matters.
 
+**Save that JSON with your results.** It is not a pre-flight check to throw away; it is the only
+change-detector you get. No provider changelog substitutes for it, because providers publish
+launches and retirements and almost never publish the change to an endpoint that keeps its name —
+so a stored endpoint record from run N, diffed against run N+1, is how you find out that the thing
+you pinned started serving something else.
+
 Then, non-negotiably:
 - **Record the provider that actually served each call** — the response `provider` field, or
   `GET /api/v1/generation?id=...` (OpenRouter's schema does not document a top-level `provider`
@@ -193,7 +277,10 @@ Key facts (so you can reason about edge cases):
   the request body's `provider` field. A repo is only pinnable if it has `extra_body`-style
   plumbing or one editable call site.
 - Quantization labels are **self-reported by providers**, not audited. Strong circumstantial
-  evidence of a quality gap, not a certification.
+  evidence of a quality gap, not a certification — and often not even offered: across 42 endpoints
+  for 6 widely-served open-weight models, **31% declared no quantization at all** (7 providers
+  declared nothing anywhere in the sample). A missing label is the provider's silence, not
+  OpenRouter's.
 - Proprietary models (Claude/GPT/Gemini) are effectively single-served → quantization/provider
   risk is low; open-weight models are where it bites hardest.
 

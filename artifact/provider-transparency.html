@@ -1,0 +1,431 @@
+<title>Provider Report Card — who tells you how they serve a model</title>
+<style>
+  :root {
+    /* Cool, blue-biased neutrals — shared with the Provider Routing Inspector. */
+    --bg: #eef1f5; --surface: #ffffff; --panel: #f7f9fc; --border: #dbe1ea;
+    --ink: #182030; --muted: #5a6577; --faint: #8a94a5;
+    --accent: #3667b0;                       /* interactive chrome only */
+    --solid: #1f8f63; --solid-bg: #dcefe6;   /* score 2 */
+    --part: #b7811c;  --part-bg: #f3e8c9;    /* score 1 */
+    --none: #c24634;  --none-bg: #f4dcd6;    /* score 0 */
+    --vacant: #98a2b3;                       /* an unoccupied grade band */
+    --shadow: 0 1px 2px rgba(20,30,50,.06), 0 6px 20px rgba(20,30,50,.06);
+    --mono: ui-monospace, "Cascadia Code", "JetBrains Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+    --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --r: 10px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1219; --surface: #141b25; --panel: #10161f; --border: #263140;
+      --ink: #e7edf5; --muted: #97a3b6; --faint: #6b7789;
+      --accent: #6fa0e6;
+      --solid: #46c08a; --solid-bg: #12271f;
+      --part: #e0ab4d;  --part-bg: #2b230f;
+      --none: #e37363;  --none-bg: #2c1712;
+      --vacant: #55627a;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #eef1f5; --surface: #ffffff; --panel: #f7f9fc; --border: #dbe1ea;
+    --ink: #182030; --muted: #5a6577; --faint: #8a94a5; --accent: #3667b0;
+    --solid: #1f8f63; --solid-bg: #dcefe6; --part: #b7811c; --part-bg: #f3e8c9;
+    --none: #c24634; --none-bg: #f4dcd6; --vacant: #98a2b3;
+    --shadow: 0 1px 2px rgba(20,30,50,.06), 0 6px 20px rgba(20,30,50,.06);
+  }
+  :root[data-theme="dark"] {
+    --bg: #0d1219; --surface: #141b25; --panel: #10161f; --border: #263140;
+    --ink: #e7edf5; --muted: #97a3b6; --faint: #6b7789; --accent: #6fa0e6;
+    --solid: #46c08a; --solid-bg: #12271f; --part: #e0ab4d; --part-bg: #2b230f;
+    --none: #e37363; --none-bg: #2c1712; --vacant: #55627a;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans);
+    line-height: 1.55; -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px 80px; }
+  a { color: var(--accent); text-underline-offset: 2px; }
+  .tnum { font-variant-numeric: tabular-nums; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+  /* ---- header ---- */
+  header { padding: 44px 0 24px; border-bottom: 1px solid var(--border); }
+  .eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--accent); display: flex; align-items: center; gap: 10px; }
+  .eyebrow::before { content: ""; width: 26px; height: 2px; background: var(--accent); display: inline-block; }
+  h1 { font-family: var(--mono); font-weight: 650; font-size: clamp(1.7rem, 4.2vw, 2.7rem);
+    line-height: 1.1; letter-spacing: -.01em; margin: 14px 0 12px; text-wrap: balance; }
+  .lede { font-size: 1.05rem; color: var(--muted); max-width: 66ch; margin: 0; }
+  .lede strong { color: var(--ink); font-weight: 620; }
+
+  /* ---- the grade rail: five bands, two of them empty ---- */
+  .rail { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 28px 0 10px; }
+  @media (max-width: 640px) { .rail { grid-template-columns: repeat(3, 1fr); } }
+  .band { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r);
+    padding: 14px 14px 12px; box-shadow: var(--shadow); text-align: left; cursor: pointer;
+    font: inherit; color: inherit; position: relative; overflow: hidden;
+    transition: border-color .15s, transform .05s; }
+  .band:hover { border-color: var(--accent); }
+  .band:active { transform: translateY(1px); }
+  .band[aria-pressed="true"] { border-color: var(--accent); box-shadow: var(--shadow), inset 0 0 0 1px var(--accent); }
+  .band .letter { font-family: var(--mono); font-size: 2.3rem; font-weight: 650; line-height: 1; }
+  .band .n { font-family: var(--mono); font-size: .82rem; color: var(--muted); margin-top: 8px;
+    font-variant-numeric: tabular-nums; }
+  .band .rng { font-family: var(--mono); font-size: .68rem; color: var(--faint); letter-spacing: .04em; }
+  .band.g-B .letter { color: var(--solid); }
+  .band.g-C .letter { color: var(--part); }
+  .band.g-D .letter { color: var(--none); }
+  .band.empty { background: transparent; border-style: dashed; box-shadow: none; cursor: default; }
+  .band.empty .letter { color: var(--vacant); }
+  .band.empty .n { color: var(--vacant); }
+  .vacancy { font-family: var(--mono); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--vacant); margin-top: 6px; }
+
+  .rail-note { color: var(--muted); font-size: .92rem; max-width: 76ch; margin: 4px 0 0; }
+  .rail-note strong { color: var(--ink); }
+
+  section { margin-top: 42px; }
+  h2 { font-family: var(--mono); font-size: 1rem; letter-spacing: .06em; text-transform: uppercase; margin: 0 0 6px; }
+  .sec-sub { color: var(--muted); font-size: .92rem; margin: 0 0 18px; max-width: 76ch; }
+
+  /* ---- rubric ---- */
+  .crit { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  @media (max-width: 820px) { .crit { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 480px) { .crit { grid-template-columns: 1fr; } }
+  .crit .c { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r);
+    padding: 14px 15px; box-shadow: var(--shadow); }
+  .crit .c .k { font-family: var(--mono); font-size: .72rem; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--accent); }
+  .crit .c .lab { font-family: var(--mono); font-weight: 640; margin-top: 4px; }
+  .crit .c .q { font-size: .88rem; color: var(--muted); margin-top: 6px; }
+  .scale { margin-top: 16px; background: var(--panel); border: 1px solid var(--border); border-radius: var(--r);
+    padding: 15px 17px; font-size: .9rem; color: var(--muted); }
+  .scale p { margin: 0 0 9px; max-width: 82ch; }
+  .scale p:last-child { margin-bottom: 0; }
+  .scale strong { color: var(--ink); }
+  .scale code { font-family: var(--mono); font-size: .86em; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px; }
+
+  /* ---- toolbar ---- */
+  .tools { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+  .chip { font-family: var(--mono); font-size: .78rem; padding: 6px 11px; border-radius: 999px;
+    border: 1px solid var(--border); background: var(--surface); color: var(--muted); cursor: pointer;
+    transition: border-color .15s, color .15s; }
+  .chip:hover { border-color: var(--accent); color: var(--ink); }
+  .chip[aria-pressed="true"] { border-color: var(--accent); color: var(--ink); background: var(--panel); }
+  .tools .spacer { flex: 1 1 auto; }
+  .count { font-family: var(--mono); font-size: .78rem; color: var(--faint); font-variant-numeric: tabular-nums; }
+
+  /* ---- ledger ---- */
+  .ledger { background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    box-shadow: var(--shadow); overflow: hidden; }
+  .lhead, .lrow { display: grid; grid-template-columns: 1.5fr repeat(4, 68px) 66px 62px;
+    align-items: center; gap: 10px; padding: 0 16px; }
+  @media (max-width: 780px) {
+    .lhead, .lrow { grid-template-columns: 1fr repeat(4, 40px) 52px 48px; gap: 6px; padding: 0 12px; }
+  }
+  .lhead { height: 40px; border-bottom: 1px solid var(--border); background: var(--panel); }
+  .lhead span, .lhead button { font-family: var(--mono); font-size: .66rem; text-transform: uppercase;
+    letter-spacing: .08em; color: var(--faint); font-weight: 600; text-align: center; }
+  .lhead .provcol { text-align: left; }
+  .lhead button { background: none; border: 0; padding: 4px 2px; cursor: pointer; border-radius: 4px; }
+  .lhead button:hover { color: var(--accent); }
+  .lhead button[aria-pressed="true"] { color: var(--accent); }
+
+  .lrow { min-height: 56px; border-bottom: 1px solid var(--border); cursor: pointer; width: 100%;
+    background: none; border-left: 0; border-right: 0; border-top: 0; font: inherit; color: inherit;
+    text-align: left; transition: background .12s; }
+  .lrow:hover { background: var(--panel); }
+  .lrow[aria-expanded="true"] { background: var(--panel); }
+  .prov { display: flex; align-items: baseline; gap: 9px; min-width: 0; }
+  .prov .nm { font-weight: 620; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .prov .slug { font-family: var(--mono); font-size: .72rem; color: var(--faint); }
+  @media (max-width: 780px) { .prov .slug { display: none; } }
+  .flagdot { width: 7px; height: 7px; border-radius: 50%; background: var(--none); flex: 0 0 auto;
+    align-self: center; }
+
+  /* two-segment meter: one block per point, 0-2 */
+  .meter { display: flex; gap: 3px; justify-content: center; }
+  .meter i { width: 15px; height: 9px; border-radius: 2px; border: 1px solid var(--border);
+    background: transparent; display: block; }
+  @media (max-width: 780px) { .meter i { width: 9px; } }
+  .meter.s2 i { background: var(--solid); border-color: transparent; }
+  .meter.s1 i:first-child { background: var(--part); border-color: transparent; }
+  .meter.s0 i { border-style: dashed; }
+
+  .tot { font-family: var(--mono); font-size: .88rem; color: var(--muted); text-align: center;
+    font-variant-numeric: tabular-nums; }
+  .tot b { color: var(--ink); font-weight: 640; }
+  .gr { font-family: var(--mono); font-size: 1.35rem; font-weight: 650; text-align: center; line-height: 1; }
+  .gr.g-B { color: var(--solid); } .gr.g-C { color: var(--part); } .gr.g-D { color: var(--none); }
+  .gr.g-A, .gr.g-F { color: var(--vacant); }
+
+  /* ---- dossier ---- */
+  .dossier { border-bottom: 1px solid var(--border); background: var(--panel); padding: 4px 20px 22px; }
+  @media (max-width: 780px) { .dossier { padding: 4px 14px 20px; } }
+  .dossier .src { font-family: var(--mono); font-size: .76rem; margin: 12px 0 14px; word-break: break-all; }
+  blockquote { margin: 0 0 12px; padding: 10px 14px; background: var(--surface);
+    border-left: 3px solid var(--accent); border-radius: 0 6px 6px 0; font-size: .93rem; }
+  blockquote p { margin: 0 0 8px; } blockquote p:last-child { margin: 0; }
+  .exempt { font-size: .9rem; color: var(--muted); font-style: italic; margin: 0 0 12px;
+    padding-left: 14px; border-left: 3px solid var(--border); }
+  .dossier .note { font-size: .93rem; margin: 0 0 12px; max-width: 82ch; }
+  .gap { font-size: .92rem; margin: 0 0 16px; max-width: 82ch; }
+  .gap b { font-family: var(--mono); font-size: .72rem; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--none); display: block; margin-bottom: 2px; }
+  .flagbox { display: flex; gap: 10px; align-items: flex-start; background: var(--none-bg); color: var(--ink);
+    border-radius: 8px; padding: 11px 14px; font-size: .9rem; margin: 0 0 16px; max-width: 82ch; }
+  .flagbox b { font-family: var(--mono); font-size: .72rem; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--none); display: block; }
+  .why { display: grid; gap: 8px; }
+  .why .r { display: grid; grid-template-columns: 128px 34px 1fr; gap: 12px; align-items: start;
+    font-size: .9rem; padding: 9px 0; border-top: 1px dashed var(--border); }
+  @media (max-width: 640px) { .why .r { grid-template-columns: 100px 30px 1fr; gap: 8px; } }
+  .why .r .cl { font-family: var(--mono); font-size: .76rem; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--muted); padding-top: 2px; }
+  .why .r .sc { font-family: var(--mono); font-weight: 650; text-align: center; font-size: .95rem; }
+  .why .r .sc.v2 { color: var(--solid); } .why .r .sc.v1 { color: var(--part); } .why .r .sc.v0 { color: var(--none); }
+  .why .r .tx { color: var(--muted); }
+
+  /* ---- leads ---- */
+  .leads { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  @media (max-width: 780px) { .leads { grid-template-columns: 1fr; } }
+  .lead { border: 1px dashed var(--border); border-radius: var(--r); padding: 14px 16px; background: transparent; }
+  .lead .top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+  .lead .nm { font-weight: 620; }
+  .lead .ung { font-family: var(--mono); font-size: .66rem; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--vacant); border: 1px dashed var(--vacant); border-radius: 999px; padding: 2px 8px; }
+  .lead .ax { font-family: var(--mono); font-size: .72rem; color: var(--faint); margin-top: 4px; }
+  .lead .nt { font-size: .88rem; color: var(--muted); margin: 8px 0 0; }
+  .lead a { font-size: .8rem; font-family: var(--mono); }
+
+  footer { margin-top: 52px; padding-top: 20px; border-top: 1px solid var(--border);
+    color: var(--muted); font-size: .87rem; }
+  footer p { margin: 0 0 8px; max-width: 82ch; }
+  footer .by { font-family: var(--mono); font-size: .76rem; color: var(--faint); }
+  .empty-state { padding: 26px 16px; text-align: center; color: var(--muted); font-size: .92rem; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Provider disclosure audit</div>
+    <h1>Nobody gets an A.</h1>
+    <p class="lede">Ten inference providers, graded on a single question: <strong>if a researcher wanted to know what actually served their result — and whether it has changed since — could they find out from the vendor's own disclosures?</strong> Four criteria, two points each. The best score in the sweep is 6 out of 8.</p>
+  </header>
+
+  <div class="rail" id="rail"></div>
+  <p class="rail-note" id="railNote"></p>
+
+  <section>
+    <h2>The four criteria</h2>
+    <p class="sec-sub">Each is scored <strong>absent (0)</strong>, <strong>partial (1)</strong>, or <strong>solid (2)</strong> against what the audit found on the provider's own pages. Every score carries its reason — open a row to read it next to the evidence it came from.</p>
+    <div class="crit" id="crit"></div>
+    <div class="scale" id="scale"></div>
+  </section>
+
+  <section>
+    <h2>The ledger</h2>
+    <p class="sec-sub">Verified against a live page snapshot. Click any provider to open its dossier — the verbatim quotations, what the audit recorded, and the reasoning behind each of its four scores.</p>
+    <div class="tools" id="tools"></div>
+    <div class="ledger" id="ledger"></div>
+  </section>
+
+  <section>
+    <h2>Ungraded leads</h2>
+    <p class="sec-sub">Surfaced by one pass of search agents and confirmed by nobody. They carry no quotations, and they get no grade — scoring an unverified report would launder a search result into a finding. These are a map of where to look next, in rough order of how much confirming them would change the picture.</p>
+    <div class="leads" id="leads"></div>
+  </section>
+
+  <footer>
+    <p>Source: <code>findings/provider_transparency.json</code> (the audit) joined with <code>findings/provider_grades.json</code> (the scores) in the <em>openrouter-reliable-research-search</em> project. Every quotation was located verbatim in a snapshot of the cited page taken by <code>scripts/fetch_provider_transparency.py</code>; a quote that can no longer be found on the live page fails the test suite rather than standing.</p>
+    <p>Letters are computed from the scores at build time, never stored — a grade cannot drift from its own reasoning. This is vendor testimony either way: the weakest evidence class the project recognises, which is why the practice it recommends is to record the endpoint yourself at run time rather than trust any of it.</p>
+    <p class="by">🤖 written by Claude (Claude Code)</p>
+  </footer>
+</div>
+
+<script>
+  const ROWS = [{"key": "cerebras", "provider": "Cerebras", "or_slug": "cerebras", "url": "https://inference-docs.cerebras.ai/models/overview", "axes": ["A", "C"], "quotes": ["We are committed to serving the original models for all existing endpoints, without modification.", "All of our public models are unpruned."], "quote_exempt": "", "note": "The only forward-looking commitment found anywhere in the sweep. Its precision claim is unusually specific and therefore falsifiable: weight-only quantization applied at storage, with activations, attention and the KV cache left unquantized. Cerebras is the provider a reviewer could most easily hold to its word.", "gap": "No quantified deprecation notice period. The deprecations page is a dated log, not a policy.", "scores": {"A": 2, "B": 1, "C": 1, "P": 2}, "reasons": {"A": "States what it serves platform-wide, and specifically enough to be falsified: unpruned weights, weight-only quantization applied at storage, with activations, attention and the KV cache left unquantized. Not per-model.", "B": "A dated deprecations log exists, but it records removals — not changes to how a surviving endpoint is served.", "C": "Deprecations are logged as they happen. No notice period is stated in advance.", "P": "The only forward-looking fixity commitment found anywhere in the sweep: the original models, for all existing endpoints, without modification."}, "flag": null, "total": 6, "letter": "B"}, {"key": "azure-foundry", "provider": "Azure AI Foundry", "or_slug": "azure", "url": "https://learn.microsoft.com/en-us/azure/ai-foundry/openai/concepts/model-retirements", "axes": ["C"], "quotes": ["Production-ready. Weights and APIs are fixed. Runtime patches for security vulnerabilities don't affect outputs.", "Experimental. Weights, runtime, and API schema might change. Not guaranteed to become GA.", "Auto-upgrades are scheduled on a rolling, region-by-region basis. The upgrade schedule is published in advance"], "quote_exempt": "", "note": "The strongest written weight-fixity guarantee in the sweep, and the only one stated as a lifecycle contract rather than a convention. It also ships the corresponding knob: `versionUpgradeOption: NoAutoUpgrade` refuses the silent forward-roll entirely, which is the hard pin this project recommends rather than a floor. Lifecycle is queryable programmatically via `lifecycleStatus` and `deprecation.inference`, and Azure documents a concrete past mutation: gpt-4o 2024-05-13 and 2024-08-06 auto-upgraded to gpt-5.1 on 2026-03-31 across eight named regions.", "gap": "Never states serving precision. Preview deployments are force-upgraded with no opt-out.", "scores": {"A": 0, "B": 1, "C": 2, "P": 2}, "reasons": {"A": "Never states serving precision.", "B": "Lifecycle events are dated and published ahead of time — the gpt-4o auto-upgrade names its date and eight regions — but nothing logs a serving-config change to a deployment that survives.", "C": "The strongest lifecycle contract in the sweep: a published upgrade schedule, with lifecycleStatus and deprecation.inference queryable from the API.", "P": "Weights and APIs are fixed for production deployments, and versionUpgradeOption: NoAutoUpgrade refuses the forward-roll outright. Preview deployments get no opt-out."}, "flag": null, "total": 5, "letter": "C"}, {"key": "cloudflare-workers-ai", "provider": "Cloudflare Workers AI", "or_slug": "cloudflare", "url": "https://developers.cloudflare.com/workers-ai/models/llama-3.3-70b-instruct-fp8-fast/", "axes": ["A", "B"], "quotes": ["Llama 3.3 70B quantized to fp8 precision, optimized to be faster."], "quote_exempt": "", "note": "Precision is in the model ID and stated in the docs, alongside a 24,000-token context window. The catalog is generated from JSON in the public cloudflare/cloudflare-docs repository, so a change to a model's declared precision or context is a dated git commit anyone can diff - the only provider in the sweep whose serving spec has a reconstructible history rather than just a current value.", "gap": "No immutable pinning: deprecated slugs are aliased forward to a successor rather than frozen.", "scores": {"A": 2, "B": 2, "C": 0, "P": 0}, "reasons": {"A": "Precision is in the model ID and stated in the docs, with the context window alongside it.", "B": "The catalog is generated from JSON in a public git repository, so a change to declared precision or context is a dated commit anyone can diff — the only reconstructible serving history in the sweep.", "C": "No deprecation policy or notice period found.", "P": "Deprecated slugs are aliased forward to a successor rather than frozen, so an ID that keeps working can stop meaning what it meant."}, "flag": "Deprecated IDs alias forward to a successor", "total": 4, "letter": "C"}, {"key": "together", "provider": "Together AI", "or_slug": "together", "url": "https://docs.together.ai/docs/changelog", "axes": ["A", "B", "C"], "quotes": ["552.8B parameters, 524,288 context length, NVFP4 quantization"], "quote_exempt": "", "note": "The best dated changelog: entries name precision and context at launch, and deprecations carry stated notice periods.", "gap": "Precision is announced inconsistently - of five recent serverless launches checked, only one stated quantization. Their policy also permits an 'upgrade' to silently redirect an existing model ID after a three-day notice, which is the single most dangerous clause found in any provider's documentation for research use.", "scores": {"A": 1, "B": 2, "C": 2, "P": 0}, "reasons": {"A": "Launch entries can name precision and context — but of five recent serverless launches checked, only one stated a quantization.", "B": "The best dated changelog in the sweep: entries name precision and context at launch.", "C": "Deprecations carry stated notice periods.", "P": "Policy permits an 'upgrade' to redirect an existing model ID after three days' notice — the single most dangerous clause found in any provider's documentation for research use."}, "flag": "A live model ID can be redirected after three days' notice", "total": 5, "letter": "C"}, {"key": "xai", "provider": "xAI", "or_slug": "xai", "url": "https://docs.x.ai/docs/models", "axes": ["C"], "quotes": ["This will not be updated and is for workflows that demand consistency.", "For most users, the aliased \u003cmodelname> or \u003cmodelname>-latest are recommended, as you would receive the latest features automatically."], "quote_exempt": "", "note": "States the pin guarantee explicitly and, unusually, names the tradeoff: the floating alias is recommended for most users, the dated ID for anyone who needs consistency. That is exactly the distinction research code has to make.", "gap": "No changelog or deprecation policy found. No precision disclosure.", "scores": {"A": 0, "B": 0, "C": 0, "P": 2}, "reasons": {"A": "No precision disclosure.", "B": "No changelog found.", "C": "No deprecation policy or notice period found.", "P": "States the pin guarantee explicitly, and names the tradeoff: the dated ID will not be updated, the floating alias will."}, "flag": null, "total": 2, "letter": "D"}, {"key": "anthropic", "provider": "Anthropic", "or_slug": "anthropic", "url": "https://platform.claude.com/docs/en/about-claude/model-deprecations", "axes": ["C"], "quotes": ["Anthropic notifies customers with active deployments for models with upcoming retirements, providing at least 60 days' notice before model retirement for publicly released models."], "quote_exempt": "", "note": "A complete dated deprecation history back to 2024 with recommended replacements, plus an explicit Active/Legacy/Deprecated/Retired taxonomy and a commitment to long-term preservation of retired model weights. Best-in-class on lifecycle.", "gap": "No written guarantee that weights behind a dated ID are fixed - it is a convention, not a promise. Never states serving precision.", "scores": {"A": 0, "B": 1, "C": 2, "P": 1}, "reasons": {"A": "Never states serving precision.", "B": "A complete dated history back to 2024 — of retirements, not of serving changes.", "C": "Best-in-class: at least 60 days' notice, an Active/Legacy/Deprecated/Retired taxonomy, named replacements, and a commitment to preserving retired weights.", "P": "Dated IDs are stable by convention. There is no written guarantee that the weights behind one are fixed."}, "flag": null, "total": 4, "letter": "C"}, {"key": "openai", "provider": "OpenAI", "or_slug": "openai", "url": "https://developers.openai.com/api/docs/deprecations", "axes": ["C"], "quotes": ["Generally available models: At least 6 months"], "quote_exempt": "", "note": "The longest stated notice period of any provider in the sweep, with dated retirement tables running back to 2022.", "gap": "The deprecations page carries no statement that the weights behind a dated snapshot ID will not change. Never states serving precision.", "scores": {"A": 0, "B": 1, "C": 2, "P": 1}, "reasons": {"A": "Never states serving precision.", "B": "Dated retirement tables run back to 2022 — again, deaths rather than changes.", "C": "The longest stated notice period in the sweep: at least 6 months for generally available models.", "P": "Dated snapshot IDs exist, with no written statement that the weights behind them will not change."}, "flag": null, "total": 4, "letter": "C"}, {"key": "deepseek", "provider": "DeepSeek", "or_slug": "deepseek", "url": "https://api-docs.deepseek.com/quick_start/pricing", "axes": ["B"], "quotes": [], "quote_exempt": "The finding is an absence: the page lists deepseek-v4-flash and deepseek-v4-pro as the callable model names, and no dated identifier appears among them.", "note": "The structurally weakest provider verified. Dated tags such as DeepSeek-R1-0528 are open-weight release labels, not API model parameters - there is no way to pin a DeepSeek API call to a fixed snapshot at all. To their credit the changelog does date the in-place checkpoint swaps, which is more than most providers offer; there is simply no pinned alternative to switch to.", "gap": "No pinnable ID exists. No precision disclosure. No general deprecation policy.", "scores": {"A": 0, "B": 2, "C": 0, "P": 0}, "reasons": {"A": "No precision disclosure.", "B": "The rarest disclosure in the sweep: the changelog dates the in-place checkpoint swaps. It logs the mutation, not just the launch and the death.", "C": "No general deprecation policy.", "P": "The API exposes only floating names — there is no way to pin a call to a fixed snapshot at all. Dated tags like DeepSeek-R1-0528 are open-weight release labels, not API parameters."}, "flag": "No pinnable ID exists", "total": 2, "letter": "D"}, {"key": "groq", "provider": "Groq", "or_slug": "groq", "url": "https://api.github.com/repos/groq/groq-changelog", "axes": ["B"], "quotes": [], "quote_exempt": "Verified by API metadata rather than page text: the repository groq/groq-changelog exists and is public, described as 'Groq Public Changelog'.", "note": "The changelog is a public git repository with an Atom feed on its commits, which makes it the most machine-followable changelog in the sweep - a diff, not a page.", "gap": "Publishes no precision anywhere, and reports quantization 'unknown' to OpenRouter. Excellent on axis B, absent on axis A.", "scores": {"A": 0, "B": 2, "C": 0, "P": 0}, "reasons": {"A": "Publishes no precision anywhere, and reports quantization 'unknown' to OpenRouter.", "B": "The most machine-followable changelog in the sweep: a public git repository with an Atom feed on its commits — a diff, not a page.", "C": "No deprecation policy found.", "P": "No pin guarantee found."}, "flag": null, "total": 2, "letter": "D"}, {"key": "chutes", "provider": "Chutes", "or_slug": "chutes", "url": "https://llm.chutes.ai/v1/models", "axes": ["A"], "quotes": [], "quote_exempt": "Verified against the live JSON API rather than page text: each model object carries quantization, context_length, max_output_length and owned_by.", "note": "The most complete machine-readable disclosure of a current serving config found anywhere. Chutes is the only provider in the sweep that publishes the inference engine per model (owned_by returns sglang or vllm) alongside precision and both token limits. Per-deployment source is inspectable with a locked model revision, and a watchdog spot-checks served weight files by hashing them at random offsets.", "gap": "No changelog and no deprecation policy - it tells you the current config precisely and its history not at all.", "scores": {"A": 2, "B": 0, "C": 0, "P": 1}, "reasons": {"A": "The most complete current-config disclosure found anywhere: quantization, context, max output and the inference engine, per model, from a live JSON API.", "B": "No changelog. It tells you the current config precisely and its history not at all.", "C": "No deprecation policy.", "P": "No written guarantee, but per-deployment source is inspectable with a locked model revision, and a watchdog hashes served weight files at random offsets — verification standing in for a promise."}, "flag": null, "total": 3, "letter": "D"}];
+  const RUBRIC = {"question": "If a researcher wanted to know what actually served their result, and whether it has changed since, could they find out from this provider's own disclosures?", "criteria": {"A": {"label": "Serves-now", "asks": "Does it say what it is serving — precision, context, engine — specifically enough to be checked?", "axis": "A"}, "B": {"label": "When-it-changed", "asks": "Is there a dated record of serving changes, not just launches and retirements?", "axis": "B"}, "C": {"label": "What-happens-next", "asks": "Is there a deprecation policy with a notice period stated in advance?", "axis": "C"}, "P": {"label": "Pinnable", "asks": "Can a caller fix the artifact — an immutable ID, or a written guarantee that the weights behind one will not move?", "axis": null}}, "levels": {"0": "absent", "1": "partial", "2": "solid"}, "bands": [[8, "A"], [6, "B"], [4, "C"], [2, "D"], [0, "F"]], "cap_on_flag": "C", "cap_note": "A documented mechanism that can change what serves a caller without the caller changing anything caps the grade at C. No flagged provider scored above C on its own, so the cap currently corrects nothing — the flag is doing descriptive work, and the rule is there for the provider that eventually earns a high score while keeping the clause.", "a_note": "An A requires 8/8 — solid on all four. The highest score in the sweep is 6. That no provider gets an A is the finding, not an artifact of a harsh scale: the two strengths are held by disjoint sets of providers, and nobody publishes a dated record of a serving change to an endpoint that keeps its name."};
+  const LEADS = [{"provider": "Fireworks AI", "url": "https://docs.fireworks.ai/updates/changelog", "axes": ["B", "C"], "note": "Reported: dated changelog with serverless deprecation entries and an 'at least 2 weeks notice' policy. Reported to fail on precision for a specific reason worth re-checking - its prominent quantization documentation covers customers quantizing their own dedicated deployments, not what runs on the shared serverless endpoint."}, {"provider": "Parasail", "url": "https://docs.parasail.io/parasail-docs/products/overview-1/fp8-quantization", "axes": [], "note": "Reported: same customer-deployment trap as Fireworks. Reported that pricing distinguishes FP8 from FP16 tiers without naming which serverless models are which - i.e. the information exists internally and is not published."}, {"provider": "SiliconFlow", "url": "https://docs.siliconflow.com/en/release-notes/overview", "axes": ["B"], "note": "Reported: dates its in-place weight swaps, including a DeepSeek-R1 checkpoint change under an unchanged model ID. If confirmed this would be one of the few providers that logs the mutation rather than only the launch and the death - worth verifying first of the unchecked leads."}, {"provider": "Baseten", "url": "https://www.baseten.co/blog/how-we-built-the-worlds-fastest-api-for-glm-52/", "axes": ["B"], "note": "Reported: a blog post describing an FP8-to-NVFP4 change on a production shared endpoint. Reported to be the only dated precision-CHANGE announcement in the entire sweep, which makes it the highest-value lead to confirm."}, {"provider": "Nebius", "url": "https://docs.tokenfactory.nebius.com/api-reference/examples/list-of-models", "axes": ["A"], "note": "Reported: the models API returns a per-model quantization field. Reported to have no changelog covering model serving."}, {"provider": "Featherless", "url": "https://featherless.ai/docs/models-model-compatibility", "axes": ["A"], "note": "Reported: a platform-wide rule that models are served at FP8, with models under 5B at FP16."}, {"provider": "DigitalOcean", "url": "https://docs.digitalocean.com/products/inference/details/model-support-policy/", "axes": ["C"], "note": "Reported: an explicit 14-day / 7-day / 0-day retirement ladder with a dated end-of-support table."}, {"provider": "SambaNova", "url": "https://docs.sambanova.ai/docs/en/models/deprecations", "axes": ["C"], "note": "Reported: a two-to-three week notice policy with a dated table. Also reported to have given two contradictory official answers about DeepSeek serving precision in its own forum - if confirmed, a useful example of why vendor testimony needs ranking."}, {"provider": "Amazon Bedrock", "url": "https://docs.aws.amazon.com/bedrock/latest/userguide/model-lifecycle.html", "axes": ["C"], "note": "Reported: a 12-month minimum on-service commitment, a dated retirement table, no floating alias at the base-model level, and a modelLifecycle field in the API."}, {"provider": "Friendli", "url": "https://friendli.ai/docs/changelog", "axes": ["B"], "note": "Reported: dated changelog entries naming specific model IDs as they are removed."}, {"provider": "Venice AI", "url": "https://featurebase.venice.ai/changelog", "axes": ["B"], "note": "Reported: dated changelog entries naming serving precision, and retirements that reroute an old ID to a different model via alias."}, {"provider": "Phala Network", "url": "https://docs.redpill.ai/confidential-ai/attestation-report", "axes": [], "note": "Reported with an important correction to the marketing framing: the TEE attestation proves the hardware and the serving-code build (repo commit, image digest), but the attestation report was reported to carry no field for model hash, weights or quantization. Attestation of the runtime is not attestation of the model. Worth verifying because the distinction matters for anyone treating TEE providers as reproducible."}];
+
+  const KEYS = ["A", "B", "C", "P"];
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const meter = (v) => `<span class="meter s${v}" role="img" aria-label="${v} of 2"><i></i><i></i></span>`;
+
+  let gradeFilter = null;   // "B" | "C" | "D" | "flagged" | null
+  let sortBy = "grade";     // "grade" | "provider" | "A" | "B" | "C" | "P"
+
+  /* ---- the grade rail ---- */
+  const railEl = document.getElementById("rail");
+  const bandLetters = RUBRIC.bands.map((b) => b[1]);
+  const tally = {};
+  bandLetters.forEach((l) => { tally[l] = 0; });
+  ROWS.forEach((r) => { tally[r.letter] += 1; });
+
+  railEl.innerHTML = bandLetters.map((l) => {
+    const n = tally[l];
+    const lo = RUBRIC.bands.find((b) => b[1] === l)[0];
+    const hi = l === "A" ? 8 : RUBRIC.bands[bandLetters.indexOf(l) - 1][0] - 1;
+    const rng = lo === hi ? `${lo}/8` : `${lo}–${hi}/8`;
+    if (n === 0) {
+      return `<div class="band empty g-${l}">
+        <div class="letter">${l}</div>
+        <div class="rng">${rng}</div>
+        <div class="vacancy">no provider</div>
+      </div>`;
+    }
+    return `<button class="band g-${l}" data-grade="${l}" aria-pressed="false">
+      <div class="letter">${l}</div>
+      <div class="rng">${rng}</div>
+      <div class="n">${n} provider${n === 1 ? "" : "s"}</div>
+    </button>`;
+  }).join("");
+
+  const flagged = ROWS.filter((r) => r.flag).length;
+  document.getElementById("railNote").innerHTML =
+    `<strong>${RUBRIC.a_note}</strong> ${esc(RUBRIC.cap_note)}`;
+
+  /* ---- criteria + scale ---- */
+  document.getElementById("crit").innerHTML = KEYS.map((k) => {
+    const c = RUBRIC.criteria[k];
+    return `<div class="c">
+      <div class="k">${k}${c.axis ? ` · axis ${c.axis}` : " · derived"}</div>
+      <div class="lab">${esc(c.label)}</div>
+      <div class="q">${esc(c.asks)}</div>
+    </div>`;
+  }).join("");
+
+  document.getElementById("scale").innerHTML = `
+    <p><strong>Bands.</strong> ${RUBRIC.bands.map((b) => {
+      const hi = b[1] === "A" ? 8 : RUBRIC.bands[RUBRIC.bands.findIndex((x) => x[1] === b[1]) - 1][0] - 1;
+      return `<code>${b[1]}</code> ${b[0] === hi ? b[0] : `${b[0]}–${hi}`}`;
+    }).join(" &nbsp;·&nbsp; ")}</p>
+    <p><strong>The question the whole scale asks.</strong> ${esc(RUBRIC.question)}</p>
+    <p><strong>Flags.</strong> ${flagged} of ${ROWS.length} providers document a mechanism that can change what serves a caller without the caller changing anything — an alias that rolls forward, a redirect on short notice, or no pinnable identifier at all. A flag caps the grade at <code>${RUBRIC.cap_on_flag}</code>.</p>`;
+
+  /* ---- toolbar ---- */
+  const toolsEl = document.getElementById("tools");
+  toolsEl.innerHTML = `
+    <button class="chip" data-filter="all" aria-pressed="true">All ${ROWS.length}</button>
+    <button class="chip" data-filter="flagged" aria-pressed="false">Flagged ${flagged}</button>
+    <span class="spacer"></span>
+    <span class="count" id="count"></span>`;
+
+  /* ---- ledger ---- */
+  const ledgerEl = document.getElementById("ledger");
+  const openRows = new Set();
+
+  function sorted() {
+    const list = ROWS.filter((r) => {
+      if (gradeFilter === "flagged") return Boolean(r.flag);
+      if (gradeFilter) return r.letter === gradeFilter;
+      return true;
+    });
+    const cmp = {
+      grade: (a, b) => b.total - a.total || a.provider.localeCompare(b.provider),
+      provider: (a, b) => a.provider.localeCompare(b.provider),
+    }[sortBy] || ((a, b) => b.scores[sortBy] - a.scores[sortBy] || b.total - a.total);
+    return list.slice().sort(cmp);
+  }
+
+  function dossier(r) {
+    const quotes = r.quotes.length
+      ? `<blockquote>${r.quotes.map((q) => `<p>${esc(q)}</p>`).join("")}</blockquote>`
+      : "";
+    const exempt = r.quote_exempt ? `<p class="exempt">${esc(r.quote_exempt)}</p>` : "";
+    const flag = r.flag
+      ? `<div class="flagbox"><div><b>Flagged</b>${esc(r.flag)}. Grade capped at ${RUBRIC.cap_on_flag}.</div></div>`
+      : "";
+    const why = KEYS.map((k) => `<div class="r">
+        <div class="cl">${k} · ${esc(RUBRIC.criteria[k].label)}</div>
+        <div class="sc v${r.scores[k]}">${r.scores[k]}</div>
+        <div class="tx">${esc(r.reasons[k])}</div>
+      </div>`).join("");
+    return `<div class="dossier" id="d-${r.key}">
+      <p class="src"><a href="${esc(r.url)}" target="_blank" rel="noopener noreferrer">${esc(r.url)}</a></p>
+      ${quotes}${exempt}
+      <p class="note">${esc(r.note)}</p>
+      <p class="gap"><b>Still not disclosed</b>${esc(r.gap)}</p>
+      ${flag}
+      <div class="why">${why}</div>
+    </div>`;
+  }
+
+  function renderLedger() {
+    const list = sorted();
+    const head = `<div class="lhead">
+      <button class="provcol" data-sort="provider" aria-pressed="${sortBy === "provider"}">Provider</button>
+      ${KEYS.map((k) => `<button data-sort="${k}" aria-pressed="${sortBy === k}" title="${esc(RUBRIC.criteria[k].label)}">${k}</button>`).join("")}
+      <button data-sort="grade" aria-pressed="${sortBy === "grade"}">Score</button>
+      <span>Grade</span>
+    </div>`;
+    const body = list.length
+      ? list.map((r) => {
+          const open = openRows.has(r.key);
+          return `<button class="lrow" data-key="${r.key}" aria-expanded="${open}"${open ? ` aria-controls="d-${r.key}"` : ""}>
+            <span class="prov">
+              ${r.flag ? '<span class="flagdot" title="flagged"></span>' : ""}
+              <span class="nm">${esc(r.provider)}</span>
+              <span class="slug">${esc(r.or_slug)}</span>
+            </span>
+            ${KEYS.map((k) => meter(r.scores[k])).join("")}
+            <span class="tot tnum"><b>${r.total}</b>/8</span>
+            <span class="gr g-${r.letter}">${r.letter}</span>
+          </button>${open ? dossier(r) : ""}`;
+        }).join("")
+      : `<p class="empty-state">No provider in this band.</p>`;
+    ledgerEl.innerHTML = head + body;
+    document.getElementById("count").textContent =
+      `${list.length} of ${ROWS.length} shown · sorted by ${sortBy === "grade" ? "score" : sortBy}`;
+  }
+
+  /* ---- leads ---- */
+  document.getElementById("leads").innerHTML = LEADS.map((l) => `<div class="lead">
+      <div class="top"><span class="nm">${esc(l.provider)}</span><span class="ung">ungraded</span></div>
+      <div class="ax">reported on: ${l.axes.length ? l.axes.map((a) => `${a} · ${esc(RUBRIC.criteria[a].label.toLowerCase())}`).join(", ") : "nothing that clears a criterion"}</div>
+      <p class="nt">${esc(l.note)}</p>
+      <a href="${esc(l.url)}" target="_blank" rel="noopener noreferrer">source →</a>
+    </div>`).join("");
+
+  /* ---- interaction ---- */
+  function setGrade(g) {
+    gradeFilter = g;
+    railEl.querySelectorAll(".band[data-grade]").forEach((b) => {
+      b.setAttribute("aria-pressed", String(b.dataset.grade === g));
+    });
+    toolsEl.querySelectorAll(".chip").forEach((c) => {
+      const on = (c.dataset.filter === "all" && !g) || c.dataset.filter === g;
+      c.setAttribute("aria-pressed", String(on));
+    });
+    renderLedger();
+  }
+
+  railEl.addEventListener("click", (e) => {
+    const b = e.target.closest(".band[data-grade]");
+    if (!b) return;
+    setGrade(gradeFilter === b.dataset.grade ? null : b.dataset.grade);
+  });
+
+  toolsEl.addEventListener("click", (e) => {
+    const c = e.target.closest(".chip");
+    if (!c) return;
+    setGrade(c.dataset.filter === "all" ? null : c.dataset.filter);
+  });
+
+  ledgerEl.addEventListener("click", (e) => {
+    const sortEl = e.target.closest("[data-sort]");
+    if (sortEl) { sortBy = sortEl.dataset.sort; renderLedger(); return; }
+    const row = e.target.closest(".lrow");
+    if (!row) return;
+    const key = row.dataset.key;
+    if (openRows.has(key)) { openRows.delete(key); } else { openRows.add(key); }
+    renderLedger();
+  });
+
+  renderLedger();
+</script>

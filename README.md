@@ -165,7 +165,7 @@ needed both released transcripts *and* someone willing to pay to re-run the expe
 | 📄 **Best-practices guide** | [`reports/openrouter-best-practices.md`](reports/openrouter-best-practices.md) |
 | 📚 **Prior work** | [`reports/prior-work.md`](reports/prior-work.md) — who already documented this, with every quotation pinned to its source |
 | 🔍 **Detection fingerprints** | [`reports/detection-fingerprints.md`](reports/detection-fingerprints.md) — 17 things a reader can look for in a published paper, and the much longer list of what cannot be told at all |
-| 🔍 **Provider transparency** | [`reports/provider-transparency.md`](reports/provider-transparency.md) — could a researcher find out what changed by reading the vendor's own docs? Mostly not: 31% of sampled endpoints declare no quantization at all |
+| 🕵️ **Provider transparency** | [`reports/provider-transparency.md`](reports/provider-transparency.md) — could a researcher find out what changed by reading the vendor's own docs? Mostly not: 31% of sampled endpoints declare no quantization at all |
 | 🗂️ **Dataset** | [`findings/survey.csv`](findings/survey.csv) · [`findings/survey.json`](findings/survey.json) (incl. a validated GitHub permalink to each call site) |
 | 🧾 **Taxonomy** | [`findings/taxonomy.md`](findings/taxonomy.md) — the M1–M12 mistake catalog |
 | 🛠️ **Claude skill** | [`skill/use-openrouter-safely/`](skill/use-openrouter-safely/) — guidance + a heuristic static auditor |
