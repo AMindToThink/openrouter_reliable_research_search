@@ -122,7 +122,7 @@ has no independent measurement of it. Read it as a vendor claim, not a verified 
   instead says it runs *"by default on every tool-calling request, requiring no configuration,"*
   with no model list at all. We could not determine from outside which is current, or whether any
   specific model you use is covered — nothing in the API response says either way, so treat this
-  as **unverifiable from outside**, not as "on for everyone now."
+  as **unverifiable from outside**, not as "on for everyone now." Human edit: probably the docs are more up to date.
 - **It reorders, it does not replace, the inverse-square-of-price sampling above.** OpenRouter's
   own account of the mechanism: providers are grouped into quality tiers using three signals
   (throughput, tool-call telemetry, benchmark scores) that OpenRouter says it recomputes "roughly
@@ -280,8 +280,8 @@ def make_model(name: str, *, pin: dict | None = None, floor_only_ack: bool = Fal
 
 Keep the floor underneath this — it's a real backstop for the calls that legitimately opt out,
 and a guard against the worst case if a pinned endpoint goes down. What it cannot do is stand in
-for the decision, and a design that lets it stand in for the decision by default will get used
 that way, every time, by callers who never think about it — which is the whole reason this
+for the decision, and a design that lets it stand in for the decision by default will get used
 mistake is common enough to survey.
 
 > **⚠️ The trap:** a script that interrogates one specific "untrusted model" isn't in the same
@@ -347,7 +347,7 @@ Not every use needs the full treatment. It's fine to be relaxed when:
 - The model is **proprietary and single-served** (Claude/GPT/Gemini via their own API through
   OpenRouter): there's effectively one backend, so quantization/provider-switching risk is low.
   (You still care about `data_collection` and version drift.)
-- You're doing **exploratory / qualitative** work where a few percent of output variance is
+- You're doing **exploratory / qualitative** work where a output variance is
   irrelevant to the conclusion.
 - Cost/latency dominate and the result is robust to backend noise (you've checked).
 

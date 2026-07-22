@@ -108,7 +108,7 @@ def main() -> None:
         f"**{prov['survived_verification']}** survived",
         f"- not verified: **{prov['unverified_candidates']}**",
         "",
-        prov["verification_gap"],
+        prov["verification_note"],
         "",
         "## Reader's checklist",
         "",

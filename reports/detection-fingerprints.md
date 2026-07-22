@@ -8,17 +8,17 @@ Fingerprints of bad inference serving that a READER can look for in a published 
 
 Most published papers release nothing a reader could check. Of the fingerprint families below, exactly one (F2) can prove a routing problem outright, and it only works when the authors happened to save the raw response objects. Everything else is either suggestive-at-best or requires re-running inference. This is the expected result: quantization is engineered to be hard to notice, and aggregate-only reporting destroys every distributional signal before publication.
 
-**17** fingerprint families survived. **4** have high discriminative power; **13** rest on a documented catch rather than on inference; **12** are checkable only when the authors released raw outputs.
+**17** fingerprint families survived. **5** have high discriminative power; **13** rest on a documented catch rather than on inference; **12** are checkable only when the authors released raw outputs.
 
 ## How this was built
 
 18 independent web-research sweeps, each assigned a distinct detection angle, followed by one adversarial verifier per candidate whose job was to refute it (check every citation loads and says what was claimed; enumerate benign explanations; disqualify anything that secretly needs new inference). Merged into families by hand.
 
 - raw candidates: **101** from independent search angles
-- adversarially verified: **67**, of which **51** survived
-- not verified: **34**
+- adversarially verified: **101**, of which **71** survived
+- not verified: **0**
 
-33 verifier agents and the synthesis agent were killed mid-run by an account spend limit. Families marked verification: 'partial' rest partly on sweep-agent claims whose citations were never independently re-checked; treat their real_instances as leads, not as settled citations. Families marked 'verified' rest only on candidates that passed adversarial citation checking.
+The first run's verification stage was cut short by an account spend limit, leaving 34 candidates unchecked; they were verified in a second pass with the same adversarial prompt, plus an instruction to re-do by hand any inspection the sweep agent claimed to have performed. 20 of the 34 survived. The 14 that did not are instructive: almost all were meta-observations (aggregate-only reporting, single point estimates, flip-masking, 'the strongest test needs data nobody publishes') that correctly fail the bar for a fingerprint because they describe why other checks are impossible rather than being observable themselves. They live in `undetectable` below, which is where they belong.
 
 ## Reader's checklist
 
@@ -53,7 +53,7 @@ This is a first-class result, not a caveat. Quantization is engineered to be sub
 
 | id | fingerprint | power | needs raw outputs |
 | --- | --- | --- | --- |
-| **F1** | Token soup — off-topic word salad in released transcripts | medium | yes |
+| **F1** | Token soup — off-topic word salad in released transcripts | high | yes |
 | **F2** | Provider metadata surviving in the released data | high | yes |
 | **F3** | Truncation signatures — long reasoning, empty answer | medium | yes |
 | **F4** | Special-token and chat-template litter | high | yes |
@@ -69,7 +69,7 @@ This is a first-class result, not a caveat. Quantization is engineered to be sub
 | **F14** | Context-window and prompt-compression artifacts | medium | no |
 | **F15** | Capability asymmetries quantization causes and aggregate metrics hide | medium | no |
 | **F16** | Paperwork tells — what the methods section does not say | low | no |
-| **F17** | NEGATIVE RESULT — cost and throughput side channels mostly do not work | low | yes |
+| **F17** | NEGATIVE RESULT — cost and throughput identify the endpoint, never its precision | low | yes |
 
 ### F1 — Token soup — off-topic word salad in released transcripts
 
@@ -77,25 +77,26 @@ This is a first-class result, not a caveat. Quantization is engineered to be sub
 
 | | |
 | --- | --- |
-| **Discriminative power** | ●●○ medium |
+| **Discriminative power** | ●●● high |
 | **Evidence** | `documented_catch` — someone really caught a bad provider this way |
 | **Needs raw outputs** | yes |
 | **Reveals** | M1, M3, M8 |
 | **Citation status** | verified |
 
-**What you see.** Inside an appendix transcript or a released raw completion, spans of text that are not prose in any language: fused non-dictionary portmanteaus ('takeoffwhetherdenumg'), proper nouns with no connection to the topic dropped into technical content, orphaned diacritic fragments, sometimes several unrelated scripts jammed together. The tell is topical unrelatedness — the corrupted span uses vocabulary that has nothing to do with the question being answered.
+**What you see.** Inside an appendix transcript or a released raw completion, spans of text that are not prose in any language. The diagnostic form is a *co-occurrence*, not a general impression of weirdness: fused non-dictionary portmanteaus ('takeoffwhetherdenumg'), a proper noun with no topical connection to the domain dropped into technical content, and a bare foreign or diacritic fragment with no grammatical role — all inside one excerpt. The severe variant scatters fragments across many unrelated scripts and embeds a literal U+FFFD replacement character mid-response.
 
 **Where to look.** Appendix qualitative-example boxes reproducing raw model output verbatim; released completions JSONL; any figure that quotes chain-of-thought text.
 
 **Why routing produces it.** A badly-configured or aggressively-quantized backend produces a next-token distribution flat enough that decoding wanders off the model's actual manifold. Because it is a decode-level failure rather than a reasoning failure, it appears in ordinary answer text too, not only in chain-of-thought.
 
-**How to check.** Extract the exact quoted excerpt. Ask whether the incoherent span is (a) topically unrelated word salad, or (b) dense on-topic jargon / another language / compressed shorthand. Only (a) is a red flag. Then check whether the same corruption appears outside the chain-of-thought — corruption confined to CoT is more likely a property of the model's reasoning, corruption in ordinary answer text points at the decode path. If raw data is released with a provider field, check whether the flagged rows concentrate on one provider.
+**How to check.** Extract the exact quoted excerpt and test for the co-occurrence above; a single odd word is not it. Two sharpeners that do most of the work. (1) Compare against the paper's *own* other illegible samples: in the documented case, the same paper's appendix samples from proprietary models show repetition-looping of real words and dropped-word telegraphic compression — never salad, fusion, or foreign-token injection. Different texture in the same paper, under the same illegibility metric, is what localises the problem to one serving path. (2) A U+FFFD in the last few tokens is ordinary truncation mid-character and means nothing; it only counts if it lands well before the end. Then check whether the corruption appears outside the chain-of-thought (decode path, not reasoning), and whether flagged rows concentrate on one provider if a provider field was released.
 
 **Benign explanations — read these before concluding anything.**
 
 - Dense, genuinely difficult content (SMILES notation, heavy math, compressed shorthand) reads as 'illegible' to a naive reader or an automated judge without being corrupted at all.
 - Vendor-documented multilingual code-switching: DeepSeek-R1 and QwQ-32B-Preview both document language-mixing as a known, unresolved property. Coherent multi-language text is NOT this fingerprint; sub-word fragment salad that parses as no language at all is.
 - A model reasoning under genuine difficulty produces clipped, jargon-dense text that scores as mildly illegible on an automated metric.
+- Repetition-looping of real words, and dropped-word telegraphic compression, are ordinary illegible-CoT textures that correctly-served frontier models produce — they are not this fingerprint, and conflating them with it is the main way to get a false positive.
 
 **Documented instances.**
 
@@ -116,27 +117,32 @@ This is a first-class result, not a caveat. Quantization is engineered to be sub
 | **Evidence** | `documented_catch` — someone really caught a bad provider this way |
 | **Needs raw outputs** | yes |
 | **Reveals** | M3, M4, M11 |
-| **Citation status** | partial |
+| **Citation status** | verified |
 
-**What you see.** A released JSON/JSONL of raw responses carries a provider-identifying key — OpenRouter's top-level `provider` string, a harness field like `openrouter_provider`, or a `gen-…` generation id. Tabulating that key across all rows nominally belonging to one model in one experiment returns more than one distinct value. Weaker variants: the key is null on a fraction of rows; the key appears only in later runs of the same project; the committed config allow-lists several providers but every logged row names one.
+**What you see.** A released JSON/JSONL of raw responses carries a provider-identifying key — OpenRouter's top-level `provider` string, or a harness field like `openrouter_provider`. Tabulating that key across all rows nominally belonging to one model in one experiment returns more than one distinct value. The mirror-image case is just as informative: every row names one provider, and that provider is named nowhere in the paper. Weaker variants: the key is null on a fraction of rows; it appears only in later runs of the same project; the committed config allow-lists several providers but every logged row shows one.
 
 **Where to look.** Released raw-response dumps, `inference.json`-style run artifacts, any per-request log committed to the repo. Not the PDF.
 
 **Why routing produces it.** This is not a behavioral inference — it is the routing decision itself, recorded. OpenRouter's default routing load-balances across providers, and any harness that persists the response object rather than just the message text captures which one won each request.
 
-**How to check.** Download the released file and group rows by the intended-fixed model, then count distinct provider values. More than one under a single reported condition means the condition was not served by one stack. Also count nulls: rows without the field cannot be audited either way, which is itself worth stating. Then diff the observed values against whatever the methods section or committed config claims. Caveat before you grep: OpenRouter's current published response schema does not document a top-level `provider` field (verified against the API reference, 2026-07-21), though real captures from 2025 carry one — so its absence in a release may reflect the API's shape at collection time rather than sloppiness by the authors.
+**How to check.** Download the released file and group rows by the intended-fixed model, then count distinct provider values. More than one under a single reported condition means the condition was not served by one stack. One value is not a clean bill of health — check whether the paper names it. Also count nulls, and use the file's own record count as the denominator: rows missing the field are usually failed/retried calls, not a second provider. Then diff the observed values against whatever the methods section or committed config claims. Note on where to look in the response: OpenRouter's published `ChatResult` OpenAPI schema does not list a top-level `provider` property, but real captured responses carry one and OpenRouter's own 2026 documentation shows an example response with `"provider": "Anthropic"` at top level and no opt-in header — so grep the actual data rather than reasoning from the schema doc.
 
 **Benign explanations — read these before concluding anything.**
 
 - Mixed providers do not by themselves prove the numbers are wrong — only that they did not come from one fixed serving stack, which is what most papers implicitly claim rather than something they assert and violate.
 - A null provider field on a handful of rows can be ordinary retry noise rather than evidence of anything.
 - Single-provider concentration is not inherently bad; it just means the number is a fact about that one endpoint, not about 'the model'.
+- A committed provider exclude-list proves nothing on its own — it is common defensive boilerplate. It becomes evidence only when paired with code that reads `response['provider']` back out of stored responses to flag or retry rows served by an excluded one.
 
 **Documented instances.**
 
 - nostalgebraist read the per-request provider field in the original study's released inference.json and established that, despite the config allow-listing two providers, every request had in fact gone to the weaker one.  
   <https://www.lesswrong.com/posts/jHnZzicKzczkCCArK/r1-cot-illegibility-revisited>
   > The OpenRouter providers listed in the config are targon/fp8 and Nebius, but in practice requests were always routed to Targon rather than Nebius, as can be confirmed by reviewing the inference
+- The released inference.json behind that paper's headline R1 GPQA numbers has 300 records; 295 carry an `openrouter_provider` field and all 295 name Targon — a provider the paper's text never mentions. The remaining 5 lack the field entirely. Reproduced by re-downloading the file and re-running the count.  
+  <https://github.com/Jozdien/cot_legibility>
+- A compliance-eval project stores the raw OpenRouter response for every call. Tabulating the provider field over one released 2,120-row file returns 16 distinct providers — the multi-backend case, visible directly in published data and reproduced independently.  
+  <https://github.com/xlr8harder/llm-compliance>
 - A second reader auditing the same released data found rows with no provider metadata at all, which blocks the audit for those rows in either direction.  
   <https://www.lesswrong.com/posts/WbP39ncim9hBsYn5t/what-counts-as-illegible-reasoning>
   > The original data was generated with the 'Targon' provider (although some of the data does not have the provider metadata available).
@@ -159,19 +165,23 @@ This is a first-class result, not a caveat. Quantization is engineered to be sub
 
 **Why routing produces it.** OpenRouter endpoints for one model slug advertise very different `max_completion_tokens`. An unpinned run therefore draws a mixture of output ceilings, and a reasoning model that overruns the smaller one is cut off before it writes an answer. The answer is then scored wrong, so the ceiling shows up as a capability difference.
 
-**How to check.** Compute the empty-answer rate and cross-tabulate against the provider field and against completion length near the requested cap. Check whether the reasoning text on those rows ends mid-word rather than at a conclusion. Compare the histogram's wall against the max_tokens the methods section declares — if they match, that is innocent; a wall lower than what was requested is not.
+**How to check.** Compute the empty-answer rate and cross-tabulate against the provider field and against completion length near the requested cap. Check whether the reasoning text on those rows ends mid-word rather than at a conclusion. Compare the histogram's wall against the max_tokens the methods section declares — if they match, that is innocent; a wall lower than what was requested is not. Treat the *level* as uninformative and the *differential* as the signal: a high empty-answer or truncation rate for one model says little, because verbose models hit a fixed cap more often. It becomes a fingerprint when the same model differs by serving condition, or when the paper claims to have logged provenance that the release does not actually contain.
 
 **Benign explanations — read these before concluding anything.**
 
 - Answer-extraction regex failures produce 'empty answer' rows even when the model did answer.
 - RL-trained reasoning models genuinely loop and ramble on hard inputs without terminating, at any precision.
 - A hard cliff at a round number is the default signature of an ordinary declared max_tokens setting in essentially every eval harness — check the methods section before suspecting anything.
+- Cross-model variance in truncation rate is dominated by model verbosity against a fixed token budget: an 85.9% truncation rate with heavy repeated-n-gram tails has been documented for a small distilled reasoning model running on a single controlled local backend, with no router, provider spread or quantization involved.
 
 **Documented instances.**
 
 - Re-running the illegible-CoT experiment unpinned split traffic across two providers; one of them frequently ran out of output budget mid-reasoning.  
   <https://www.lesswrong.com/posts/jHnZzicKzczkCCArK/r1-cot-illegibility-revisited>
   > After reviewing the results, I found that responses from Azure frequently had empty final answer fields, suggesting that they ran out of room while still writing CoT.
+- A CoT-faithfulness study of 12 open-weight reasoning models, all routed through OpenRouter unpinned, released per-sample JSONL in which the empty-answer rate spans 0.2% to 33.7% across models. The rate is largely explicable by verbosity against a fixed cap; what is not is that the release carries no provider or timestamp field, so the one thing that would separate the two explanations was dropped.  
+  <https://arxiv.org/abs/2603.26410>
+  > Approximately 6.5% of the primary 10,506 influenced cases hit an output-token cap during generation
 
 ### F4 — Special-token and chat-template litter
 
@@ -593,7 +603,7 @@ This is a first-class result, not a caveat. Quantization is engineered to be sub
 | **Evidence** | `documented_catch` — someone really caught a bad provider this way |
 | **Needs raw outputs** | no |
 | **Reveals** | M6, M10, M12 |
-| **Citation status** | partial |
+| **Citation status** | verified |
 
 **What you see.** A one-sentence serving disclosure ('we evaluate models through OpenRouter') with no provider, engine, precision or dated snapshot; a bare undated model slug next to a stated multi-week collection window; `:free` or `:floor` slugs or `sort: "price"` in committed source; a config whose earliest committed version had no routing key at all.
 
@@ -609,19 +619,23 @@ This is a first-class result, not a caveat. Quantization is engineered to be sub
 - Short collection windows make version drift a non-issue.
 - `:free` is documented in terms of rate caps, not precision, so it does not by itself establish quantization.
 - Single-run point estimates with no dispersion are standard practice driven by eval cost.
+- Much of the audited corpus predates the community awareness the audit is trying to create, and venue page limits routinely push snapshot and quantization detail out of prose into an artifact package — so the omission can reflect convention or formatting pressure rather than carelessness, and the detail may still exist in the linked repo.
 
 **Documented instances.**
 
-- A systematic review of 72 peer-reviewed LLM-security papers at top venues found model ambiguity — no snapshot, commit, or quantization — to be the single most prevalent pitfall, and unacknowledged everywhere it appeared.  
+- A systematic audit of 72 peer-reviewed papers at leading Security and Software Engineering venues found model ambiguity — no dated snapshot, commit, or quantization — to be the single most prevalent of nine pitfalls, and unacknowledged in every paper where it appeared. Its own controlled re-experiments show the omission is not academic: swapping only the GPT-4 snapshot moved hate-speech recall from 82.05% to 41.03%, and going from full precision to 2-bit raised a jailbreak success rate on CodeLlama-7B from 18.21% to 69.52%.  
   <https://arxiv.org/abs/2512.09549>
   > 73.6% (53) of all papers, andPartly presentin 12.5% (9)
+- The paper whose results were later shown to be provider-dependent discloses its entire serving setup for non-Claude models in one sentence of Section 2, immediately after stating a temperature with no claim that the API honoured it. No provider, precision or dated snapshot appears anywhere in the 18 pages; Table 2 lists the Claude model sizes as literally 'Unknown'.  
+  <https://arxiv.org/abs/2510.27338>
+  > We evaluate most models through OpenRouter, and Claude models through the Anthropic API
 - The author of the illegible-CoT paper conceded after a cross-provider re-run that the paper's serving had not been controlled.  
   <https://www.lesswrong.com/posts/jHnZzicKzczkCCArK/r1-cot-illegibility-revisited>
   > I should have been running capability evaluations with different providers to see which one was serving it properly
 
-### F17 — NEGATIVE RESULT — cost and throughput side channels mostly do not work
+### F17 — NEGATIVE RESULT — cost and throughput identify the endpoint, never its precision
 
-*Per-token cost and tokens/sec look like they should identify the endpoint and its precision. Measured, they largely do not.*
+*Per-token cost and tokens/sec look like they should reveal a degraded backend. Measured, they can weakly say *which* endpoint served a request and cannot say how well it served it.*
 
 | | |
 | --- | --- |
@@ -629,18 +643,24 @@ This is a first-class result, not a caveat. Quantization is engineered to be sub
 | **Evidence** | `literature_supported` — the underlying degradation is published; the catch is not |
 | **Needs raw outputs** | yes |
 | **Reveals** | M4 |
-| **Citation status** | partial |
+| **Citation status** | verified |
 
-**What you see.** A logged cost or latency column that seems to promise backend identification.
+**What you see.** A logged cost, duration or throughput column that seems to promise backend identification — often two overlapping speed populations under one unchanged model and config.
 
 **Where to look.** Released per-request logs with cost, duration or throughput columns.
 
-**Why routing produces it.** OpenRouter prices differ per provider, so cost per token is in principle close to an endpoint identifier. In practice measured cost-per-token was effectively identical across three different providers serving one model, and price ranks poorly against disclosed precision. Extreme throughput more often identifies specialised hardware than low precision — one provider serves a model roughly 40× faster than another at comparable quality.
+**Why routing produces it.** OpenRouter passes through each provider's own rate card, so cost per token is in principle close to an endpoint identifier, and decode speed differs by engine and hardware. Neither tracks precision: ranking endpoints by price against their disclosed quantization gives only a weak positive correlation with many outright inversions, and for one model the bf16 endpoint was the cheapest of all. Extreme throughput usually identifies specialised silicon rather than low precision — one provider serves a model roughly 40x faster than another at comparable quality.
 
-**How to check.** Use cost only as weak corroboration after checking the provider field directly. Never read high throughput as a quantization red flag without identifying the provider first. Wall-clock mixes decode speed with queueing, retries, network jitter and (for reasoning models) how long the chain happened to run.
+**How to check.** Use cost only as weak corroboration after checking the provider field directly, and only against contemporaneous prices — rate cards move, and figures taken from a dashboard months ago will not reproduce. Never read high throughput as a quantization red flag without identifying the provider first. Wall-clock mixes decode speed with queueing, retries, network jitter and, for reasoning models, how long the chain happened to run. If you cluster requests by speed, expect a much weaker split than it first looks: on the largest released runs a hindsight-optimal speed threshold labelled requests by provider only 67-74% correctly against majority baselines of 53-68%.
 
 **Benign explanations — read these before concluding anything.**
 
-- Cost per token was measured as near-identical across distinct providers of one model.
+- Cost per token has been measured as near-identical across distinct providers of one model, and price ranks poorly against disclosed precision.
 - Specialised-silicon vendors produce order-of-magnitude throughput differences at full precision.
 - Latency is dominated by confounds that have nothing to do with serving quality.
+- The sign is not fixed. In one released dataset the faster provider produced the better output on one model, and the slower provider did on another — so 'fast therefore degraded' has no reliable direction.
+
+**Documented instances.**
+
+- Recomputed from a released legibility study's own run artifacts: for one model the faster provider (median 44.8 vs 39.7 tok/s) also had the better legibility (3.09 vs 4.09) and accuracy (45.5% vs 34.8%), with the direction holding in 15 of 16 runs — but a second model reversed it, the slower provider scoring better on both. Throughput covaries with quality within a run; it does not tell you which way.  
+  <https://github.com/nostalgebraist/cot_legibility>

@@ -116,6 +116,24 @@ def test_checklist_and_undetectable_reference_real_families(data: dict, families
     assert cited <= ids, f"references unknown fingerprints {sorted(cited - ids)}"
 
 
+def test_verification_is_complete(data: dict) -> None:
+    """Every candidate got an adversarial verifier, and every family says so.
+
+    The first run of this sweep lost its verification stage to a spend limit and the
+    catalogue shipped with families marked `partial`. That is a legitimate state to be in
+    briefly, but it must never be silently mistaken for a finished audit — so the counts and
+    the per-family labels are checked against each other here.
+    """
+    prov = data["provenance"]
+    assert prov["unverified_candidates"] == 0, "some candidates still have no verifier"
+    assert prov["verified_candidates"] == prov["raw_candidates"]
+    assert prov["survived_verification"] <= prov["verified_candidates"]
+    unverified = [f["id"] for f in data["families"] if f["verification"] != "verified"]
+    assert not unverified, (
+        f"provenance claims full verification but these families are not: {unverified}"
+    )
+
+
 def test_undetectable_section_is_substantive(data: dict) -> None:
     """The honest negative result is load-bearing; a stub would quietly overclaim."""
     assert len(data["undetectable"]) >= 5
