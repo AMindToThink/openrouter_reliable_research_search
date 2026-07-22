@@ -56,8 +56,19 @@ given model slug (e.g. `deepseek/deepseek-r1`) there are often several providers
   price and by precision, the correlation is positive in **58–65% of the models with a testable
   spread** (64.6% by prompt price, 57.8% by completion price) with a median ρ of only 0.21–0.36,
   and it **inverts outright in 13–16 models**. The cheapest endpoint is the most quantized one
-  about 71% of the time. `openai/gpt-oss-120b` — this guide's own recurring example — is one of
-  the inversions: its cheapest disclosed endpoint is `bf16`, while pricier ones are `fp4`/`fp8`.
+  about 71% of the time. A clean inversion (in our snapshot, re-verified live 2026-07-22): for
+  `meta-llama/llama-3.3-70b-instruct`, which Meta released in bf16, the most expensive endpoint
+  serves `fp8` (Cloudflare, $2.25/M output — Cloudflare's own product name for it is
+  `llama-3.3-70b-instruct-fp8-fast`), Novita serves `bf16` at $0.40/M, and the *cheapest*
+  endpoint (DeepInfra, $0.32/M) is `fp8` again — so price sorts precision in neither direction,
+  and paying 5.6x the bf16 price buys a quantized endpoint. **We previously cited
+  `openai/gpt-oss-120b`'s cheap-`bf16` endpoints as one of the inversions. That was wrong in an
+  instructive way: gpt-oss's release checkpoint already has its MoE weights (90+% of parameters)
+  quantized to MXFP4, so `fp4` *is* the release precision, and a `bf16` endpoint is the standard
+  lossless upcast fallback (every MXFP4 value is exactly representable in bf16), not extra
+  fidelity.** Precision labels order fidelity only *relative to a model's release precision* —
+  gpt-oss ships at MXFP4 and DeepSeek-V3/R1 at fp8, so for those models a higher label than the
+  release adds nothing, and their labels contribute noise, not signal, to the ρ above.
   So price is a weak, unreliable proxy for precision: cheap routing *tends* toward worse weights
   but you cannot infer either from the other. Look the endpoint up (§3) instead of reasoning from
   its price. This isn't hypothetical: independently
