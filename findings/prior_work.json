@@ -382,10 +382,15 @@
       "arxiv_id": "2407.09141",
       "venue": "NeurIPS 2024",
       "tier": "direct",
-      "status": "lead",
-      "verified": false,
-      "why": "Reported to show compressed models matching baseline accuracy while flipping large numbers of individual answers and degrading open-ended generation — i.e. benchmark parity hiding behavioural divergence. Would strengthen the argument that an unchanged headline number is not evidence of an unchanged model.",
-      "rank": 21
+      "status": "new",
+      "verified": true,
+      "why": "Kills the most common defence of a quantized route — \"the benchmark score barely moved.\" Compressed models flip individual answers in both directions and are markedly worse on free-form generation while aggregate accuracy stays put, so an unchanged headline number is not evidence of an unchanged model. Directly relevant to any router claim that rests on a coarse aggregate metric.",
+      "rank": 13,
+      "quote": "the behavior of compressed models as visible to end-users is often significantly different from the baseline model, even when accuracy is similar",
+      "supports": [
+        "M1",
+        "M8"
+      ]
     },
     {
       "key": "quantization-safety-reliability",
@@ -393,10 +398,15 @@
       "arxiv_id": "2502.15799",
       "venue": "preprint",
       "tier": "direct",
-      "status": "lead",
-      "verified": false,
-      "why": "Reported to test 66 compressed variants across 6 compression methods and find measurable safety degradation — the safety-eval-specific version of the quantization risk.",
-      "rank": 22
+      "status": "new",
+      "verified": true,
+      "why": "The safety-eval version of the quantization risk, across 66 quantized variants and six compression methods, with no method uniformly safe. Matters here because safety measurements are exactly what much of the surveyed research reports, and because vendor reassurance about quantization is generally framed around task or tool-call quality, never safety behaviour.",
+      "rank": 14,
+      "quote": "Our results show both PTQ and QAT can degrade safety alignment",
+      "supports": [
+        "M1",
+        "M8"
+      ]
     },
     {
       "key": "inference-engine-bugs",
@@ -419,6 +429,29 @@
       "verified": false,
       "why": "Reported that of 18 artifact-bearing papers using commercial LLM APIs, only 5 were executable and none fully reproduced — the closed-API analogue of this survey, in software engineering.",
       "rank": 24
+    },
+    {
+      "key": "gatescope",
+      "kind": "paper",
+      "arxiv_id": "2604.21083",
+      "venue": "preprint",
+      "tier": "direct",
+      "status": "new",
+      "verified": true,
+      "rank": 7.5,
+      "quote": "reveal frequent gaps between expected and actual behaviors, including silent model substitutions, degraded memory retention, deviations from announced pricing",
+      "body_quotes": [
+        {
+          "quote": "we do not disclose real platform names",
+          "locator": "the paper's anonymisation policy for the audited gateways"
+        }
+      ],
+      "why": "The first black-box audit aimed squarely at this repo's object of study — third-party API gateways, not individual providers — and it finds silent model substitution in the wild across ten commercial gateways. Important caveat that cuts both ways: the paper anonymises every platform it audits, so it cannot be cited as evidence about OpenRouter specifically, only about the class of service OpenRouter belongs to. That a measurement paper felt obliged to anonymise its subjects is itself worth noting.",
+      "supports": [
+        "M1",
+        "M6",
+        "M11"
+      ]
     }
   ]
 }

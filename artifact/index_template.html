@@ -186,6 +186,17 @@
   .tag { font-family: var(--mono); font-size: .72rem; padding: 3px 8px; border-radius: 6px; background: var(--panel); border: 1px solid var(--border); color: var(--muted); }
   .fix { background: var(--panel); border-radius: 8px; padding: 10px 12px; font-size: .9rem; }
   .fix .flab { color: var(--accent); }
+  /* fingerprints — what the project's OWN published output shows, as opposed to what its code leaves open */
+  .fprint { background: var(--panel); border-radius: 8px; padding: 10px 12px; font-size: .9rem;
+    border-left: 3px solid var(--none); }
+  .fprint.v-fingerprints_found { border-left-color: var(--high); }
+  .fprint.v-checked_clean { border-left-color: var(--safe); }
+  .fprint.v-inconclusive { border-left-color: var(--med); }
+  .fprint .flab { font-family: var(--mono); font-size: .7rem; text-transform: uppercase;
+    letter-spacing: .07em; color: var(--muted); margin-bottom: 4px; }
+  .fprint.v-fingerprints_found .flab { color: var(--high); }
+  .fpchip { font-family: var(--mono); font-size: .68rem; padding: 2px 6px; border-radius: 5px;
+    border: 1px solid var(--border); color: var(--muted); margin-left: 6px; }
   .ev { font-family: var(--mono); font-size: .78rem; color: var(--muted); background: var(--panel); border-radius: 8px; padding: 10px 12px;
     white-space: pre-wrap; word-break: break-word; }
   .dlinks { display: flex; gap: 14px; margin-top: 14px; font-family: var(--mono); font-size: .82rem; flex-wrap: wrap; }
@@ -466,6 +477,20 @@ function impactBlock(d){
   return `<div class="field span2"><div class="flab">Possibly-impacted findings (${fs.length})${unv}</div>
     ${hl}<div class="impact-list">${items}</div></div>`;
 }
+/* Did the project publish anything a reader could actually check — and does it look off?
+   This is evidence-side, not code-side: a repo can be wide open in code and still show no
+   visible sign, which is exactly what quantization is designed to do. */
+const FPV = {fingerprints_found:"signs found", checked_clean:"looks clean",
+             inconclusive:"inconclusive", nothing_checkable_released:"nothing checkable released"};
+function fingerprintBlock(d){
+  const txt = d.provider_issue_fingerprints || "";
+  if(!txt) return "";
+  const v = d.fingerprint_verdict || "";
+  const ids = (d.fingerprint_ids||[]).map(f=>`<span class="fpchip">${esc(f)}</span>`).join("");
+  return `<div class="field span2"><div class="fprint v-${esc(v)}">
+    <div class="flab">◎ signs in their published output — ${esc(FPV[v]||v)}${ids}</div>
+    ${xp(txt,340)}</div></div>`;
+}
 function repoCard(d,i){
   const sevcls = d.safe ? "sev-none" : (d.severity==="medium"?"sev-medium":"sev-high");
   const KL = {handled:["handled","HANDLED"], not_on_result_path:["na","OFF RESULT PATH"],
@@ -499,6 +524,7 @@ function repoCard(d,i){
                <div class="classnote ${d.safety_class==="handled"?"handled":""}">${xp(d.safety_class_reason||d.notes,340)}</div></div>`
           : `<div class="field span2"><div class="flab">The problem</div><div class="fval">${xp(d.mistakes,420)}</div></div>`}
         ${impactBlock(d)}
+        ${fingerprintBlock(d)}
         <div class="field span2"><div class="flab">Safeguards present</div><div class="fval"><div class="metarow" style="margin-top:2px">${safeg}</div></div></div>
         ${d.fix ? `<div class="field span2"><div class="fix"><div class="flab">▸ one-line fix</div>${xp(d.fix,240)}</div></div>`:""}
         <div class="field span2"><div class="flab">Evidence (from source)</div><div class="ev">${xp(d.evidence,320)}</div></div>

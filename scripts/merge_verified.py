@@ -107,7 +107,9 @@ def regenerate(rows: list[dict]) -> None:
             ("awareness", "Awareness"), ("safeguards_present", "Safeguards present"),
             ("one_line_fix", "One-line fix"), ("code_ref", "Call site (file:line)"), ("code_url", "Code URL"),
             ("repo_url", "Repo URL"), ("paper_url", "Paper URL"), ("venue", "Venue"), ("confidence", "Confidence"),
-            ("provider_ab_rerun_assessment", "Provider A/B rerun assessment")]
+            ("provider_ab_rerun_assessment", "Provider A/B rerun assessment"),
+            ("provider_issue_fingerprints", "Signs provider issues messed up the paper"),
+            ("fingerprint_verdict", "Fingerprint verdict"), ("fingerprint_ids", "Fingerprint IDs")]
 
     with (ROOT / "findings/survey.csv").open("w", newline="") as f:
         w = csv.writer(f)
@@ -123,7 +125,7 @@ def regenerate(rows: list[dict]) -> None:
                     v = flat(r.get("impacted_findings") or [])
                 elif k == "n_impacted":
                     v = len(r.get("impacted_findings") or [])
-                elif k in ("mistake_ids", "safeguards_present"):
+                elif k in ("mistake_ids", "safeguards_present", "fingerprint_ids"):
                     v = ", ".join(r.get(k) or [])
                 else:
                     v = r.get(k, "")
@@ -168,6 +170,9 @@ def regenerate(rows: list[dict]) -> None:
             "impact_verified_rows": sum(1 for r in rows if r.get("impact_verified")),
         },
         "safety_class": classes,
+        # What a reader could actually SEE in each project's published output. Distinct from
+        # safety_class, which is about what the code leaves open.
+        "fingerprint_verdict": tally("fingerprint_verdict"),
         "surveyed": len(rows),
         "actual_openrouter_users": users,
         "at_risk_pct_of_users": round(100 * at_risk / users) if users else 0,
@@ -195,6 +200,9 @@ def regenerate(rows: list[dict]) -> None:
         "safety_class": r.get("safety_class") or ("at_risk" if not r.get("uses_safely") else ""),
         "safety_class_reason": r.get("safety_class_reason") or "",
         "provider_ab_rerun_assessment": r.get("provider_ab_rerun_assessment") or "",
+        "provider_issue_fingerprints": r.get("provider_issue_fingerprints") or "",
+        "fingerprint_verdict": r.get("fingerprint_verdict") or "",
+        "fingerprint_ids": r.get("fingerprint_ids") or [],
     } for r in rows]
     (ROOT / "artifact/_data.json").write_text(json.dumps(art, ensure_ascii=False))
 

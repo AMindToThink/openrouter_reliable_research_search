@@ -56,6 +56,11 @@ PROPRIETARY_AUTHORS = {"openai", "anthropic", "google", "x-ai", "perplexity", "c
                        "amazon", "microsoft", "inflection", "ai21"}
 # ...except open-weight releases from those authors, which ARE multi-served.
 OPEN_WEIGHT_EXCEPTIONS = {"openai/gpt-oss-120b", "openai/gpt-oss-20b"}
+# Whole open-weight families from otherwise-proprietary authors. Without this, every
+# `google/gemma-*` model silently drops out of the sweep even though it is open-weight and
+# multi-served — four of them are in the committed snapshot and would have vanished on the
+# next refresh, quietly shrinking the denominator rather than failing.
+OPEN_WEIGHT_PREFIXES = ("google/gemma-",)
 
 
 def get(url: str, timeout: int = 30) -> dict[str, Any] | None:
@@ -70,6 +75,8 @@ def get(url: str, timeout: int = 30) -> dict[str, Any] | None:
 
 def is_open_weight(model_id: str) -> bool:
     if model_id in OPEN_WEIGHT_EXCEPTIONS:
+        return True
+    if model_id.lower().startswith(OPEN_WEIGHT_PREFIXES):
         return True
     return model_id.split("/", 1)[0].lower() not in PROPRIETARY_AUTHORS
 

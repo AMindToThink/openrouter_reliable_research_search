@@ -158,12 +158,12 @@
       "url": "https://www.lesswrong.com/posts/jHnZzicKzczkCCArK/r1-cot-illegibility-revisited",
       "quote": "I think this is pretty convincing re your original argument that my results were contaminated by bad inference setups, and that correspondingly my paper doesn't substantiate some of its claims and conclusions with good evidence",
       "quote_found_in": "page",
-      "quote_context": "nd R1 isn't available from the DeepSeek API anymore. I hadn't realized this at the time of writing the comment I quo R1 CoT illegibility revisited 53 Jozdien 6 nostalgebraist 5 Sheikh Abdur Raheem Ali 3 lbernick 4 Comments 4 AI Frontpage 92 New Comment Submit 4 comments , sorted by top scoring Click to highlight new comments since: Today at 12:46 PM [ - ] Jozdien 3mo 53 0 Thanks for running this! I think this is pretty convincing re your original argument that my results were contaminated by bad inference setups, and that correspondingly my paper doesn't substantiate some of its claims and conclusions with good evidence. In the past couple months I've gotten some other feedback about the paper as well, about the grader inflating some illegibility scores for reasoning that's legible but hard to follow (as far as I could tell this isn't as big a problem as the one you point out here however). In retrospect I think I was being much shoddier than I'd like while writing it, mostly because it was my first time writing",
+      "quote_context": " deployment, and R1 isn't available from the DeepSeek API anymore. I hadn't realized this at the time of writing the comment I quo AI Frontpage 93 R1 CoT illegibility revisited 53 Jozdien 6 nostalgebraist 5 Sheikh Abdur Raheem Ali 3 lbernick New Comment Submit 4 comments , sorted by top scoring Click to highlight new comments since: Today at 1:55 PM [ - ] Jozdien 3mo 53 0 Thanks for running this! I think this is pretty convincing re your original argument that my results were contaminated by bad inference setups, and that correspondingly my paper doesn't substantiate some of its claims and conclusions with good evidence. In the past couple months I've gotten some other feedback about the paper as well, about the grader inflating some illegibility scores for reasoning that's legible but hard to follow (as far as I could tell this isn't as big a problem as the one you point out here however). In retrospect I think I was being much shoddier than I'd like while writing it, mostly because it was my first time writing",
       "body_quotes": [
         {
           "quote": "average illegibility score of only 2.30 (vs. 4.30 in the paper)",
           "locator": "the post's headline comparison",
-          "context": "I Frontpage 92 R1 CoT illegibility revisited by nostalgebraist 19th Apr 2026 7 min read 4 92 This is a brief research note describing the results of running @Jozdien 's research code for the paper \" Reasoning Models Sometimes Output Illegible Chains of Thought \" using the Novita provider on OpenRouter. tl;dr: I re-ran the paper's R1 GPQA experiments with no changes except using Novita, and got an average illegibility score of only 2.30 (vs. 4.30 in the paper) , with no examples scoring above 5 (vs. 29.4% of examples scoring above 6 in the paper). Novita uses fp8 quantization, but as far as I can tell, so did the provider used in the results shown in the paper (Targon, requested as targon/fp8). To address any lingering suspicion about Novita's R1 deployment being \"worse\" than Targon's in some sense, I show that switching Targon to Novita also results i"
+          "context": "I Frontpage 93 R1 CoT illegibility revisited by nostalgebraist 19th Apr 2026 7 min read 4 93 This is a brief research note describing the results of running @Jozdien 's research code for the paper \" Reasoning Models Sometimes Output Illegible Chains of Thought \" using the Novita provider on OpenRouter. tl;dr: I re-ran the paper's R1 GPQA experiments with no changes except using Novita, and got an average illegibility score of only 2.30 (vs. 4.30 in the paper) , with no examples scoring above 5 (vs. 29.4% of examples scoring above 6 in the paper). Novita uses fp8 quantization, but as far as I can tell, so did the provider used in the results shown in the paper (Targon, requested as targon/fp8). To address any lingering suspicion about Novita's R1 deployment being \"worse\" than Targon's in some sense, I show that switching Targon to Novita also results i"
         }
       ]
     },
@@ -215,6 +215,71 @@
       "quote": "Serve Artificial Analysis a model, quantization, context length, or endpoint configuration that differs from what is publicly advertised and generally available under the same name",
       "quote_found_in": "page",
       "quote_context": "ngerprint, or otherwise identify Artificial Analysis traffic (whether by account, API key, IP address, request headers, payloads, or traffic patterns) and serve it differently from ordinary traffic. Route Artificial Analysis traffic to dedicated, reserved, or non-public resources, including separate hardware, capacity pools, priority queues, or geographic regions that are not generally available. Serve Artificial Analysis a model, quantization, context length, or endpoint configuration that differs from what is publicly advertised and generally available under the same name. Serve Artificial Analysis traffic at a batch size, concurrency, or load configuration that is not representative of what ordinary traffic on the same endpoint receives (for example, running benchmark requests at reduced batch sizes to increase per-request speed). On request, providers must confirm the model version, precision or quantization, and context length serving Artificial Analysis traffi"
+    },
+    "accuracy-is-not-all-you-need": {
+      "kind": "arxiv",
+      "arxiv_id": "2407.09141",
+      "abs_url": "https://arxiv.org/abs/2407.09141v1",
+      "title": "Accuracy is Not All You Need",
+      "authors": [
+        "Abhinav Dutta",
+        "Sanjeev Krishnan",
+        "Nipun Kwatra",
+        "Ramachandran Ramjee"
+      ],
+      "published": "2024-07-12",
+      "updated": "2024-07-12",
+      "abstract": "When Large Language Models (LLMs) are compressed using techniques such as quantization, the predominant way to demonstrate the validity of such techniques is by measuring the model's accuracy on various benchmarks.If the accuracies of the baseline model and the compressed model are close, it is assumed that there was negligible degradation in quality.However, even when the accuracy of baseline and compressed model are similar, we observe the phenomenon of flips, wherein answers change from correct to incorrect and vice versa in proportion.We conduct a detailed study of metrics across multiple compression techniques, models and datasets, demonstrating that the behavior of compressed models as visible to end-users is often significantly different from the baseline model, even when accuracy is similar.We further evaluate compressed models qualitatively and quantitatively using MT-Bench and show that compressed models are significantly worse than baseline models in this free-form generative task.Thus, we argue that compression techniques should also be evaluated using distance metrics.We propose two such metrics, KL-Divergence and flips, and show that they are well correlated.",
+      "quote": "the behavior of compressed models as visible to end-users is often significantly different from the baseline model, even when accuracy is similar",
+      "quote_found_in": "abstract",
+      "quote_context": "mpressed model are close, it is assumed that there was negligible degradation in quality.However, even when the accuracy of baseline and compressed model are similar, we observe the phenomenon of flips, wherein answers change from correct to incorrect and vice versa in proportion.We conduct a detailed study of metrics across multiple compression techniques, models and datasets, demonstrating that the behavior of compressed models as visible to end-users is often significantly different from the baseline model, even when accuracy is similar.We further evaluate compressed models qualitatively and quantitatively using MT-Bench and show that compressed models are significantly worse than baseline models in this free-form generative task.Thus, we argue that compression techniques should also be evaluated using distance metrics.We propose two such metrics, KL-Divergence and flips, and show that they are well correlated."
+    },
+    "quantization-safety-reliability": {
+      "kind": "arxiv",
+      "arxiv_id": "2502.15799",
+      "abs_url": "https://arxiv.org/abs/2502.15799v2",
+      "title": "Investigating the Impact of Quantization Methods on the Safety and Reliability of Large Language Models",
+      "authors": [
+        "Artyom Kharinaev",
+        "Viktor Moskvoretskii",
+        "Egor Shvetsov",
+        "Kseniia Studenikina",
+        "Bykov Mikhail",
+        "Evgeny Burnaev"
+      ],
+      "published": "2025-02-18",
+      "updated": "2025-06-29",
+      "abstract": "Large Language Models (LLMs) are powerful tools for modern applications, but their computational demands limit accessibility. Quantization offers efficiency gains, yet its impact on safety and trustworthiness remains poorly understood. To address this, we introduce OpenMiniSafety, a human-curated safety dataset with 1.067 challenging questions to rigorously evaluate model behavior. We publicly release human safety evaluations for four LLMs (both quantized and full-precision), totaling 4.268 annotated question-answer pairs. By assessing 66 quantized variants of these models using four post-training quantization (PTQ) and two quantization-aware training (QAT) methods across four safety benchmarks including human-centric evaluations we uncover critical safety performance trade-offs. Our results show both PTQ and QAT can degrade safety alignment, with QAT techniques like QLORA or STE performing less safely. No single method consistently outperforms others across benchmarks, precision settings, or models, highlighting the need for safety-aware compression strategies. Furthermore, precision-specialized methods (e.g., QUIK and AWQ for 4-bit, AQLM and Q-PET for 2-bit) excel at their target precision, meaning that these methods are not better at compressing but rather different approaches.",
+      "quote": "Our results show both PTQ and QAT can degrade safety alignment",
+      "quote_found_in": "abstract",
+      "quote_context": "licly release human safety evaluations for four LLMs (both quantized and full-precision), totaling 4.268 annotated question-answer pairs. By assessing 66 quantized variants of these models using four post-training quantization (PTQ) and two quantization-aware training (QAT) methods across four safety benchmarks including human-centric evaluations we uncover critical safety performance trade-offs. Our results show both PTQ and QAT can degrade safety alignment, with QAT techniques like QLORA or STE performing less safely. No single method consistently outperforms others across benchmarks, precision settings, or models, highlighting the need for safety-aware compression strategies. Furthermore, precision-specialized methods (e.g., QUIK and AWQ for 4-bit, AQLM and Q-PET for 2-bit) excel at their target precision, meaning that these methods are not better"
+    },
+    "gatescope": {
+      "kind": "arxiv",
+      "arxiv_id": "2604.21083",
+      "abs_url": "https://arxiv.org/abs/2604.21083v1",
+      "title": "Behavioral Consistency and Transparency Analysis on Large Language Model API Gateways",
+      "authors": [
+        "Guanjie Lin",
+        "Yinxin Wan",
+        "Shichao Pei",
+        "Ting Xu",
+        "Kuai Xu",
+        "Guoliang Xue"
+      ],
+      "published": "2026-04-22",
+      "updated": "2026-04-22",
+      "abstract": "Third-party Large Language Model (LLM) API gateways are rapidly emerging as unified access points to models offered by multiple vendors. However, the internal routing, caching, and billing policies of these gateways are largely undisclosed, leaving users with limited visibility into whether requests are served by the advertised models, whether responses remain faithful to upstream APIs, or whether invoices accurately reflect public pricing policies. To address this gap, we introduce GateScope, a lightweight black-box measurement framework for evaluating behavioral consistency and operational transparency in commercial LLM gateways. GateScope is designed to detect key misbehaviors, including model downgrading or switching, silent truncation, billing inaccuracies, and instability in latency by auditing gateways along four critical dimensions: response content analysis, multi-turn conversation performance, billing accuracy, and latency characteristics. Our measurements across 10 real-world commercial LLM API gateways reveal frequent gaps between expected and actual behaviors, including silent model substitutions, degraded memory retention, deviations from announced pricing, and substantial variation in latency stability across platforms.",
+      "quote": "reveal frequent gaps between expected and actual behaviors, including silent model substitutions, degraded memory retention, deviations from announced pricing",
+      "quote_found_in": "abstract",
+      "quote_context": "gateways. GateScope is designed to detect key misbehaviors, including model downgrading or switching, silent truncation, billing inaccuracies, and instability in latency by auditing gateways along four critical dimensions: response content analysis, multi-turn conversation performance, billing accuracy, and latency characteristics. Our measurements across 10 real-world commercial LLM API gateways reveal frequent gaps between expected and actual behaviors, including silent model substitutions, degraded memory retention, deviations from announced pricing, and substantial variation in latency stability across platforms.",
+      "body_quotes": [
+        {
+          "quote": "we do not disclose real platform names",
+          "locator": "the paper's anonymisation policy for the audited gateways",
+          "context": "ls. arXiv preprint arXiv:2407.01235(2024). [29] Baohang Zhou, Zezhong Wang, Lingzhi Wang, Hongru Wang, Ying Zhang, Kehui Song, Xuhui Sui, and Kam-Fai Wong. 2024. DPDLLM: A Black-box Framework for Detecting Pre-training Data from Large Language Models. InProc. of ACL. A Ethics In this work, we use only public APIs of vendors and we do not capture user traffic. We anonymize commercial platforms and we do not disclose real platform names. Our study does not involve any personal information. B DCC Prompt Template Table 5 presents the complete Discrete Concept Composition (DCC) prompt template used for eliciting structured behavioral signatures. The design deliberately separates the reasoning process from the fi- nal result to facilitate the feature extraction described in Section 3.2. C Sampling Protocol and Probe Suite In this pa"
+        }
+      ]
     }
   }
 }

@@ -121,6 +121,13 @@ def test_readme_prior_work_figures_are_quoted_from_a_source(sources: dict) -> No
     assert len(section) == 2, "the README prior-work section is missing"
     block = section[1].split("\n## ", 1)[0]
 
+    # the skill quotes the same figures to auditors, under an explicit marker
+    skill = (ROOT / "skill" / "use-openrouter-safely" / "SKILL.md").read_text()
+    marked = re.search(r"<!-- PRIOR-WORK FIGURES:.*?-->(.*?)<!-- END PRIOR-WORK FIGURES -->",
+                       skill, re.S)
+    assert marked, "the skill's prior-work figures block is missing or its markers were renamed"
+    block += marked.group(1)
+
     haystack = norm(" ".join(
         str(rec.get("abstract", "")) + " " + str(rec.get("quote_context", "")) + " "
         + " ".join(bq["context"] for bq in rec.get("body_quotes", []))
