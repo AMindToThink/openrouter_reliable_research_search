@@ -1,0 +1,272 @@
+{
+  "_note": "Curated audit of whether OpenRouter providers publicly disclose CHANGES to how they serve a model. Rendered by scripts/make_provider_transparency.py into reports/provider-transparency.md. Every quote is located verbatim in the page snapshot fetched by scripts/fetch_provider_transparency.py; entries with verified:false were reported by a search agent, confirmed by nobody, and must carry no quote. See findings/methodology.md for the same discipline applied to the repo survey.",
+  "_axes": {
+    "A": "says what it serves now - per-model precision, context, engine",
+    "B": "says when that changed - a dated changelog of serving changes",
+    "C": "says what happens next - deprecation policy with a stated notice period"
+  },
+  "entries": [
+    {
+      "key": "cerebras",
+      "provider": "Cerebras",
+      "or_slug": "cerebras",
+      "verified": true,
+      "rank": 1,
+      "axes": ["A", "C"],
+      "url": "https://inference-docs.cerebras.ai/models/overview",
+      "quotes": [
+        "We are committed to serving the original models for all existing endpoints, without modification.",
+        "All of our public models are unpruned."
+      ],
+      "note": "The only forward-looking commitment found anywhere in the sweep. Its precision claim is unusually specific and therefore falsifiable: weight-only quantization applied at storage, with activations, attention and the KV cache left unquantized. Cerebras is the provider a reviewer could most easily hold to its word.",
+      "gap": "No quantified deprecation notice period. The deprecations page is a dated log, not a policy."
+    },
+    {
+      "key": "azure-foundry",
+      "provider": "Azure AI Foundry",
+      "or_slug": "azure",
+      "verified": true,
+      "rank": 2,
+      "axes": ["C"],
+      "url": "https://learn.microsoft.com/en-us/azure/ai-foundry/openai/concepts/model-retirements",
+      "quotes": [
+        "Production-ready. Weights and APIs are fixed. Runtime patches for security vulnerabilities don't affect outputs.",
+        "Experimental. Weights, runtime, and API schema might change. Not guaranteed to become GA.",
+        "Auto-upgrades are scheduled on a rolling, region-by-region basis. The upgrade schedule is published in advance"
+      ],
+      "note": "The strongest written weight-fixity guarantee in the sweep, and the only one stated as a lifecycle contract rather than a convention. It also ships the corresponding knob: `versionUpgradeOption: NoAutoUpgrade` refuses the silent forward-roll entirely, which is the hard pin this project recommends rather than a floor. Lifecycle is queryable programmatically via `lifecycleStatus` and `deprecation.inference`, and Azure documents a concrete past mutation: gpt-4o 2024-05-13 and 2024-08-06 auto-upgraded to gpt-5.1 on 2026-03-31 across eight named regions.",
+      "gap": "Never states serving precision. Preview deployments are force-upgraded with no opt-out."
+    },
+    {
+      "key": "cloudflare-workers-ai",
+      "provider": "Cloudflare Workers AI",
+      "or_slug": "cloudflare",
+      "verified": true,
+      "rank": 3,
+      "axes": ["A", "B"],
+      "url": "https://developers.cloudflare.com/workers-ai/models/llama-3.3-70b-instruct-fp8-fast/",
+      "quotes": [
+        "Llama 3.3 70B quantized to fp8 precision, optimized to be faster."
+      ],
+      "note": "Precision is in the model ID and stated in the docs, alongside a 24,000-token context window. The catalog is generated from JSON in the public cloudflare/cloudflare-docs repository, so a change to a model's declared precision or context is a dated git commit anyone can diff - the only provider in the sweep whose serving spec has a reconstructible history rather than just a current value.",
+      "gap": "No immutable pinning: deprecated slugs are aliased forward to a successor rather than frozen."
+    },
+    {
+      "key": "together",
+      "provider": "Together AI",
+      "or_slug": "together",
+      "verified": true,
+      "rank": 4,
+      "axes": ["A", "B", "C"],
+      "url": "https://docs.together.ai/docs/changelog",
+      "quotes": [
+        "552.8B parameters, 524,288 context length, NVFP4 quantization"
+      ],
+      "note": "The best dated changelog: entries name precision and context at launch, and deprecations carry stated notice periods.",
+      "gap": "Precision is announced inconsistently - of five recent serverless launches checked, only one stated quantization. Their policy also permits an 'upgrade' to silently redirect an existing model ID after a three-day notice, which is the single most dangerous clause found in any provider's documentation for research use."
+    },
+    {
+      "key": "xai",
+      "provider": "xAI",
+      "or_slug": "xai",
+      "verified": true,
+      "rank": 5,
+      "axes": ["C"],
+      "url": "https://docs.x.ai/docs/models",
+      "quotes": [
+        "This will not be updated and is for workflows that demand consistency.",
+        "For most users, the aliased <modelname> or <modelname>-latest are recommended, as you would receive the latest features automatically."
+      ],
+      "note": "States the pin guarantee explicitly and, unusually, names the tradeoff: the floating alias is recommended for most users, the dated ID for anyone who needs consistency. That is exactly the distinction research code has to make.",
+      "gap": "No changelog or deprecation policy found. No precision disclosure."
+    },
+    {
+      "key": "anthropic",
+      "provider": "Anthropic",
+      "or_slug": "anthropic",
+      "verified": true,
+      "rank": 6,
+      "axes": ["C"],
+      "url": "https://platform.claude.com/docs/en/about-claude/model-deprecations",
+      "quotes": [
+        "Anthropic notifies customers with active deployments for models with upcoming retirements, providing at least 60 days' notice before model retirement for publicly released models."
+      ],
+      "note": "A complete dated deprecation history back to 2024 with recommended replacements, plus an explicit Active/Legacy/Deprecated/Retired taxonomy and a commitment to long-term preservation of retired model weights. Best-in-class on lifecycle.",
+      "gap": "No written guarantee that weights behind a dated ID are fixed - it is a convention, not a promise. Never states serving precision."
+    },
+    {
+      "key": "openai",
+      "provider": "OpenAI",
+      "or_slug": "openai",
+      "verified": true,
+      "rank": 7,
+      "axes": ["C"],
+      "url": "https://developers.openai.com/api/docs/deprecations",
+      "quotes": [
+        "Generally available models: At least 6 months"
+      ],
+      "note": "The longest stated notice period of any provider in the sweep, with dated retirement tables running back to 2022.",
+      "gap": "The deprecations page carries no statement that the weights behind a dated snapshot ID will not change. Never states serving precision."
+    },
+    {
+      "key": "deepseek",
+      "provider": "DeepSeek",
+      "or_slug": "deepseek",
+      "verified": true,
+      "rank": 8,
+      "axes": ["B"],
+      "url": "https://api-docs.deepseek.com/quick_start/pricing",
+      "quotes": [],
+      "quote_exempt": "The finding is an absence: the page lists deepseek-v4-flash and deepseek-v4-pro as the callable model names, and no dated identifier appears among them.",
+      "note": "The structurally weakest provider verified. Dated tags such as DeepSeek-R1-0528 are open-weight release labels, not API model parameters - there is no way to pin a DeepSeek API call to a fixed snapshot at all. To their credit the changelog does date the in-place checkpoint swaps, which is more than most providers offer; there is simply no pinned alternative to switch to.",
+      "gap": "No pinnable ID exists. No precision disclosure. No general deprecation policy."
+    },
+    {
+      "key": "groq",
+      "provider": "Groq",
+      "or_slug": "groq",
+      "verified": true,
+      "rank": 9,
+      "axes": ["B"],
+      "url": "https://api.github.com/repos/groq/groq-changelog",
+      "quotes": [],
+      "quote_exempt": "Verified by API metadata rather than page text: the repository groq/groq-changelog exists and is public, described as 'Groq Public Changelog'.",
+      "note": "The changelog is a public git repository with an Atom feed on its commits, which makes it the most machine-followable changelog in the sweep - a diff, not a page.",
+      "gap": "Publishes no precision anywhere, and reports quantization 'unknown' to OpenRouter. Excellent on axis B, absent on axis A."
+    },
+    {
+      "key": "chutes",
+      "provider": "Chutes",
+      "or_slug": "chutes",
+      "verified": true,
+      "rank": 10,
+      "axes": ["A"],
+      "url": "https://llm.chutes.ai/v1/models",
+      "quotes": [],
+      "quote_exempt": "Verified against the live JSON API rather than page text: each model object carries quantization, context_length, max_output_length and owned_by.",
+      "note": "The most complete machine-readable disclosure of a current serving config found anywhere. Chutes is the only provider in the sweep that publishes the inference engine per model (owned_by returns sglang or vllm) alongside precision and both token limits. Per-deployment source is inspectable with a locked model revision, and a watchdog spot-checks served weight files by hashing them at random offsets.",
+      "gap": "No changelog and no deprecation policy - it tells you the current config precisely and its history not at all."
+    },
+
+    {
+      "key": "fireworks",
+      "provider": "Fireworks AI",
+      "or_slug": "fireworks",
+      "verified": false,
+      "rank": 20,
+      "axes": ["B", "C"],
+      "url": "https://docs.fireworks.ai/updates/changelog",
+      "note": "Reported: dated changelog with serverless deprecation entries and an 'at least 2 weeks notice' policy. Reported to fail on precision for a specific reason worth re-checking - its prominent quantization documentation covers customers quantizing their own dedicated deployments, not what runs on the shared serverless endpoint."
+    },
+    {
+      "key": "parasail",
+      "provider": "Parasail",
+      "or_slug": "parasail",
+      "verified": false,
+      "rank": 21,
+      "axes": [],
+      "url": "https://docs.parasail.io/parasail-docs/products/overview-1/fp8-quantization",
+      "note": "Reported: same customer-deployment trap as Fireworks. Reported that pricing distinguishes FP8 from FP16 tiers without naming which serverless models are which - i.e. the information exists internally and is not published."
+    },
+    {
+      "key": "siliconflow",
+      "provider": "SiliconFlow",
+      "or_slug": "siliconflow",
+      "verified": false,
+      "rank": 22,
+      "axes": ["B"],
+      "url": "https://docs.siliconflow.com/en/release-notes/overview",
+      "note": "Reported: dates its in-place weight swaps, including a DeepSeek-R1 checkpoint change under an unchanged model ID. If confirmed this would be one of the few providers that logs the mutation rather than only the launch and the death - worth verifying first of the unchecked leads."
+    },
+    {
+      "key": "baseten",
+      "provider": "Baseten",
+      "or_slug": "baseten",
+      "verified": false,
+      "rank": 23,
+      "axes": ["B"],
+      "url": "https://www.baseten.co/blog/how-we-built-the-worlds-fastest-api-for-glm-52/",
+      "note": "Reported: a blog post describing an FP8-to-NVFP4 change on a production shared endpoint. Reported to be the only dated precision-CHANGE announcement in the entire sweep, which makes it the highest-value lead to confirm."
+    },
+    {
+      "key": "nebius",
+      "provider": "Nebius",
+      "or_slug": "nebius",
+      "verified": false,
+      "rank": 24,
+      "axes": ["A"],
+      "url": "https://docs.tokenfactory.nebius.com/api-reference/examples/list-of-models",
+      "note": "Reported: the models API returns a per-model quantization field. Reported to have no changelog covering model serving."
+    },
+    {
+      "key": "featherless",
+      "provider": "Featherless",
+      "or_slug": "featherless",
+      "verified": false,
+      "rank": 25,
+      "axes": ["A"],
+      "url": "https://featherless.ai/docs/models-model-compatibility",
+      "note": "Reported: a platform-wide rule that models are served at FP8, with models under 5B at FP16."
+    },
+    {
+      "key": "digitalocean",
+      "provider": "DigitalOcean",
+      "or_slug": "digitalocean",
+      "verified": false,
+      "rank": 26,
+      "axes": ["C"],
+      "url": "https://docs.digitalocean.com/products/inference/details/model-support-policy/",
+      "note": "Reported: an explicit 14-day / 7-day / 0-day retirement ladder with a dated end-of-support table."
+    },
+    {
+      "key": "sambanova",
+      "provider": "SambaNova",
+      "or_slug": "sambanova",
+      "verified": false,
+      "rank": 27,
+      "axes": ["C"],
+      "url": "https://docs.sambanova.ai/docs/en/models/deprecations",
+      "note": "Reported: a two-to-three week notice policy with a dated table. Also reported to have given two contradictory official answers about DeepSeek serving precision in its own forum - if confirmed, a useful example of why vendor testimony needs ranking."
+    },
+    {
+      "key": "amazon-bedrock",
+      "provider": "Amazon Bedrock",
+      "or_slug": "amazon-bedrock",
+      "verified": false,
+      "rank": 28,
+      "axes": ["C"],
+      "url": "https://docs.aws.amazon.com/bedrock/latest/userguide/model-lifecycle.html",
+      "note": "Reported: a 12-month minimum on-service commitment, a dated retirement table, no floating alias at the base-model level, and a modelLifecycle field in the API."
+    },
+    {
+      "key": "friendli",
+      "provider": "Friendli",
+      "or_slug": "friendli",
+      "verified": false,
+      "rank": 29,
+      "axes": ["B"],
+      "url": "https://friendli.ai/docs/changelog",
+      "note": "Reported: dated changelog entries naming specific model IDs as they are removed."
+    },
+    {
+      "key": "venice",
+      "provider": "Venice AI",
+      "or_slug": "venice",
+      "verified": false,
+      "rank": 30,
+      "axes": ["B"],
+      "url": "https://featurebase.venice.ai/changelog",
+      "note": "Reported: dated changelog entries naming serving precision, and retirements that reroute an old ID to a different model via alias."
+    },
+    {
+      "key": "phala",
+      "provider": "Phala Network",
+      "or_slug": "phala",
+      "verified": false,
+      "rank": 31,
+      "axes": [],
+      "url": "https://docs.redpill.ai/confidential-ai/attestation-report",
+      "note": "Reported with an important correction to the marketing framing: the TEE attestation proves the hardware and the serving-code build (repo commit, image digest), but the attestation report was reported to carry no field for model hash, weights or quantization. Attestation of the runtime is not attestation of the model. Worth verifying because the distinction matters for anyone treating TEE providers as reproducible."
+    }
+  ]
+}
