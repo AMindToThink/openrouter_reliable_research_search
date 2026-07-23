@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1500" viewBox="0 0 1200 1500">
-<rect width="1200" height="1500" fill="#0d1219"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1520" viewBox="0 0 1200 1520">
+<rect width="1200" height="1520" fill="#0d1219"/>
 <rect x="0" y="0" width="1200" height="4" fill="#6fa0e6" opacity="0.9"/>
 <rect x="72" y="52" width="30" height="3" fill="#6fa0e6"/>
 <text x="114" y="60" font-family="DejaVu Sans Mono, monospace" font-size="20" font-weight="bold" fill="#6fa0e6" text-anchor="start" letter-spacing="3" opacity="1">PROVIDER ROUTING INSPECTOR</text>
@@ -87,13 +87,14 @@
 <text x="96" y="1154" font-family="DejaVu Sans, sans-serif" font-size="18" font-weight="normal" fill="#97a3b6" text-anchor="start" opacity="1">number is wrong. Of 35 repos surveyed, 34 contain an OpenRouter call site and 32 put its output</text>
 <text x="96" y="1180" font-family="DejaVu Sans, sans-serif" font-size="18" font-weight="normal" fill="#97a3b6" text-anchor="start" opacity="1">on a result path; the 3 that never do are excluded rather than counted as successes. Only ONE</text>
 <text x="96" y="1206" font-family="DejaVu Sans, sans-serif" font-size="18" font-weight="normal" fill="#97a3b6" text-anchor="start" opacity="1">repo both uses OpenRouter for real results and controls for it.</text>
-<rect x="72" y="1250" width="1056" height="150" rx="12" fill="#161d27" stroke="#28313d"/>
-<rect x="72" y="1250" width="4" height="150" rx="2" fill="#46c08a"/>
-<text x="96" y="1284" font-family="DejaVu Sans Mono, monospace" font-size="15" font-weight="bold" fill="#46c08a" text-anchor="start" letter-spacing="1.5" opacity="1">THE FIX  ·  ~5 MINUTES</text>
+<rect x="72" y="1250" width="1056" height="172" rx="12" fill="#161d27" stroke="#28313d"/>
+<rect x="72" y="1250" width="4" height="172" rx="2" fill="#46c08a"/>
+<text x="96" y="1284" font-family="DejaVu Sans Mono, monospace" font-size="15" font-weight="bold" fill="#46c08a" text-anchor="start" letter-spacing="1.5" opacity="1">THE MITIGATION  ·  ~5 MINUTES</text>
 <text x="96" y="1320" font-family="DejaVu Sans Mono, monospace" font-size="17" font-weight="normal" fill="#e7edf5" text-anchor="start" opacity="1">provider = { &quot;only&quot;: [&quot;&lt;provider/quant-you-validated&gt;&quot;],   # e.g. &quot;cerebras/fp16&quot;</text>
 <text x="228.6" y="1346" font-family="DejaVu Sans Mono, monospace" font-size="17" font-weight="normal" fill="#e7edf5" text-anchor="start" opacity="1">&quot;allow_fallbacks&quot;: false,  &quot;require_parameters&quot;: true }</text>
-<text x="96" y="1376" font-family="DejaVu Sans Mono, monospace" font-size="17" font-weight="normal" fill="#46c08a" text-anchor="start" opacity="1">→ then log which provider actually served each call. Now anyone can reproduce you.</text>
-<text x="72" y="1430" font-family="DejaVu Sans Mono, monospace" font-size="15" font-weight="normal" fill="#6b7789" text-anchor="start" letter-spacing="0.5" opacity="1">SOURCES  NeurIPS · ICML · ICLR · ACL · NAACL · Nature · UK AISI · METR · Redwood · Palisade · LessWrong</text>
-<text x="72" y="1460" font-family="DejaVu Sans Mono, monospace" font-size="15" font-weight="normal" fill="#97a3b6" text-anchor="start" opacity="1">importance-first · audit + adversarial verify per repo</text>
-<text x="1128" y="1460" font-family="DejaVu Sans Mono, monospace" font-size="15" font-weight="normal" fill="#6fa0e6" text-anchor="end" opacity="1">github.com/AMindToThink/openrouter_reliable_research_search</text>
+<text x="96" y="1376" font-family="DejaVu Sans Mono, monospace" font-size="17" font-weight="normal" fill="#46c08a" text-anchor="start" opacity="1">→ then log which provider actually served each call, and report it like temperature.</text>
+<text x="96" y="1402" font-family="DejaVu Sans Mono, monospace" font-size="15" font-weight="normal" fill="#97a3b6" text-anchor="start" opacity="1">Best available practice, not a guarantee — providers can still change what a pinned tag serves.</text>
+<text x="72" y="1450" font-family="DejaVu Sans Mono, monospace" font-size="15" font-weight="normal" fill="#6b7789" text-anchor="start" letter-spacing="0.5" opacity="1">SOURCES  NeurIPS · ICML · ICLR · ACL · NAACL · Nature · UK AISI · METR · Redwood · Palisade · LessWrong</text>
+<text x="72" y="1480" font-family="DejaVu Sans Mono, monospace" font-size="15" font-weight="normal" fill="#97a3b6" text-anchor="start" opacity="1">importance-first · audit + adversarial verify per repo</text>
+<text x="1128" y="1480" font-family="DejaVu Sans Mono, monospace" font-size="15" font-weight="normal" fill="#6fa0e6" text-anchor="end" opacity="1">github.com/AMindToThink/openrouter_reliable_research_search</text>
 </svg>

@@ -45,7 +45,7 @@ SHORT = {"M1":"Unpinned quantization","M2":"Silent param dropping","M3":"Probabi
  "M7":"seed → determinism","M8":"Comparison confound","M9":"Unconstrained judge",
  "M10":"No reporting","M11":"Silent backend mixing","M12":"Cheap route chosen"}
 MONO="DejaVu Sans Mono, monospace"; SANS="DejaVu Sans, sans-serif"
-W, H = 1200, 1500
+W, H = 1200, 1520
 def e(s): return html.escape(str(s), quote=True)
 
 def wrap(text, maxc):
@@ -144,15 +144,18 @@ cav = wrap("“At risk” = a known corruption channel left open and uncontrolle
            "successes. Only ONE repo both uses OpenRouter for real results and controls for it.", 96)
 multiline(M+24, cy+62, cav, 18, 26, fill=C["muted"])
 
-# the fix panel
-fxy = cy + ch + 34; fxh = 150
+# the mitigation panel — "best practice available … but unfortunately insufficient" (blog),
+# so no guarantee language here: it narrows the channel, it does not close it
+fxy = cy + ch + 34; fxh = 172
 add(f'<rect x="{M}" y="{fxy}" width="{W-2*M}" height="{fxh}" rx="12" fill="{C["panel"]}" stroke="{C["border"]}"/>')
 add(f'<rect x="{M}" y="{fxy}" width="4" height="{fxh}" rx="2" fill="{C["safe"]}"/>')
-text(M+24, fxy+34, "THE FIX  ·  ~5 MINUTES", 15, C["safe"], MONO, "bold", spacing="1.5")
+text(M+24, fxy+34, "THE MITIGATION  ·  ~5 MINUTES", 15, C["safe"], MONO, "bold", spacing="1.5")
 text(M+24, fxy+70, 'provider = { "only": ["<provider/quant-you-validated>"],   # e.g. "cerebras/fp16"', 17, C["ink"], MONO)
 # x-offset in place of leading spaces: SVG collapses whitespace, so indent geometrically
 text(M+24+13*10.2, fxy+96, '"allow_fallbacks": false,  "require_parameters": true }', 17, C["ink"], MONO)
-text(M+24, fxy+126, "→ then log which provider actually served each call. Now anyone can reproduce you.", 17, C["safe"], MONO)
+text(M+24, fxy+126, "→ then log which provider actually served each call, and report it like temperature.", 17, C["safe"], MONO)
+text(M+24, fxy+152, "Best available practice, not a guarantee — providers can still change what a pinned tag serves.",
+     15, C["muted"], MONO)
 
 # footer
 text(M, H-70, "SOURCES  NeurIPS · ICML · ICLR · ACL · NAACL · Nature · UK AISI · METR · Redwood · Palisade · LessWrong",
