@@ -45,7 +45,7 @@ SHORT = {"M1":"Unpinned quantization","M2":"Silent param dropping","M3":"Probabi
  "M7":"seed → determinism","M8":"Comparison confound","M9":"Unconstrained judge",
  "M10":"No reporting","M11":"Silent backend mixing","M12":"Cheap route chosen"}
 MONO="DejaVu Sans Mono, monospace"; SANS="DejaVu Sans, sans-serif"
-W, H = 1200, 1490
+W, H = 1200, 1520
 def e(s): return html.escape(str(s), quote=True)
 
 def wrap(text, maxc):
@@ -91,17 +91,20 @@ sub = wrap("OpenRouter serves “a model” from whichever provider is cheapest-
 y = multiline(M, 300, sub, 22, 32, fill=C["muted"])
 
 # stat tiles
-tiles = [(f"{AT_RISK}/{CRIT}", "at risk, of those whose OpenRouter output reaches a result", C["high"]),
+tiles = [(f"{AT_RISK}/{CRIT}", f"at risk, of the {CRIT} whose output reaches a result", C["high"]),
          (str(FINDINGS), "specific claims / figures possibly affected", C["high"]),
          (str(HIGH), "carry a high-severity gap", C["med"]),
          (str(HANDLED), "uses it properly — the only one", C["safe"])]
-ty = 432; th = 132; gap = 18; tw = (W - 2*M - 3*gap) / 4
+ty = 432; th = 140; gap = 18; tw = (W - 2*M - 3*gap) / 4
 for i,(num,lab,col) in enumerate(tiles):
     tx = M + i*(tw+gap)
+    lines = wrap(lab, 22)
+    if len(lines) > 3:
+        raise SystemExit(f"tile label overflows its box ({len(lines)} lines > 3): {lab!r}")
     add(f'<rect x="{tx}" y="{ty}" width="{tw}" height="{th}" rx="12" fill="{C["panel"]}" stroke="{C["border"]}"/>')
     add(f'<rect x="{tx}" y="{ty}" width="4" height="{th}" rx="2" fill="{col}"/>')
     text(tx+22, ty+66, num, 46, col, MONO, "bold")
-    multiline(tx+22, ty+94, wrap(lab, 22), 15.5, 19, fill=C["muted"])
+    multiline(tx+22, ty+92, lines, 15.5, 19, fill=C["muted"])
 
 # mistake bars
 by = ty + th + 60
@@ -121,8 +124,7 @@ for i,(m,c) in enumerate(top):
     add(f'<rect x="{bx}" y="{ry+4}" width="{bw}" height="22" rx="5" fill="{C["panel"]}"/>')
     fillw = max(8, bw * c / maxc)
     add(f'<rect x="{bx}" y="{ry+4}" width="{fillw:.1f}" height="22" rx="5" fill="{col}"/>')
-    text(bx+bw+16, ry+22, str(c), 21, C["ink"], MONO, "bold", anchor="end")
-    text(W-M, ry+22, "", 1)  # spacer
+    text(bx+bw+16, ry+22, str(c), 21, C["ink"], MONO, "bold")
 # legend
 ly = by + 16 + len(top)*rowh + 6
 add(f'<rect x="{M}" y="{ly}" width="13" height="13" rx="3" fill="{C["high"]}"/>')
@@ -142,14 +144,18 @@ cav = wrap("“At risk” = a known corruption channel left open and uncontrolle
            "successes. Only ONE repo both uses OpenRouter for real results and controls for it.", 96)
 multiline(M+24, cy+62, cav, 18, 26, fill=C["muted"])
 
-# the fix panel
-fxy = cy + ch + 34; fxh = 150
+# the mitigation panel — "best practice available … but unfortunately insufficient" (blog),
+# so no guarantee language here: it narrows the channel, it does not close it
+fxy = cy + ch + 34; fxh = 172
 add(f'<rect x="{M}" y="{fxy}" width="{W-2*M}" height="{fxh}" rx="12" fill="{C["panel"]}" stroke="{C["border"]}"/>')
 add(f'<rect x="{M}" y="{fxy}" width="4" height="{fxh}" rx="2" fill="{C["safe"]}"/>')
-text(M+24, fxy+34, "THE FIX  ·  ~5 MINUTES", 15, C["safe"], MONO, "bold", spacing="1.5")
-text(M+24, fxy+70, 'provider = { "quantizations": ["fp8","fp16","bf16"],  "require_parameters": true,', 17, C["ink"], MONO)
-text(M+24, fxy+96, '             "data_collection": "deny",  "order": ["<the-provider-you-validated>"] }', 17, C["ink"], MONO)
-text(M+24, fxy+126, "→ then log which provider actually served each call. Now anyone can reproduce you.", 17, C["safe"], MONO)
+text(M+24, fxy+34, "THE MITIGATION  ·  ~5 MINUTES", 15, C["safe"], MONO, "bold", spacing="1.5")
+text(M+24, fxy+70, 'provider = { "only": ["<provider/quant-you-validated>"],   # e.g. "cerebras/fp16"', 17, C["ink"], MONO)
+# x-offset in place of leading spaces: SVG collapses whitespace, so indent geometrically
+text(M+24+13*10.2, fxy+96, '"allow_fallbacks": false,  "require_parameters": true }', 17, C["ink"], MONO)
+text(M+24, fxy+126, "→ then log which provider actually served each call, and report it like temperature.", 17, C["safe"], MONO)
+text(M+24, fxy+152, "Best available practice, not a guarantee — providers can still change what a pinned tag serves.",
+     15, C["muted"], MONO)
 
 # footer
 text(M, H-70, "SOURCES  NeurIPS · ICML · ICLR · ACL · NAACL · Nature · UK AISI · METR · Redwood · Palisade · LessWrong",
