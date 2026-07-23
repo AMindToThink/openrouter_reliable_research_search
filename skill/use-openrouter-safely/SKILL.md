@@ -179,7 +179,7 @@ tradeoff that is theirs. **Ask them** (`AskUserQuestion`), then map the answer t
 
 | If they prioritize… | Then | Because |
 | --- | --- | --- |
-| **Reproducibility** — a headline number, a comparison, anything re-run later | Hard endpoint pin (`only: ["provider/quant"]`, `allow_fallbacks: False`), plus per-response provenance logging | Fixes the weights. Costs you availability: a down endpoint is now a hard error, which is the point |
+| **Reproducibility** — a headline number, a comparison, anything re-run later | Hard endpoint pin (`only: ["provider/quant"]`, `allow_fallbacks: False`), plus per-response provenance logging | Fixes the endpoint — as close to fixing the weights as a router gets; what the tag serves is provider convention, not contract, so the log is your change-detector. Costs you availability: a down endpoint is now a hard error, which is the point |
 | **Knowing what actually ran** — the model's identity is the research subject | Prefer providers that publish precision per model *and* re-verify it against the endpoints API each run; log the endpoint record with the results | Self-reported labels are unaudited; the strongest version of this is Model Equality Testing, not a docs page |
 | **Being told when it changes** — a long-running eval, a leaderboard you maintain | Prefer a provider whose changelog is machine-followable, and snapshot the endpoint record every run so *you* hold the diff | Nobody logs the mutation. Your own stored snapshots are the only reliable change-detector |
 | **Cost or throughput** — exploration, pilot runs, non-reported work | Default routing or a quantization floor is genuinely fine — say so | Don't sell a pin to someone whose output never reaches a reported number (§6 of the full guide) |
@@ -231,9 +231,11 @@ provider = {
 
 `only`/`order` accept **endpoint tags** of the form `provider_slug/variant` — and for most
 open-weight models the variant *is the quantization*: `cerebras/fp16`, `targon/fp8`,
-`deepinfra/bf16`, `wandb/fp4`. This is the maximal pin: it fixes the weights, not just the
-company. (`nostalgebraist/cot_legibility` pins this way; the docs also show region/variant forms
-like `google-vertex/us-east5`.)
+`deepinfra/bf16`, `wandb/fp4`. This is the maximal pin a router offers: it fixes the declared
+quantization, not just the company. It is still not a weight-fixity contract — the provider can
+change what the tag serves without renaming it, which is what the endpoint snapshot below is for.
+(`nostalgebraist/cot_legibility` pins this way; the docs also show region/variant forms like
+`google-vertex/us-east5`.)
 
 > **⚠️ The trap: pinning a provider does not pin quality.** MathArena pins Kimi K2.6 with
 > `provider: {order: [moonshotai], allow_fallbacks: False}` — textbook-looking, fully
